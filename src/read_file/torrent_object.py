@@ -13,7 +13,7 @@ class TorrentObject(object):
     info_hash: Union[bytes, None]  # sha-1 hash of the entire bencoded info dict
     piece_hashes: Union[List[bytes], None]  # list of sha-1 hashes of all the pieces
 
-    announce: Optional[bytes]  # tracker
+    announce: Optional[bytes] = None  # tracker
     comment: Optional[Union[bytes, None]] = None  # comment added by uploader, optional
 
     # other extensions to the protocol

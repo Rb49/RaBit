@@ -26,7 +26,7 @@ def udp_request(tracker_url: bytes):
     udp_socket.settimeout(1)
 
     request, transaction_id = conn_req()
-    print(request, len(request))
+    print(server_address, len(request))
 
     udp_socket.sendto(request, server_address)
 
