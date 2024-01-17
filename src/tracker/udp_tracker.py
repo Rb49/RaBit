@@ -144,7 +144,7 @@ def udp_tracker_announce(tracker_url: str, info_hash: bytes, peer_id: bytes, eve
 
     request_data = __build_announce_packet(connection_id, info_hash, peer_id, event, port)
 
-    for timeout in __timeouts:
+    for timeout in timeout_list:
         udp_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
         try:
             udp_socket.settimeout(timeout)

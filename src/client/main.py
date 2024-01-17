@@ -22,7 +22,7 @@ if __name__ == '__main__':
         url = url[0].decode('utf-8')
         try:
             if 'udp' in url:
-                response = udp_tracker_announce(url, TorrentFile.info_hash, TorrentFile.peer_id)
+                response = udp_tracker_announce(url, TorrentFile.info_hash, TorrentFile.peer_id, timeout_list=[1])
 
             elif 'http' in url:
                 response = http_tracker_announce(url, TorrentFile.info_hash, TorrentFile.peer_id)
