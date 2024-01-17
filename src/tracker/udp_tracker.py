@@ -43,7 +43,7 @@ def __get_connection_id(tracker_address: Tuple[str, int], timeout_list: List[int
     """
     request_data = __build_connect_packet()
 
-    for timeout in __timeouts:
+    for timeout in timeout_list:
         udp_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
         try:
             udp_socket.settimeout(timeout)
@@ -124,9 +124,10 @@ def __format_announce_response(data: bytes) -> Tuple[List[Tuple[str, int]], List
     return peers, unpacked_data
 
 
-def udp_tracker_announce(tracker_url: str, info_hash: bytes, peer_id: bytes) -> Union[Tuple[List[Tuple[str, int]], List[Any]], str]:
+def udp_tracker_announce(tracker_url: str, info_hash: bytes, peer_id: bytes, timeout_list: List[int] = __timeouts) -> Union[Tuple[List[Tuple[str, int]], List[Any]], str]:
     """
     creates an announce request to the tracker and awaits response
+    :param timeout_list: list that specifies how much time to wait before retransmission
     :param tracker_url: tracker udp url
     :param info_hash: info_hash
     :param peer_id: peer_id
@@ -135,7 +136,7 @@ def udp_tracker_announce(tracker_url: str, info_hash: bytes, peer_id: bytes) -> 
     tracker_address = __format_url(tracker_url)
 
     # build the announce packet
-    connection_id = __get_connection_id(tracker_address)
+    connection_id = __get_connection_id(tracker_address, timeout_list)
     if connection_id is None:
         return f"tracker is not reachable"
 
