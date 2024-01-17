@@ -12,6 +12,7 @@ class PeerObject(object):
     # status of this peer
     isChocked: bool  # is the peer chocked rn?
     isInterested: bool  # is the peer interested rn?
+    id: Optional[bytes]  # peer id
 
     # some stats
     client: Optional[Union[str, None]] = None  # which client is this peer using?
