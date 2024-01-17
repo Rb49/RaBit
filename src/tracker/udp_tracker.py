@@ -99,7 +99,39 @@ def __build_announce_packet(connection_id: bytes, info_hash: bytes, peer_id: byt
     return data
 
 
+def __format_announce_response(data: bytes) -> Tuple[List[Tuple[str, int]], List[Any]]:
+    """
+    formats the announce response
+    :param data: binary data received from tracker
+    :return: [0]: list of peers addresses (ip, port) [1]: unpacked entire data
+    """
+    # unpack data
+    format_string = ">4s4sIII"  # format of first 20 bytes
+    dynamic_format = "4sH"  # format of ip and port
+    n = (len(data) - 20) // 6
+    format_string += dynamic_format * n
+    unpacked_data = list(struct.unpack(format_string, data))
+
+    # format ip addresses from bytes
+    for i in range(0, n, 2):
+        unpacked_data[i + 5] = '.'.join([str(i) for i in unpacked_data[i + 5]])
+
+    # convert peers addresses to a separate list
+    peers = []
+    for i in range(0, n, 2):
+        peers.append((unpacked_data[i + 5], unpacked_data[i + 6]))
+
+    return peers, unpacked_data
+
+
 def udp_tracker_announce(tracker_url: str, info_hash: bytes, peer_id: bytes) -> Union[Tuple[List[Tuple[str, int]], List[Any]], str]:
+    """
+    creates an announce request to the tracker and awaits response
+    :param tracker_url: tracker udp url
+    :param info_hash: info_hash
+    :param peer_id: peer_id
+    :return:
+    """
     tracker_address = __format_url(tracker_url)
 
     # build the announce packet
@@ -119,23 +151,7 @@ def udp_tracker_announce(tracker_url: str, info_hash: bytes, peer_id: bytes) -> 
                 data, server = udp_socket.recvfrom(4096)
                 if len(data) >= 20:
                     if request_data[12:16] == data[4:8] and request_data[8:12] == data[0:4]:  # same transaction_id and action
-                        # unpack data
-                        format_string = ">4s4sIII"  # format of first 20 bytes
-                        dynamic_format = "4sH"  # format of ip and port
-                        n = (len(data) - 20) // 6
-                        format_string += dynamic_format * n
-                        unpacked_data = list(struct.unpack(format_string, data))
-
-                        # format ip addresses from bytes
-                        for i in range(0, n, 2):
-                            unpacked_data[i + 5] = '.'.join([str(i) for i in unpacked_data[i + 5]])
-
-                        # convert peers addresses to a separate list
-                        peers = []
-                        for i in range(0, n, 2):
-                            peers.append((unpacked_data[i + 5], unpacked_data[i + 6]))
-
-                        return peers, unpacked_data
+                        return __format_announce_response(data)
 
         except socket.timeout:
             udp_socket.close()
