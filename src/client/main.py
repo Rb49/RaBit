@@ -1,10 +1,11 @@
 from src.read_file.read_torrent import read_torrent
-from src.tracker.udp_tracker import udp_request
-from src.tracker.http_tracker import connect_to_tracker
+from src.tracker.udp_tracker import udp_tracker_announce
+from src.tracker.http_tracker import http_tracker_announce
+from collections import OrderedDict
 
 if __name__ == '__main__':
     # path for test torrent file
-    test_path = "debian-edu-12.4.0-amd64-netinst.iso.torrent"
+    test_path = "The.Hunger.Games.The.Ballad.of.Songbirds.and.Snakes.2023.2160p.WEB-DL.DDP5.1.Atmos.DV.HDR.H.265-FLUX[TGx].torrent"
     test_path = "../../data/" + test_path
 
     # read torrent file
@@ -12,21 +13,30 @@ if __name__ == '__main__':
 
     # connect to trackers
 
-    # set peer_id, later will be chosen randomly in a file
-    peer_id = "qR7pX2oH9wL4sZ8vE1aY"
-
     if not TorrentFile.announce_list:
         TorrentFile.announce_list = [[TorrentFile.announce]]
-    for url in TorrentFile.announce_list:
-        url = url[0]
-        try:
-            if b'udp' in url:
 
-                print(url)
-                udp_request(url)
-            elif b'http' in url:
-                print(url)
-                connect_to_tracker(url, TorrentFile.info_hash, peer_id, 61234)
+    peers = []
+    for url in TorrentFile.announce_list:
+        response = ''
+        url = url[0].decode('utf-8')
+        try:
+            if 'udp' in url:
+                response = udp_tracker_announce(url, TorrentFile.info_hash, TorrentFile.peer_id)
+
+            elif 'http' in url:
+                response = http_tracker_announce(url, TorrentFile.info_hash, TorrentFile.peer_id)
+
+            if not isinstance(response, str):
+                peers.extend(response[0])
 
         except Exception as e:
             print(e)
+
+    # remove duplicates from peers[]
+    peers = list(dict.fromkeys(peers))
+
+    # create peer instances for each peer and connect
+
+
+    quit(0)
