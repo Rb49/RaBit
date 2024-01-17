@@ -68,7 +68,7 @@ def __get_connection_id(tracker_address: Tuple[str, int], timeout_list: List[int
     return None
 
 
-def __build_announce_packet(connection_id: bytes, info_hash: bytes, peer_id: bytes, event: int = 0, port: int = 6881) -> bytes:
+def __build_announce_packet(connection_id: bytes, info_hash: bytes, peer_id: bytes, event: int, port: int) -> bytes:
     """
     generates a udp announce packet
     :param connection_id:
@@ -106,8 +106,8 @@ def __format_announce_response(data: bytes) -> Tuple[List[Tuple[str, int]], List
     :return: [0]: list of peers addresses (ip, port) [1]: unpacked entire data
     """
     # unpack data
-    format_string = ">4s4sIII"  # format of first 20 bytes
-    dynamic_format = "4sH"  # format of ip and port
+    format_string = '>4s4sIII'  # format of first 20 bytes
+    dynamic_format = '4sH'  # format of ip and port
     n = (len(data) - 20) // 6
     format_string += dynamic_format * n
     unpacked_data = list(struct.unpack(format_string, data))
@@ -124,9 +124,11 @@ def __format_announce_response(data: bytes) -> Tuple[List[Tuple[str, int]], List
     return peers, unpacked_data
 
 
-def udp_tracker_announce(tracker_url: str, info_hash: bytes, peer_id: bytes, timeout_list: List[int] = __timeouts) -> Union[Tuple[List[Tuple[str, int]], List[Any]], str]:
+def udp_tracker_announce(tracker_url: str, info_hash: bytes, peer_id: bytes, event: int = 0, port: int = 6881, timeout_list: List[int] = __timeouts) -> Union[Tuple[List[Tuple[str, int]], List[Any]], str]:
     """
     creates an announce request to the tracker and awaits response
+    :param event: 0: none; 1: completed; 2: started; 3: stopped
+    :param port: tells the tracker where the client is listening
     :param timeout_list: list that specifies how much time to wait before retransmission
     :param tracker_url: tracker udp url
     :param info_hash: info_hash
@@ -140,7 +142,7 @@ def udp_tracker_announce(tracker_url: str, info_hash: bytes, peer_id: bytes, tim
     if connection_id is None:
         return f"tracker is not reachable"
 
-    request_data = __build_announce_packet(connection_id, info_hash, peer_id)
+    request_data = __build_announce_packet(connection_id, info_hash, peer_id, event, port)
 
     for timeout in __timeouts:
         udp_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
