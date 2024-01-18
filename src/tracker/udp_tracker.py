@@ -9,11 +9,11 @@ import socket
 __timeouts = (15, 30, 60, 120, 240, 480, 960, 1920, 3840)  # protocol timeouts for udp sockets
 
 
-def __format_url(tracker_url: str) -> Tuple[Tuple[str, int], str]:
+def __format_url(tracker_url: str) -> Union[List[Tuple[Tuple[str, int], str]], str]:
     """
-    formats an url to proper address and finds out the ip version of the tracker
+    formats an url to proper addresses and finds out the ip version of them
     :param tracker_url: raw tracker url
-    :return: (url, port), ip version (v4 | v6): (str, int), str
+    :return: (url, port), ip version (v4 | v6): (str, int), str: error code
     """
     # remove the 'udp://' and '/announce' from address
     tracker_url = tracker_url.replace('udp://', '')
@@ -21,12 +21,12 @@ def __format_url(tracker_url: str) -> Tuple[Tuple[str, int], str]:
 
     address = tracker_url.split(':')[0], int(tracker_url.split(':')[1])
     try:
-        ip = socket.gethostbyname(address[0])
+        result = socket.getaddrinfo(*address)
+        addresses = [((res[4][0], res[4][1]), 'v6' if ':' in res[4][0] else 'v4') for res in result]
     except socket.error as e:
-        return address, 'failed resolve'
+        return 'failed resolve'
 
-    ip_address_version = 'v6' if ':' in ip else 'v4'
-    return address, ip_address_version
+    return addresses
 
 
 def __build_connect_packet() -> bytes:
@@ -42,7 +42,7 @@ def __build_connect_packet() -> bytes:
     return data
 
 
-def __build_announce_packet(connection_id: bytes, info_hash: bytes, peer_id: bytes, event: int, port: int) -> bytes:
+def __build_announce_packet(connection_id: bytes, info_hash: bytes, peer_id: bytes, event: int, port: int, key: int) -> bytes:
     """
     generates a udp announce packet
     :param connection_id:
@@ -50,6 +50,7 @@ def __build_announce_packet(connection_id: bytes, info_hash: bytes, peer_id: byt
     :param peer_id: peer_id
     :param event: 0: none; 1: completed; 2: started; 3: stopped
     :param port: tells the tracker where the client is listening
+    :param key: random key
     :return: bytes of announce packet
     """
 
@@ -66,7 +67,7 @@ def __build_announce_packet(connection_id: bytes, info_hash: bytes, peer_id: byt
                        0,  # uploaded
                        event,
                        0,  # ip address, default is 0
-                       random.getrandbits(32),  # random key
+                       key,  # random key
                        -1,  # num_want, default is -1 (50)
                        port)
 
@@ -158,24 +159,38 @@ async def udp_tracker_announce(tracker_url: str, info_hash: bytes, peer_id: byte
     :param peer_id: peer_id
     :return:
     """
-    tracker_address, ip_version = __format_url(tracker_url)
-
-    if ip_version == 'failed resolve':
+    tracker_addresses = __format_url(tracker_url)
+    if tracker_addresses == 'failed resolve':
         return f"failed to resolve tracker url"
 
-    # build the announce packet
-    connection_id = await __get_connection_id(tracker_address, timeout_list)
-    if connection_id is None:
+    # generate only one random key to follow protocol
+    key = random.getrandbits(32)
+
+    async def announce(address: Tuple[Tuple[str, int], str]):
+
+        # build the announce packet
+        connection_id = await __get_connection_id(address[0], timeout_list)
+        if connection_id is None:
+            return f"tracker is not reachable"
+
+        request_data = __build_announce_packet(connection_id, info_hash, peer_id, event, port, key)
+
+        for timeout in timeout_list:
+
+            data = await __udp_connection(request_data, address[0], timeout)
+
+            if len(data) >= 20:
+                if request_data[12:16] == data[4:8] and request_data[8:12] == data[0:4]:  # same transaction_id and action
+                    return __format_announce_response(data, address[1])[0]
+
         return f"tracker is not reachable"
 
-    request_data = __build_announce_packet(connection_id, info_hash, peer_id, event, port)
-
-    for timeout in timeout_list:
-
-        data = await __udp_connection(request_data, tracker_address, timeout)
-
-        if len(data) >= 20:
-            if request_data[12:16] == data[4:8] and request_data[8:12] == data[0:4]:  # same transaction_id and action
-                return __format_announce_response(data, ip_version)
-
-    return f"tracker is not reachable"
+    lst = [[]]
+    for address in tracker_addresses:
+        peers = await announce(address)
+        if isinstance(peers, str):
+            return peers
+        else:
+            lst[0].extend(peers)
+    print(lst)
+    return lst
