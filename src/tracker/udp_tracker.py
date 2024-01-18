@@ -2,6 +2,9 @@ import socket
 import random
 from typing import Tuple, List, Union, Any
 import struct
+import asyncio
+import aioudp
+
 
 __timeouts = (15, 30, 60, 120, 240, 480, 960, 1920, 3840)  # protocol timeouts for udp sockets
 
@@ -33,41 +36,6 @@ def __build_connect_packet() -> bytes:
     return data
 
 
-def __get_connection_id(tracker_address: Tuple[str, int], timeout_list: List[int] = __timeouts) -> Union[bytes, None]:
-    """
-    gets a connection_id from tracker for announce / scrape
-    :param tracker_address: formatted tracker address
-    :param timeout_list: list that specifies how much time to wait before retransmission
-    :return: bytes: successfully received a connection_id. None: did not receive a connection_id
-     | raised exception: something went wrong
-    """
-    request_data = __build_connect_packet()
-
-    for timeout in timeout_list:
-        udp_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-        try:
-            udp_socket.settimeout(timeout)
-            udp_socket.sendto(request_data, tracker_address)
-
-            while True:
-                data, server = udp_socket.recvfrom(1024)
-                if len(data) >= 16:
-                    if data[4:8] == request_data[12:] and data[0:4] == request_data[8:12]:  # same transaction_id and action
-                        # if received data passes checks, it's the right packet
-                        connection_id = data[8:]
-                        udp_socket.close()
-                        return connection_id
-
-        except socket.timeout:
-            udp_socket.close()
-            continue
-        except Exception as e:
-            udp_socket.close()
-            raise e
-
-    return None
-
-
 def __build_announce_packet(connection_id: bytes, info_hash: bytes, peer_id: bytes, event: int, port: int) -> bytes:
     """
     generates a udp announce packet
@@ -76,7 +44,7 @@ def __build_announce_packet(connection_id: bytes, info_hash: bytes, peer_id: byt
     :param peer_id: peer_id
     :param event: 0: none; 1: completed; 2: started; 3: stopped
     :param port: tells the tracker where the client is listening
-    :return:
+    :return: bytes of announce packet
     """
 
     format_string = '>8sII20s20sQQQIIIiH'
@@ -124,7 +92,45 @@ def __format_announce_response(data: bytes) -> Tuple[List[Tuple[str, int]], List
     return peers, unpacked_data
 
 
-def udp_tracker_announce(tracker_url: str, info_hash: bytes, peer_id: bytes, event: int = 0, port: int = 6881, timeout_list: List[int] = __timeouts) -> Union[Tuple[List[Tuple[str, int]], List[Any]], str]:
+async def __udp_connection(request_data: bytes, address: Tuple[str, int], timeout: int) -> bytes:
+    try:
+        async with aioudp.connect(*address) as connection:
+            await connection.send(request_data)
+            data = await asyncio.wait_for(connection.recv(), timeout)
+            await asyncio.sleep(0.01)
+            return data
+
+    except asyncio.TimeoutError:
+        return b''
+    except Exception as e:
+        raise e
+
+
+async def __get_connection_id(tracker_address: Tuple[str, int], timeout_list: List[int] = __timeouts) -> Union[bytes, None]:
+    """
+    gets a connection_id from tracker for announce / scrape
+    :param tracker_address: formatted tracker address
+    :param timeout_list: list that specifies how much time to wait before retransmission
+    :return: bytes: successfully received a connection_id. None: did not receive a connection_id
+     | raised exception: something went wrong
+    """
+    request_data = __build_connect_packet()
+
+    for timeout in timeout_list:
+
+        data = await __udp_connection(request_data, tracker_address, timeout)
+
+        if len(data) >= 16:
+            if data[4:8] == request_data[12:] and data[0:4] == request_data[8:12]:  # same transaction_id and action
+                # if received data passes checks, it's the right packet
+                connection_id = data[8:]
+                return connection_id
+
+    return None
+
+
+async def udp_tracker_announce(tracker_url: str, info_hash: bytes, peer_id: bytes, port: int, event: int = 0, timeout_list: List[int] = __timeouts) \
+        -> Union[Tuple[List[Tuple[str, int]], List[Any]], str]:
     """
     creates an announce request to the tracker and awaits response
     :param event: 0: none; 1: completed; 2: started; 3: stopped
@@ -138,29 +144,18 @@ def udp_tracker_announce(tracker_url: str, info_hash: bytes, peer_id: bytes, eve
     tracker_address = __format_url(tracker_url)
 
     # build the announce packet
-    connection_id = __get_connection_id(tracker_address, timeout_list)
+    connection_id = await __get_connection_id(tracker_address, timeout_list)
     if connection_id is None:
         return f"tracker is not reachable"
 
     request_data = __build_announce_packet(connection_id, info_hash, peer_id, event, port)
 
     for timeout in timeout_list:
-        udp_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-        try:
-            udp_socket.settimeout(timeout)
-            udp_socket.sendto(request_data, tracker_address)
 
-            while True:
-                data, server = udp_socket.recvfrom(4096)
-                if len(data) >= 20:
-                    if request_data[12:16] == data[4:8] and request_data[8:12] == data[0:4]:  # same transaction_id and action
-                        return __format_announce_response(data)
+        data = await __udp_connection(request_data, tracker_address, timeout)
 
-        except socket.timeout:
-            udp_socket.close()
-            continue
-        except Exception as e:
-            udp_socket.close()
-            raise e
+        if len(data) >= 20:
+            if request_data[12:16] == data[4:8] and request_data[8:12] == data[0:4]:  # same transaction_id and action
+                return __format_announce_response(data)
 
     return f"tracker is not reachable"

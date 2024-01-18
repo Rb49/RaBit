@@ -1,11 +1,12 @@
-import requests
 from urllib.parse import urlencode
 import bencodepy
 from collections import OrderedDict
 from typing import Union, List, Tuple
+import asyncio
+import aiohttp
 
 
-def http_tracker_announce(tracker_url: str, info_hash: bytes, peer_id: bytes, event: int = 0, port: int = 6881) -> Union[Tuple[List[Tuple[str, int]], OrderedDict], str]:
+async def http_tracker_announce(tracker_url: str, info_hash: bytes, peer_id: bytes, port: int, event: int = 0) -> Union[Tuple[List[Tuple[str, int]], OrderedDict], str]:
     """
     connect to a http tracker through GET
     :param event: 0: none; 1: completed; 2: started; 3: stopped
@@ -25,15 +26,15 @@ def http_tracker_announce(tracker_url: str, info_hash: bytes, peer_id: bytes, ev
         'event': event,
         'port': port
     }
-
     params = urlencode(params)
-    response = requests.get(tracker_url, params=params, timeout=1)
 
-    # check if the request was successful (HTTP status code 200)
-    if response.status_code == 200:
-        peer_data = response.text
-        peer_data = bencodepy.decode(str.encode(peer_data))
+    async with aiohttp.ClientSession() as session:
+        async with session.get(tracker_url, params=params) as response:
+            # check if the request was successful (HTTP status code 200)
+            if response.status == 200:
+                peer_data = await response.text()
+                peer_data = bencodepy.decode(str.encode(peer_data))
 
-        return [(peer[b'ip'].decode('utf=8'), peer[b'port']) for peer in peer_data[b'peers']], peer_data
-    else:
-        return f"Failed to connect to the tracker. HTTP Status Code: {response.status_code}"
+                return [(peer[b'ip'].decode('utf=8'), peer[b'port']) for peer in peer_data[b'peers']], peer_data
+            else:
+                return f"Failed to connect to the tracker. HTTP Status Code: {response.status}"
