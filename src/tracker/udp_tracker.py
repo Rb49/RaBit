@@ -1,26 +1,32 @@
-import socket
 import random
 from typing import Tuple, List, Union, Any
 import struct
 import asyncio
 import aioudp
+import socket
 
 
 __timeouts = (15, 30, 60, 120, 240, 480, 960, 1920, 3840)  # protocol timeouts for udp sockets
 
 
-def __format_url(tracker_url: str) -> Tuple[str, int]:
+def __format_url(tracker_url: str) -> Tuple[Tuple[str, int], str]:
     """
-    formats an url to proper address
+    formats an url to proper address and finds out the ip version of the tracker
     :param tracker_url: raw tracker url
-    :return: (url, port): (str, int)
+    :return: (url, port), ip version (v4 | v6): (str, int), str
     """
     # remove the 'udp://' and '/announce' from address
     tracker_url = tracker_url.replace('udp://', '')
     tracker_url = tracker_url.split('/')[0]
 
     address = tracker_url.split(':')[0], int(tracker_url.split(':')[1])
-    return address
+    try:
+        ip = socket.gethostbyname(address[0])
+    except socket.error as e:
+        return address, 'failed resolve'
+
+    ip_address_version = 'v6' if ':' in ip else 'v4'
+    return address, ip_address_version
 
 
 def __build_connect_packet() -> bytes:
@@ -67,22 +73,33 @@ def __build_announce_packet(connection_id: bytes, info_hash: bytes, peer_id: byt
     return data
 
 
-def __format_announce_response(data: bytes) -> Tuple[List[Tuple[str, int]], List[Any]]:
+def __format_announce_response(data: bytes, ip_version: str) -> Tuple[List[Tuple[str, int]], List[Any]]:
     """
     formats the announce response
     :param data: binary data received from tracker
+    :param ip_version: ip_version of tracker
     :return: [0]: list of peers addresses (ip, port) [1]: unpacked entire data
     """
     # unpack data
     format_string = '>4s4sIII'  # format of first 20 bytes
-    dynamic_format = '4sH'  # format of ip and port
-    n = (len(data) - 20) // 6
-    format_string += dynamic_format * n
-    unpacked_data = list(struct.unpack(format_string, data))
 
-    # format ip addresses from bytes
-    for i in range(0, n, 2):
-        unpacked_data[i + 5] = '.'.join([str(i) for i in unpacked_data[i + 5]])
+    if ip_version == 'v4':
+        dynamic_format = '4sH'  # format of ipv4 and port
+        n = (len(data) - 20) // 6
+        format_string += dynamic_format * n
+        unpacked_data = list(struct.unpack(format_string, data))
+        # format ipv4 addresses from bytes
+        for i in range(0, n, 2):
+            unpacked_data[i + 5] = '.'.join([str(i) for i in unpacked_data[i + 5]])
+
+    else:  # ip_version == 'v6'
+        dynamic_format = '16sH'
+        n = (len(data) - 20) // 18
+        format_string += dynamic_format * n
+        unpacked_data = list(struct.unpack(format_string, data))
+        # format ipv6 addresses from bytes
+        for i in range(0, n, 2):
+            unpacked_data[i + 5] = socket.inet_ntop(socket.AF_INET6, unpacked_data[i + 5])
 
     # convert peers addresses to a separate list
     peers = []
@@ -141,7 +158,10 @@ async def udp_tracker_announce(tracker_url: str, info_hash: bytes, peer_id: byte
     :param peer_id: peer_id
     :return:
     """
-    tracker_address = __format_url(tracker_url)
+    tracker_address, ip_version = __format_url(tracker_url)
+
+    if ip_version == 'failed resolve':
+        return f"failed to resolve tracker url"
 
     # build the announce packet
     connection_id = await __get_connection_id(tracker_address, timeout_list)
@@ -156,6 +176,6 @@ async def udp_tracker_announce(tracker_url: str, info_hash: bytes, peer_id: byte
 
         if len(data) >= 20:
             if request_data[12:16] == data[4:8] and request_data[8:12] == data[0:4]:  # same transaction_id and action
-                return __format_announce_response(data)
+                return __format_announce_response(data, ip_version)
 
     return f"tracker is not reachable"
