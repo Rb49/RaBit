@@ -192,5 +192,4 @@ async def udp_tracker_announce(tracker_url: str, info_hash: bytes, peer_id: byte
             return peers
         else:
             lst[0].extend(peers)
-    print(lst)
     return lst
