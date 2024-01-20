@@ -2,6 +2,7 @@ import bencodepy
 from .torrent_object import TorrentObject
 from hashlib import sha1
 import random
+import string
 
 
 def read_torrent(path: str) -> TorrentObject:
@@ -35,7 +36,7 @@ def read_torrent(path: str) -> TorrentObject:
     sha1_hash = sha1(data).digest()
     torrent_data.info_hash = sha1_hash
 
-    # Azureus - style peer id encoding: RB - client ;), 0010 - version 1
-    torrent_data.peer_id = b'-RB0010-' + ''.join([str(random.choice(range(10))) for _ in range(12)]).encode()
+    # Azureus - style peer id encoding: RB - client ;), 0001 - version 1 : 8 bytes. random 12 alphanumeric bytes
+    torrent_data.peer_id = b'-RB0001-' + ''.join(random.choice(string.ascii_letters + string.digits) for _ in range(12)).encode()
 
     return torrent_data

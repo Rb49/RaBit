@@ -2,6 +2,7 @@ from src.read_file.read_torrent import read_torrent
 from src.tracker.udp_tracker import udp_tracker_announce
 from src.tracker.http_tracker import http_tracker_announce
 import asyncio
+from src.peer.handshake import *
 
 
 async def main() -> None:
@@ -26,10 +27,12 @@ async def main() -> None:
 
         try:
             if 'udp' in tracker_url:
-                response = await udp_tracker_announce(tracker_url, TorrentData.info_hash, TorrentData.peer_id, 6881, event=2, timeout_list=[1])
+                response = await udp_tracker_announce(tracker_url, TorrentData.info_hash, TorrentData.peer_id, 59596,
+                                                      event=2, timeout_list=[1, 1])
 
             elif 'http' in tracker_url:
-                response = await http_tracker_announce(tracker_url, TorrentData.info_hash, TorrentData.peer_id, 6881, event=2)
+                response = await http_tracker_announce(tracker_url, TorrentData.info_hash, TorrentData.peer_id, 59596,
+                                                       event=2)
 
             if not isinstance(response, str):
                 peers_list.extend(response[0])
@@ -46,8 +49,21 @@ async def main() -> None:
     # remove duplicates from peers[]
     peers_list = list(dict.fromkeys(peers_list))
 
+    # --------
+
+    # peer wire protocol
+    outputs = []
+
+    async def x(address: Tuple[str, int]):
+        outputs.append(await tcp_wire_communication(address, TorrentData.info_hash, TorrentData.peer_id))
+
+    tasks = [x(address) for address in peers_list]
+
+    await asyncio.gather(*tasks)
+
     return
 
 
 if __name__ == '__main__':
+
     asyncio.run(main())
