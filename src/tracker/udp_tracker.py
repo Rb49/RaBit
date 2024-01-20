@@ -91,7 +91,7 @@ def __format_announce_response(data: bytes, ip_version: str) -> Tuple[List[Tuple
         unpacked_data = list(struct.unpack(format_string, data))
         # format ipv4 addresses from bytes
         for i in range(0, n, 2):
-            unpacked_data[i + 5] = '.'.join([str(i) for i in unpacked_data[i + 5]])
+            unpacked_data[i + 5] = socket.inet_ntop(socket.AF_INET, unpacked_data[i + 5])
 
     else:  # ip_version == 'v6'
         dynamic_format = '16sH'
