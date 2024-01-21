@@ -55,6 +55,7 @@ async def main() -> None:
     outputs = []
 
     async def x(address: Tuple[str, int]):
+        nonlocal outputs
         outputs.append(await tcp_wire_communication(address, TorrentData.info_hash, TorrentData.peer_id))
 
     tasks = [x(address) for address in peers_list]
