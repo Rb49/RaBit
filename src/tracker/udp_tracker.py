@@ -9,11 +9,11 @@ import socket
 __timeouts = (15, 30, 60, 120, 240, 480, 960, 1920, 3840)  # protocol timeouts for udp sockets
 
 
-def __format_url(tracker_url: str) -> Union[List[Tuple[Tuple[str, int], str]], str]:
+def __format_url(tracker_url: str) -> Union[str, List[Tuple[Tuple[str, str], str]]]:
     """
     formats an url to proper addresses and finds out the ip version of them
     :param tracker_url: raw tracker url
-    :return: (url, port), ip version (v4 | v6): (str, int), str: error code
+    :return: (url, port), ip version (v4 | v6): (str, int), OR str: error code
     """
     # remove the 'udp://' and '/announce' from address
     tracker_url = tracker_url.replace('udp://', '')
@@ -110,7 +110,7 @@ def __format_announce_response(data: bytes, ip_version: str) -> Tuple[List[Tuple
     return peers, unpacked_data
 
 
-async def __udp_connection(request_data: bytes, address: Tuple[str, int], timeout: int) -> bytes:
+async def __udp_connection(request_data: bytes, address: Tuple[str, int], timeout: int) -> Union[bytes, str]:
     try:
         async with aioudp.connect(*address) as connection:
             await connection.send(request_data)
@@ -119,7 +119,7 @@ async def __udp_connection(request_data: bytes, address: Tuple[str, int], timeou
             return data
 
     except asyncio.TimeoutError:
-        return b''
+        return 'connection timeout'
     except Exception as e:
         raise e
 
@@ -185,6 +185,7 @@ async def udp_tracker_announce(tracker_url: str, info_hash: bytes, peer_id: byte
 
         return f"tracker is not reachable"
 
+    # iterate over every address this tracker has
     lst = [[]]
     for address in tracker_addresses:
         peers = await announce(address)

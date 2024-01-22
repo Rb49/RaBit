@@ -29,7 +29,7 @@ async def http_tracker_announce(tracker_url: str, info_hash: bytes, peer_id: byt
     params = urlencode(params)
 
     async with aiohttp.ClientSession() as session:
-        async with session.get(tracker_url, params=params) as response:
+        async with session.get(tracker_url, params=params, timeout=2) as response:
             # check if the request was successful (HTTP status code 200)
             if response.status == 200:
                 peer_data = await response.text()
