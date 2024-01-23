@@ -13,7 +13,7 @@ def __abs_db_path(file_name: str) -> Path:
     hpath_parent = Path(__file__).parent
     return hpath_parent.joinpath(file_name)
 
-    # thanks to sapoj for help with this function
+    #  thanks to sapoj for help with this function
 
 
 def __calc_haversine(lat1: float, long1: float, lat2: float, long2: float) -> float:
