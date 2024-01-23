@@ -13,7 +13,7 @@ def __abs_db_path(file_name: str) -> Path:
     hpath_parent = Path(__file__).parent
     return hpath_parent.joinpath(file_name)
 
-    #  thanks to sapoj for help with this function
+    # thanks to sapoj for help with this function
 
 
 def __calc_haversine(lat1: float, long1: float, lat2: float, long2: float) -> float:
@@ -49,6 +49,12 @@ def get_my_public_ip() -> Union[str, None]:
 
 
 def calc_distance(ip_address1: str, ip_address2: str) -> Union[float, None]:
+    """
+    calculates the geolocation distance between two ip addresses
+    :param ip_address1: ip_address
+    :param ip_address2: ip_address
+    :return: distance in km | None if failed
+    """
     # check if addresses are in the database
     info1 = get_info(ip_address1)
     if info1 is None:
