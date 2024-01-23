@@ -17,7 +17,7 @@ def __build_tcp_download_handshake_packet(info_hash: bytes, peer_id: bytes) -> b
     string_format = '>B19sQ20s20s'
 
     data = struct.pack(string_format,
-                       19,  # len of b'BitTorrent protocol'
+                       19,  # len of protocol name
                        b'BitTorrent protocol',  # protocol name
                        0,  # reserve 8 bytes for extensions, none will be used
                        info_hash,  # info hash of info dictionary
@@ -44,6 +44,7 @@ async def tcp_wire_communication(address: Tuple[str, int], info_hash: bytes, pee
             except asyncio.CancelledError:
                 # print('task cancelled')
                 pass
+
             finally:
                 # print("Closing the connection.")
                 writer.close()

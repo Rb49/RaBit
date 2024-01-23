@@ -1,3 +1,4 @@
+from .utils import format_announce_response
 import random
 from typing import Tuple, List, Union, Any
 import struct
@@ -42,12 +43,15 @@ def __build_connect_packet() -> bytes:
     return data
 
 
-def __build_announce_packet(connection_id: bytes, info_hash: bytes, peer_id: bytes, event: int, port: int, key: int) -> bytes:
+def __build_announce_packet(connection_id: bytes, info_hash: bytes, peer_id: bytes, downloaded: int, uploaded: int, left: int, event: int, port: int, key: int) -> bytes:
     """
     generates a udp announce packet
     :param connection_id:
     :param info_hash: info_hash of the torrent file
     :param peer_id: peer_id
+    :param uploaded: uploaded
+    :param downloaded: downloaded
+    :param left: left
     :param event: 0: none; 1: completed; 2: started; 3: stopped
     :param port: tells the tracker where the client is listening
     :param key: random key
@@ -62,52 +66,16 @@ def __build_announce_packet(connection_id: bytes, info_hash: bytes, peer_id: byt
                        random.getrandbits(32),  # transaction_id
                        info_hash,
                        peer_id,
-                       0,  # downloaded
-                       0,  # left
-                       0,  # uploaded
-                       event,
+                       downloaded,  # downloaded
+                       left,  # left
+                       uploaded,  # uploaded
+                       event,  # event
                        0,  # ip address, default is 0
                        key,  # random key
                        -1,  # num_want, default is -1 (50)
                        port)
 
     return data
-
-
-def __format_announce_response(data: bytes, ip_version: str) -> Tuple[List[Tuple[str, int]], List[Any]]:
-    """
-    formats the announce response
-    :param data: binary data received from tracker
-    :param ip_version: ip_version of tracker
-    :return: [0]: list of peers addresses (ip, port) [1]: unpacked entire data
-    """
-    # unpack data
-    format_string = '>4s4sIII'  # format of first 20 bytes
-
-    if ip_version == 'v4':
-        dynamic_format = '4sH'  # format of ipv4 and port
-        n = (len(data) - 20) // 6
-        format_string += dynamic_format * n
-        unpacked_data = list(struct.unpack(format_string, data))
-        # format ipv4 addresses from bytes
-        for i in range(0, n, 2):
-            unpacked_data[i + 5] = socket.inet_ntop(socket.AF_INET, unpacked_data[i + 5])
-
-    else:  # ip_version == 'v6'
-        dynamic_format = '16sH'
-        n = (len(data) - 20) // 18
-        format_string += dynamic_format * n
-        unpacked_data = list(struct.unpack(format_string, data))
-        # format ipv6 addresses from bytes
-        for i in range(0, n, 2):
-            unpacked_data[i + 5] = socket.inet_ntop(socket.AF_INET6, unpacked_data[i + 5])
-
-    # convert peers addresses to a separate list
-    peers = []
-    for i in range(0, n, 2):
-        peers.append((unpacked_data[i + 5], unpacked_data[i + 6]))
-
-    return peers, unpacked_data
 
 
 async def __udp_connection(request_data: bytes, address: Tuple[str, int], timeout: int) -> Union[bytes, str]:
@@ -147,16 +115,21 @@ async def __get_connection_id(tracker_address: Tuple[str, int], timeout_list: Li
     return None
 
 
-async def udp_tracker_announce(tracker_url: str, info_hash: bytes, peer_id: bytes, port: int, event: int = 0, timeout_list: List[int] = __timeouts) \
+async def udp_tracker_announce(tracker_url: str, info_hash: bytes, peer_id: bytes, uploaded: int, downloaded: int, left: int, event: int, port: int, timeout_list: List[int] = __timeouts) \
         -> Union[Tuple[List[Tuple[str, int]], List[Any]], str]:
     """
     creates an announce request to the tracker and awaits response
-    :param event: 0: none; 1: completed; 2: started; 3: stopped
-    :param port: tells the tracker where the client is listening
-    :param timeout_list: list that specifies how much time to wait before retransmission
     :param tracker_url: tracker udp url
     :param info_hash: info_hash
     :param peer_id: peer_id
+    :param uploaded: uploaded
+    :param downloaded: downloaded
+    :param left: left
+    :param event: 0: none; 1: completed; 2: started; 3: stopped
+    :param port: tells the tracker where the client is listening
+    :param timeout_list: list that specifies how much time to wait before retransmission
+
+
     :return:
     """
     tracker_addresses = __format_url(tracker_url)
@@ -173,7 +146,7 @@ async def udp_tracker_announce(tracker_url: str, info_hash: bytes, peer_id: byte
         if connection_id is None:
             return f"tracker is not reachable"
 
-        request_data = __build_announce_packet(connection_id, info_hash, peer_id, event, port, key)
+        request_data = __build_announce_packet(connection_id, info_hash, peer_id, uploaded, downloaded, left, event, port, key)
 
         for timeout in timeout_list:
 
@@ -181,7 +154,7 @@ async def udp_tracker_announce(tracker_url: str, info_hash: bytes, peer_id: byte
 
             if len(data) >= 20:
                 if request_data[12:16] == data[4:8] and request_data[8:12] == data[0:4]:  # same transaction_id and action
-                    return __format_announce_response(data, address[1])[0]
+                    return format_announce_response(data, address[1])[0]
 
         return f"tracker is not reachable"
 

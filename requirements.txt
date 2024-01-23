@@ -1,3 +1,4 @@
 bencodepy==0.9.5
 aioudp~=0.1.1
 aiohttp~=3.8.6
+yarl~=1.9.4
