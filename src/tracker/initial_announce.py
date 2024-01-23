@@ -25,10 +25,10 @@ async def get_peers_addresses(tracker_url_list: List[List[bytes]], info_hash: by
         try:
             if 'udp' in tracker_url:
                 response = await udp_tracker_announce(tracker_url, info_hash, peer_id, 0, 0, left, 2, port, timeout_list=[1, 1])  # set manual timeout_list to prevent blocking for now
-                pass
+
             elif 'http' in tracker_url:
                 response = await http_tracker_announce(tracker_url, info_hash, peer_id, 0, 0, left, 2, port)
-                pass
+
             if not isinstance(response, str):  # extend peer_list if error message is not returned
                 peers_list.extend(response[0])
 

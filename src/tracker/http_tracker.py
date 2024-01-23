@@ -40,7 +40,7 @@ async def http_tracker_announce(tracker_url: str, info_hash: bytes, peer_id: byt
     }
     params = urlencode(params)
     tracker_url = f"{tracker_url}?{params}"
-    print(tracker_url)
+
     async with aiohttp.ClientSession(headers=headers) as session:
         async with session.get(URL(tracker_url, encoded=True)) as response:
             # check if the request was successful (HTTP status code 200)
