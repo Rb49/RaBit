@@ -115,7 +115,7 @@ async def __get_connection_id(tracker_address: Tuple[str, int], timeout_list: Li
     return None
 
 
-async def udp_tracker_announce(tracker_url: str, info_hash: bytes, peer_id: bytes, uploaded: int, downloaded: int, left: int, event: int, port: int, timeout_list: List[int] = __timeouts) \
+async def udp_tracker_announce(tracker_url: str, info_hash: bytes, peer_id: bytes, downloaded: int, uploaded: int, left: int, event: int, port: int, timeout_list: List[int] = __timeouts) \
         -> Union[Tuple[List[Tuple[str, int]], List[Any]], str]:
     """
     creates an announce request to the tracker and awaits response
@@ -146,7 +146,7 @@ async def udp_tracker_announce(tracker_url: str, info_hash: bytes, peer_id: byte
         if connection_id is None:
             return f"tracker is not reachable"
 
-        request_data = __build_announce_packet(connection_id, info_hash, peer_id, uploaded, downloaded, left, event, port, key)
+        request_data = __build_announce_packet(connection_id, info_hash, peer_id, downloaded, uploaded, left, event, port, key)
 
         for timeout in timeout_list:
 

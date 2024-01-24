@@ -29,11 +29,11 @@ async def get_peers_addresses(tracker_url_list: List[List[bytes]], info_hash: by
             elif 'http' in tracker_url:
                 response = await http_tracker_announce(tracker_url, info_hash, peer_id, 0, 0, left, 2, port)
 
-            if not isinstance(response, str):  # extend peer_list if error message is not returned
+            if not isinstance(response, str):  # extend peer_list if an error message is not returned
                 peers_list.extend(response[0])
 
         except Exception as e:
-            print(e)
+            # print(e)
             pass
 
         return

@@ -8,7 +8,7 @@ import aiohttp
 from yarl import URL
 
 
-async def http_tracker_announce(tracker_url: str, info_hash: bytes, peer_id: bytes, uploaded: int, downloaded: int,
+async def http_tracker_announce(tracker_url: str, info_hash: bytes, peer_id: bytes, downloaded: int, uploaded: int,
                                 left: int, event: int, port: int) -> Union[
     Tuple[List[Tuple[Any, Any]], Iterable], Tuple[None, Iterable], str]:
     """
