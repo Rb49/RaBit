@@ -3,11 +3,22 @@ from math import radians, cos, sin, atan2, sqrt
 from typing import Tuple, Union
 import requests
 from pathlib import Path
+import json
+
+
+__database_path = 'GeoLite2-City.mmdb'
+__banned_json = 'banned_countries.json'
+
+
+def get_banned_countries():
+    with open(__abs_db_path(__banned_json), 'r') as json_file:
+        banned_list = json.load(json_file)
+        return banned_list
 
 
 def __abs_db_path(file_name: str) -> Path:
     """
-    computes the absolute path of the db (based on this root dir)
+    computes the absolute path of the file (based on this root dir)
     :return: absolute path
     """
     hpath_parent = Path(__file__).parent
@@ -72,7 +83,7 @@ def get_info(ip_address: str) -> Union[Tuple[str, str, float, float], None]:
     :param ip_address: ip_address
     :return: tuple: city, country, latitude, longitude | None if failed
     """
-    with database.Reader(__abs_db_path('GeoLite2-City.mmdb')) as reader:
+    with database.Reader(__abs_db_path(__database_path)) as reader:
         try:
             response = reader.city(ip_address)
             city = response.city.name
