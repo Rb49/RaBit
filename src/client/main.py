@@ -32,21 +32,21 @@ async def main() -> None:
         """
         formats the peers' list received from the trackers
         :param my_ip: my ip address
-        :type peers: formatted peer list: [0]: address [1]: geolocation info
+        :type peers: formatted peer list: [0]: address [1]: geolocation info [2]: distance from me
         """
         for i in range(len(peers)):
-            peers[i] = peers[i], (get_info(peers[i][0]))
+            peers[i] = [peers[i], (get_info(peers[i][0]))]
+            peers[i].append(calc_distance(peers[i][0][0], my_ip))
 
         # remove peers from banned countries
         banned_list = get_banned_countries()
         peers = list(filter(lambda x: x[1][1] not in banned_list, peers))
 
-        # remove peers with distance 0 (me)
-        distances = [(peer, calc_distance(peer[0][0], ip)) for peer in peers]
-        filtered_peers = [peer for peer, distance in distances if distance > 0]
+        # remove peers with distance 0 (could be me)
+        filtered_peers = list(filter(lambda x: x[2] > 0, peers))
 
         # sort by distance
-        sorted_peers = sorted(filtered_peers, key=lambda x: distances[filtered_peers.index(x)][1])
+        sorted_peers = sorted(filtered_peers, key=lambda x: x[2])
 
         # new peer structure: [0]: address. [1]: city, country, latitude, longitude
         return sorted_peers
