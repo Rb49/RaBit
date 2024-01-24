@@ -1,6 +1,33 @@
+from src.geolocation.utils import calc_distance, get_info, get_banned_countries, get_my_public_ip
 import struct
 import socket
 from typing import Tuple, List, Any, Union
+
+
+def format_peers_list(peers: List[Tuple[str, int]]) -> List[Tuple[Tuple[str, int], List[str]]]:
+    """
+    formats the peers' list received from the trackers
+    Note: blocking function!
+    :param peers: peers list from a trackers
+    :return: formatted peer list: [0]: address [1]: geolocation info [2]: distance from me
+    """
+    my_ip = get_my_public_ip()
+    # some formatting
+    for i in range(len(peers)):
+        peers[i] = peers[i], (get_info(peers[i][0])), calc_distance(peers[i][0], my_ip)
+
+    # remove peers from banned countries
+    banned_list = get_banned_countries()
+    peers = list(filter(lambda x: x[1][1] not in banned_list, peers))
+
+    # remove peers with distance 0 (could be me)
+    filtered_peers = list(filter(lambda x: x[2] > 0, peers))
+
+    # sort by distance
+    sorted_peers = sorted(filtered_peers, key=lambda x: x[2])
+
+    # new peer structure: [0]: address. [1]: city, country, latitude, longitude. [2]: distance from me
+    return sorted_peers
 
 
 def format_announce_response(data: bytes, ip_version: str, format_string: str = '>4s4sIII', header_length: int = 20) -> Tuple[List[Any], Union[None, str]]:
