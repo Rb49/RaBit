@@ -1,30 +1,34 @@
-from src.geolocation.utils import calc_distance, get_info, get_banned_countries, get_my_public_ip
+from src.geolocation.utils import calc_distance, get_info, get_banned_countries
 import struct
 import socket
 from typing import Tuple, List, Any, Union
+from math import inf as INF
 
 
-def format_peers_list(peers: List[Tuple[str, int]]) -> List[Tuple[Tuple[str, int], List[str]]]:
+def format_peers_list(peers: List[Tuple[str, int]], my_ip: str) -> List[Tuple[Tuple[str, int], None, None]]:
     """
     formats the peers' list received from the trackers
     Note: blocking function!
     :param peers: peers list from a trackers
+    :param my_ip: my public ip for geolocation calculations
     :return: formatted peer list: [0]: address [1]: geolocation info [2]: distance from me
     """
-    my_ip = get_my_public_ip()
+    if my_ip is None:
+        return [(addr, None, None) for addr in peers]
+
     # some formatting
     for i in range(len(peers)):
         peers[i] = peers[i], (get_info(peers[i][0])), calc_distance(peers[i][0], my_ip)
 
     # remove peers from banned countries
     banned_list = get_banned_countries()
-    peers = list(filter(lambda x: x[1][1] not in banned_list, peers))
+    peers = list(filter(lambda x: x[1][1] if x[1] is not None else '' not in banned_list, peers))
 
     # remove peers with distance 0 (could be me)
-    filtered_peers = list(filter(lambda x: x[2] > 0, peers))
+    filtered_peers = list(filter(lambda x: x[2] > 0 if x[2] is not None else True, peers))
 
     # sort by distance
-    sorted_peers = sorted(filtered_peers, key=lambda x: x[2])
+    sorted_peers = sorted(filtered_peers, key=lambda x: x[2] if x[2] is not None else INF)
 
     # new peer structure: [0]: address. [1]: city, country, latitude, longitude. [2]: distance from me
     return sorted_peers

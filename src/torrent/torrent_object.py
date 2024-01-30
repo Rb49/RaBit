@@ -4,7 +4,7 @@ from typing import Optional, List, Union
 
 
 @dataclass
-class TorrentObject(object):
+class Torrent(object):
     """
     object to store attributes from the torrent file
     """
@@ -17,9 +17,10 @@ class TorrentObject(object):
 
     announce: Optional[bytes] = None  # tracker
     comment: Optional[Union[bytes, None]] = None  # comment added by uploader, optional
+    created_by: Optional[Union[bytes, None]] = None  # added by uploader, optional
+    date_created: Optional[Union[bytes, None]] = None  # added by uploader, optional
 
     # other extensions to the protocol
-    nodes: Optional[list] = None  # support distributed hash tables
     announce_list: Optional[list] = None  # support of multiple trackers
-    http_seeds: Optional[list] = None  # support http seeds to retrieve torrent file and later support https
+    nodes: Optional[list] = None  # support distributed hash tables
     private: Optional[bool] = False  # if 'private' key in 'info' dict is 1 (private torrent)

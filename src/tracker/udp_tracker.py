@@ -89,7 +89,8 @@ async def __udp_connection(request_data: bytes, address: Tuple[str, int], timeou
     except asyncio.TimeoutError:
         return 'connection timeout'
     except Exception as e:
-        raise e
+        # raise e
+        pass
 
 
 async def __get_connection_id(tracker_address: Tuple[str, int], timeout_list: List[int] = __timeouts) -> Union[bytes, None]:
@@ -128,8 +129,6 @@ async def udp_tracker_announce(tracker_url: str, info_hash: bytes, peer_id: byte
     :param event: 0: none; 1: completed; 2: started; 3: stopped
     :param port: tells the tracker where the client is listening
     :param timeout_list: list that specifies how much time to wait before retransmission
-
-
     :return:
     """
     tracker_addresses = __format_url(tracker_url)
@@ -139,7 +138,7 @@ async def udp_tracker_announce(tracker_url: str, info_hash: bytes, peer_id: byte
     # generate only one random key to follow protocol
     key = random.getrandbits(32)
 
-    async def announce(address: Tuple[Tuple[str, int], str]):
+    async def _announce(address: Tuple[Tuple[str, int], str]):
 
         # build the announce packet
         connection_id = await __get_connection_id(address[0], timeout_list)
@@ -161,7 +160,7 @@ async def udp_tracker_announce(tracker_url: str, info_hash: bytes, peer_id: byte
     # iterate over every address this tracker has
     lst = [[]]
     for address in tracker_addresses:
-        peers = await announce(address)
+        peers = await _announce(address)
         if isinstance(peers, str):
             return peers
         else:

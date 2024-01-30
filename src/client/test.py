@@ -1,6 +1,5 @@
-def main():
-    pass
+import bitstring
+import requests
 
-
-if __name__ == "__main__":
-    main()
+s = requests.get('https://api.ipify.org', timeout=2).content.decode('utf8')
+print(s)

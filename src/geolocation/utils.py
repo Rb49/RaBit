@@ -53,7 +53,7 @@ def get_my_public_ip() -> Union[str, None]:
     :return: ip address | None is failed
     """
     try:
-        return requests.get('https://api.ipify.org').content.decode('utf8')
+        return requests.get('https://api.ipify.org', timeout=2).content.decode('utf8')
     except Exception as e:
         # print(e)
         return None

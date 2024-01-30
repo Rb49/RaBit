@@ -1,11 +1,11 @@
 import bencodepy
-from .torrent_object import TorrentObject
+from .torrent_object import Torrent
 from hashlib import sha1
 import random
 import string
 
 
-def read_torrent(path: str) -> TorrentObject:
+def read_torrent(path: str) -> Torrent:
     """
     function to read a torrent file into a torrent file object
     :param path: path of torrent file
@@ -19,13 +19,16 @@ def read_torrent(path: str) -> TorrentObject:
 
     # create a Torrent instance
     # need to add support for distributed torrents and magnet links, non multi-file torrents and no announcers
-    torrent_data = TorrentObject(info=content.get(b'info'),
+    torrent_data = Torrent(info=content.get(b'info'),
                                  info_hash=None,
                                  piece_hashes=None,
                                  peer_id=None,
                                  announce=content.get(b'announce'),
                                  comment=content.get(b'comment'),
-                                 announce_list=content.get(b'announce-list'))
+                                 created_by=content.get(b'created by'),
+                                 date_created=content.get(b'date created'),
+                                 announce_list=content.get(b'announce-list'),
+                                 nodes=content.get(b'nodes'))
 
     # set info_hash, piece_hashes and peer_id:
     # hashes are in sha1, 20 bytes long
@@ -37,6 +40,7 @@ def read_torrent(path: str) -> TorrentObject:
     torrent_data.info_hash = sha1_hash
 
     # Azureus - style peer id encoding: RB - client ;), 1000 - version 1 : 8 bytes. random 12 alphanumeric bytes
-    torrent_data.peer_id = b'-RB1000-' + ''.join(random.choice(string.ascii_letters + string.digits) for _ in range(12)).encode()
+    torrent_data.peer_id = b'-RB1000-' + ''.join(
+        random.choice(string.ascii_letters + string.digits) for _ in range(12)).encode()
 
     return torrent_data

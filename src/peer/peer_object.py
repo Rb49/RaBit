@@ -1,16 +1,26 @@
+from src.torrent.torrent_object import Torrent
 from typing import Optional, List, Union, Tuple
+import bitstring
 
 
-class PeerObject(object):
+class Peer(object):
     """
     object to store attributes of a peer and some stats
     """
 
-    def __init__(self, address: Tuple[str, int]):
+    def __init__(self, TorrentData: Torrent, address: Tuple[str, int], peer_id: bytes = None):
+        self.torrent = TorrentData
+
         self.address = address
 
         self.is_chocked = True
         self.am_interested = False
+
+        self.have_pieces = bitstring.BitArray(bin='0' * len(self.torrent.piece_hashes))
+        self.peer_id = peer_id
+        self.downloaded = 0
+        self.uploaded = 0
+
 
 
 """
