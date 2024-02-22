@@ -23,6 +23,7 @@ async def http_tracker_announce(tracker_url: str, info_hash: bytes, peer_id: byt
     :param port: tells the tracker where the client is listening
     :return: str: error message | list: decoded response of the tracker in form of (ip, port), OrderedDict: entire response
     """
+    events = ['none', 'completed', 'started', 'stopped']
 
     headers = {
         'User-Agent': 'rbTorrent v1.0'
@@ -34,7 +35,7 @@ async def http_tracker_announce(tracker_url: str, info_hash: bytes, peer_id: byt
         'uploaded': uploaded,
         'downloaded': downloaded,
         'left': left,
-        'event': event,
+        'event': events[event],
         'port': port,
         'no_peer_id': 1
     }
