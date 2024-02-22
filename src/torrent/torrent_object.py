@@ -24,3 +24,7 @@ class Torrent(object):
     announce_list: Optional[list] = None  # support of multiple trackers
     nodes: Optional[list] = None  # support distributed hash tables
     private: Optional[bool] = False  # if 'private' key in 'info' dict is 1 (private torrent)
+
+    # download/upload stats
+    downloaded: int = 0
+    uploaded: int = 0
