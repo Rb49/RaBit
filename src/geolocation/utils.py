@@ -11,6 +11,7 @@ __banned_json = 'banned_countries.json'
 
 
 def get_banned_countries():
+    # TODO move the function and json to a single config file
     with open(__abs_db_path(__banned_json), 'r') as json_file:
         banned_list = json.load(json_file)
         return banned_list
