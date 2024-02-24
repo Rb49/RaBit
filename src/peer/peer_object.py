@@ -30,8 +30,8 @@ class Peer(object):
         self.last_data_sent = time.time()
 
         self.peer_id = None
-        self.download_rate = 0  # in KiB
-        self.upload_rate = 0  # in KiB
+        self.download_rate = 0  # in KiB/s
+        self.upload_rate = 0  # in KiB/s
 
         self.geodata = geodata
         self.client = None
