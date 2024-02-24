@@ -1,3 +1,3 @@
-# rbTorrent
+# RaBit
 a torrent client
 
