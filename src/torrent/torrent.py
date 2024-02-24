@@ -40,7 +40,6 @@ def read_torrent(path: str) -> Torrent:
     torrent_data.info_hash = sha1_hash
 
     # Azureus - style peer id encoding: RB - client ;), 1000 - version 1 : 8 bytes. random 12 alphanumeric bytes
-    torrent_data.peer_id = b'-RB1000-' + ''.join(
-        random.choice(string.ascii_letters + string.digits) for _ in range(12)).encode()
+    torrent_data.peer_id = b'-RB1000-' + ''.join(random.choice(string.ascii_letters + string.digits) for _ in range(12)).encode()
 
     return torrent_data
