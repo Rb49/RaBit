@@ -4,9 +4,6 @@ import time
 from typing import Tuple
 import bitstring
 
-# TODO add dynamic pipelining based on performance
-MAX_PIPELINE_SIZE = 5  # 5 is default
-
 
 class Peer(object):
     """
@@ -16,6 +13,7 @@ class Peer(object):
     def __init__(self, TorrentData: Torrent, address: Tuple[str, int], geodata: Tuple[str, str, float, float]):
         self.torrent = TorrentData
 
+        self.MAX_PIPELINE_SIZE = 5  # 5 is default
         self.address = address
 
         self.is_chocked = True
@@ -29,11 +27,37 @@ class Peer(object):
         self.endgame_received = None
         self.endgame_queue = []
 
-        self.last_seen = time.time()
+        self.last_data_sent = time.time()
 
         self.peer_id = None
-        self.downloaded = 0
-        self.uploaded = 0
+        self.download_rate = 0  # in KiB
+        self.upload_rate = 0  # in KiB
 
         self.geodata = geodata
         self.client = None
+
+    def update_download_rate(self, len_bytes_sent: int):
+        if self.is_in_endgame:
+            self.MAX_PIPELINE_SIZE = 1
+            return
+
+        rn = time.time()
+        if (dt := rn - self.last_data_sent) < 1:
+            return
+
+        rate = (len_bytes_sent / 1024) / dt
+        # update pipeline size using rtorrent algorithm
+        if rate < 20:
+            self.MAX_PIPELINE_SIZE = rate + 2
+        else:
+            self.MAX_PIPELINE_SIZE = rate / 5 + 18
+        self.last_data_sent = rn
+        self.download_rate = rate
+        # print(rate)
+
+
+
+
+
+
+

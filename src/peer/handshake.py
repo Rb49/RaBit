@@ -3,7 +3,7 @@ import math
 
 from src.torrent.torrent_object import Torrent
 from .endgame import EndgameManager
-from .peer_object import Peer, MAX_PIPELINE_SIZE
+from .peer_object import Peer
 from src.file.data_structures import Block
 from .utils import *
 
@@ -42,7 +42,6 @@ async def tcp_wire_communication(peerData: Tuple, TorrentData: Torrent, pieces_d
                 assert peer_id
 
                 thisPeer.peer_id = peer_id
-                thisPeer.last_seen = time.time()
 
                 # send interested
                 writer.write(struct.pack('>IB', 1, 2))
@@ -58,11 +57,9 @@ async def tcp_wire_communication(peerData: Tuple, TorrentData: Torrent, pieces_d
                     data = await reader.read(__BUFFER_SIZE)
                     buffer += data
                     if not data and not buffer:
-                        print('breaking', address, city)
-                        break
-
-                    if data:
-                        thisPeer.last_seen = time.time()
+                        ...
+                        # print('breaking', address, city)
+                        # break
 
                     length = struct.unpack('>I', buffer[0:4])[0] + 4
                     if length == 4:  # keepalive, ignore
@@ -106,9 +103,11 @@ async def tcp_wire_communication(peerData: Tuple, TorrentData: Torrent, pieces_d
 
                     elif msg[4] == 7:  # piece
                         _, _, index, begin, data = struct.unpack(f'>IBII{length - 13}s', msg)
-                        # update stats in objects
+                        # update stats of torrent
                         TorrentData.downloaded += len(data)
-                        thisPeer.downloaded += len(data)
+
+                        # update pipeline size
+                        thisPeer.update_download_rate(len(data))
 
                         # check if I want this block?
                         for block in thisPeer.pipelined_requests:
@@ -178,7 +177,7 @@ async def tcp_wire_communication(peerData: Tuple, TorrentData: Torrent, pieces_d
 
                     # NOT IN ENDGAME MODE
                     if not thisPeer.is_in_endgame:
-                        while not thisPeer.is_chocked and len(thisPeer.pipelined_requests) < MAX_PIPELINE_SIZE:
+                        while not thisPeer.is_chocked and len(thisPeer.pipelined_requests) < thisPeer.MAX_PIPELINE_SIZE:
                             request: None = None
                             if not failed_queue.empty():
                                 request: Block = await failed_queue.get()
@@ -228,7 +227,7 @@ async def tcp_wire_communication(peerData: Tuple, TorrentData: Torrent, pieces_d
                         print(Endgame.endgame_status, thisPeer.peer_id, len(thisPeer.endgame_queue))
 
                         # send requests from endgame queue
-                        while thisPeer.is_chocked is False and len(thisPeer.pipelined_requests) < MAX_PIPELINE_SIZE and thisPeer.endgame_queue:
+                        while thisPeer.is_chocked is False and len(thisPeer.pipelined_requests) < thisPeer.MAX_PIPELINE_SIZE and thisPeer.endgame_queue:
                             if not failed_queue.empty():
                                 request: Block = await failed_queue.get()
                             else:
@@ -245,7 +244,7 @@ async def tcp_wire_communication(peerData: Tuple, TorrentData: Torrent, pieces_d
                             thisPeer.pipelined_requests.insert(0, request)
                             # update this peer tracking
                             thisPeer.endgame_sent[endgame_blocks.index(request)] = True
-                        print('hii')
+                        # print('hii')
                         # send cancels, without checking the pipeline limit
                         """
                         EXAMPLE:
@@ -256,7 +255,7 @@ async def tcp_wire_communication(peerData: Tuple, TorrentData: Torrent, pieces_d
                         need to send cancel for blocks that were received not by me but have been requested by me
                         """
                         bitarray = Endgame.endgame_status & thisPeer.endgame_sent & (~thisPeer.endgame_received)
-                        print(Endgame.endgame_status, thisPeer.endgame_sent, (~thisPeer.endgame_received))
+                        # print(Endgame.endgame_status, thisPeer.endgame_sent, (~thisPeer.endgame_received))
                         for bit in bitarray:
                             if bit:
                                 cancel: Block = endgame_blocks[bit]

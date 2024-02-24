@@ -40,5 +40,6 @@ def validate_handshake(data: bytes, info_hash1: bytes):
 async def put_back_requests(peer: Peer, failed_queue: asyncio.Queue, endgame_blocks: List[Block]):
     while peer.pipelined_requests:
         if (block := peer.pipelined_requests.pop()) not in endgame_blocks:
+            block.time_requested = 0
             await failed_queue.put(block)
 
