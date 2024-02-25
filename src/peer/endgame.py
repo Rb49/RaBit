@@ -19,13 +19,17 @@ class EndgameManager(object):
 
     async def enable_endgame(self, pieces_dict: Dict) -> bool:
         if self.endgame:
-            return False
+            return True
 
         async with self.Lock:
             for piece in pieces_dict.values():
                 for index, block in enumerate(piece.data):
                     if not piece.blocks_available[index]:
                         self.blocks_list.append(block)
+
+            if len(self.blocks_list) > 20:
+                self.blocks_list = []
+                return False
 
             self.endgame = True
             self.endgame_status = bitstring.BitArray(bin='0' * len(self.blocks_list))

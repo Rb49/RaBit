@@ -9,6 +9,7 @@ class Peer(object):
     """
     object to store attributes of a peer and some stats
     """
+    endgame_ready = []
 
     def __init__(self, TorrentData: Torrent, address: Tuple[str, int], geodata: Tuple[str, str, float, float]):
         self.torrent = TorrentData
@@ -20,7 +21,11 @@ class Peer(object):
         self.am_interested = False
 
         self.have_pieces = bitstring.BitArray(bin='0' * len(self.torrent.piece_hashes))
+        self.is_seed = False
         self.pipelined_requests = []
+
+        self.standing_by = False
+        Peer.endgame_ready.append(self.standing_by)
 
         self.is_in_endgame = False
         self.endgame_sent = None
@@ -30,6 +35,8 @@ class Peer(object):
         self.last_data_sent = time.time()
 
         self.peer_id = None
+        self.downloaded = 0  # in bytes
+        self.uploaded = 0  # in bytes
         self.download_rate = 0  # in KiB/s
         self.upload_rate = 0  # in KiB/s
 
@@ -41,6 +48,7 @@ class Peer(object):
             self.MAX_PIPELINE_SIZE = 1
             return
 
+        self.downloaded += len_bytes_sent
         rn = time.time()
         if (dt := rn - self.last_data_sent) < 1:
             return
@@ -52,9 +60,24 @@ class Peer(object):
         else:
             self.MAX_PIPELINE_SIZE = rate / 5 + 18
         self.last_data_sent = rn
+        self.downloaded = 0
         self.download_rate = rate
         # print(rate)
 
+    def toggle_endgame_ready(self):
+        if self.standing_by:
+            Peer.endgame_ready.remove(True)
+            self.standing_by = False
+            Peer.endgame_ready.append(False)
+            return False
+        else:
+            Peer.endgame_ready.remove(False)
+            self.standing_by = True
+            Peer.endgame_ready.append(True)
+            return True
+
+    def __del__(self):
+        Peer.endgame_ready.remove(self.standing_by)
 
 
 

@@ -30,8 +30,8 @@ class BetterQueue(queue.Queue):
 
 async def main() -> None:
     # path for test torrent file
-    # test_path = "Young.Sheldon.S07E01.HDTV.x264-TORRENTGALAXY.torrent"
-    test_path = "debian-edu-12.4.0-amd64-netinst.iso.torrent"
+    test_path = "Coding with AI For Dummies by Chris Minnick PDF.torrent"
+    # test_path = "debian-edu-12.4.0-amd64-netinst.iso.torrent"
     # test_path = "The.Hunger.Games.The.Ballad.of.Songbirds.and.Snakes.2023.2160p.WEB-DL.DDP5.1.Atmos.DV.HDR.H.265-FLUX[TGx].torrent"
     test_path = "././data/" + test_path
 
