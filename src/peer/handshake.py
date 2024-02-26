@@ -17,7 +17,7 @@ import threading
 from random import shuffle
 
 __BUFFER_SIZE = 4096
-__MAX_TIMEOUT = 1000000000000000
+__MAX_TIMEOUT = 10
 
 
 async def tcp_wire_communication(peerData: Tuple, TorrentData: Torrent, pieces_dict: Dict, failed_queue: asyncio.Queue, results_queue, Endgame: EndgameManager):
