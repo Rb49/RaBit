@@ -1,39 +1,26 @@
 from typing import Dict
 
-from src.file.data_structures import Piece
 from src.torrent.torrent import read_torrent
 from src.tracker.announce import announce
 from src.tracker.utils import format_peers_list
-from src.peer.handshake import tcp_wire_communication
-from src.geolocation.utils import get_my_public_ip
-from src.peer.endgame import EndgameManager
+from src.geoip.utils import get_my_public_ip
+from src.download.piece_picker import PiecePicker
+from src.peer.peer_communication import tcp_wire_communication
+from src.file.file_object import File
+import threading
 
 import asyncio
 import queue
 from random import shuffle
 
 
-class BetterQueue(queue.Queue):
-    def __init__(self, maxsize: int = 0):
-        super().__init__(maxsize)
-        self.size = 0
-
-    def put(self, item, block=True, timeout=None):
-        super().put(item, block, timeout)
-        self.size += 1
-
-    def get(self, block=True, timeout=None):
-        item = super().get(block, timeout)
-        self.size -= 1
-        return item
-
-
 async def main() -> None:
     # path for test torrent file
-    test_path = "Coding with AI For Dummies by Chris Minnick PDF.torrent"
-    # test_path = "debian-edu-12.4.0-amd64-netinst.iso.torrent"
-    # test_path = "The.Hunger.Games.The.Ballad.of.Songbirds.and.Snakes.2023.2160p.WEB-DL.DDP5.1.Atmos.DV.HDR.H.265-FLUX[TGx].torrent"
-    test_path = "././data/" + test_path
+    # torrent_name = "Coding with AI For Dummies by Chris Minnick PDF.torrent"
+    torrent_name = "debian-edu-12.4.0-amd64-netinst.iso.torrent"
+    # torrent_name = "Young.Sheldon.S07E01.HDTV.x264-TORRENTGALAXY.torrent"
+    # torrent_name = "The.Hunger.Games.The.Ballad.of.Songbirds.and.Snakes.2023.2160p.WEB-DL.DDP5.1.Atmos.DV.HDR.H.265-FLUX[TGx].torrent"
+    test_path = "././data/" + torrent_name
 
     # read torrent file
     TorrentData = read_torrent(test_path)
@@ -50,20 +37,18 @@ async def main() -> None:
     # --------
 
     # peer wire protocol
+    piece_picker = PiecePicker(TorrentData)
 
-    # TODO changing BLOCK_SIZE changes downloading speed!
-    pieces_list = [Piece(TorrentData, index) for index in range(len(TorrentData.piece_hashes))]
-    shuffle(pieces_list)
-    pieces_dict = {piece.piece_index: piece for piece in pieces_list}
+    # start disk IO thread
+    file = File(TorrentData, piece_picker, piece_picker.results_queue, '././results/', False)
+    disk_loop = await asyncio.to_thread(file.save_pieces_loop)
 
-    failed_queue = asyncio.Queue()  # queue where the peers will take jobs
-    results_queue = BetterQueue()  # where the results will be collected
+    # TODO better peer management
+    # TODO run a peer reputation db and reconnect to good peers if needed
+    work = [tcp_wire_communication(peer, TorrentData, piece_picker) for peer in peers_list]
+    await asyncio.gather(disk_loop, *work)
 
-    Endgame = EndgameManager()
-
-    await asyncio.gather(*[tcp_wire_communication(peer, TorrentData, pieces_dict, failed_queue, results_queue, Endgame) for peer in peers_list])
-
-    print('final: ', len(pieces_dict))
+    print('final: ', piece_picker.num_of_pieces_left)
     return
 
 
@@ -75,4 +60,5 @@ if __name__ == '__main__':
     # t = threading.Thread(target=lambda: asyncio.run(main()), daemon=True)
     # t.start()
     # t.join()
+
     asyncio.run(main())
