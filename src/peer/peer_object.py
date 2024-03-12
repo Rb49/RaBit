@@ -1,7 +1,7 @@
 from src.torrent.torrent_object import Torrent
 
 import time
-from typing import Tuple
+from typing import Tuple, List, Set
 import bitstring
 
 
@@ -9,48 +9,42 @@ class Peer(object):
     """
     object to store attributes of a peer and some stats
     """
-    endgame_ready = []
+    MAX_ENDGAME_PIPELINE = 2
+    peer_instances: List = []
 
     def __init__(self, TorrentData: Torrent, address: Tuple[str, int], geodata: Tuple[str, str, float, float]):
+        Peer.peer_instances.append(self)
+
         self.torrent = TorrentData
 
-        self.MAX_PIPELINE_SIZE = 5  # 5 is default
+        self.MAX_PIPELINE_SIZE = 10  # 10 is default
         self.address = address
 
-        self.is_chocked = True
-        self.am_interested = False
+        self.is_chocked = True  # am I chocked?
+        # self.is_interested = True  # am I interested in what the peer offers? always true on download
+        self.am_chocked = True  # have I chocked the peer?
+        self.am_interested = False  # is the peer interested in what I offer?
 
         self.have_pieces = bitstring.BitArray(bin='0' * len(self.torrent.piece_hashes))
         self.is_seed = False
         self.pipelined_requests = []
 
-        self.standing_by = False
-        Peer.endgame_ready.append(self.standing_by)
-
-        self.is_in_endgame = False
-        self.endgame_sent = None
-        self.endgame_received = None
-        self.endgame_queue = []
+        self.have_msg_sent: Set = set()
+        self.endgame_cancel_msg_sent: Set = set()
 
         self.last_data_sent = time.time()
 
-        self.peer_id = None
-        self.downloaded = 0  # in bytes
-        self.uploaded = 0  # in bytes
         self.download_rate = 0  # in KiB/s
         self.upload_rate = 0  # in KiB/s
 
         self.geodata = geodata
+        self.peer_id = None
         self.client = None
 
     def update_download_rate(self, len_bytes_sent: int):
-        if self.is_in_endgame:
-            self.MAX_PIPELINE_SIZE = 1
-            return
-
-        self.downloaded += len_bytes_sent
+        # idk how but this function generates ridiculously incredible downloading on account of cpu usage
         rn = time.time()
-        if (dt := rn - self.last_data_sent) < 1:
+        if (dt := rn - self.last_data_sent) < 0.05:
             return
 
         rate = (len_bytes_sent / 1024) / dt
@@ -59,28 +53,9 @@ class Peer(object):
             self.MAX_PIPELINE_SIZE = rate + 2
         else:
             self.MAX_PIPELINE_SIZE = rate / 5 + 18
-        self.last_data_sent = rn
-        self.downloaded = 0
-        self.download_rate = rate
-        # print(rate)
 
-    def toggle_endgame_ready(self):
-        if self.standing_by:
-            Peer.endgame_ready.remove(True)
-            self.standing_by = False
-            Peer.endgame_ready.append(False)
-            return False
-        else:
-            Peer.endgame_ready.remove(False)
-            self.standing_by = True
-            Peer.endgame_ready.append(True)
-            return True
+        self.last_data_sent = rn
+        self.download_rate = rate
 
     def __del__(self):
-        Peer.endgame_ready.remove(self.standing_by)
-
-
-
-
-
-
+        Peer.peer_instances.remove(self)
