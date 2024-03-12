@@ -5,4 +5,3 @@ aiohttp~=3.8.6
 yarl~=1.9.3
 requests~=2.31.0
 geoip2~=4.7.0
-aiofiles~=22.1.0
