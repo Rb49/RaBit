@@ -1,47 +1,57 @@
-from src.file.data_structures import Piece
+from src.download.data_structures import DownloadingPiece
+from src.download.piece_picker import BetterQueue, PiecePicker
 from src.torrent.torrent_object import Torrent
 
 import asyncio
 from hashlib import sha1
 from typing import Dict, List
-import aiofiles
+import threading
+import os
 
 
 class File(object):
-    def __init__(self, TorrentData: Torrent, pieces: List[Piece], path: str, skip_hash_check: bool = False):
+    def __init__(self, TorrentData: Torrent, piece_picker: PiecePicker, results_queue: BetterQueue, path: str, skip_hash_check: bool = False):
         self.TorrentData = TorrentData
-        self.pieces = pieces
-        self.path = path
+        self.results_queue = results_queue
+        self.file_name = path + TorrentData.info[b'name'].decode('utf-8')
+        self.fd = os.open(self.file_name, os.O_RDWR | os.O_CREAT)
         self.skip_hash_check = skip_hash_check
+        self.piece_picker = piece_picker
 
-    async def alloc(self):
-        async with aiofiles.open(self.path, 'wb') as file:
-            await file.seek(self.TorrentData.info[b'piece length'] * len(self.TorrentData.piece_hashes))
-            await file.write(b'\0')
+    async def save_pieces_loop(self):
+        while True:
+            if self.piece_picker.num_of_pieces_left == 0:
+                quit()
 
-    async def save_piece(self, piece: Piece, piece_dict: Dict) -> int:
-        # hash check
-        piece_hash = piece.get_hash
-        torrent_piece_hash = sha1(self.TorrentData.piece_hashes[piece.piece_index])
-        torrent_piece_hash = torrent_piece_hash.digest()
+            with threading.Lock():
+                piece: DownloadingPiece = await self.results_queue.get()
 
-        if not self.skip_hash_check:
-            if piece_hash != torrent_piece_hash:
-                print('received corrupted piece ', piece.piece_index)
+            # hash check
+            data = piece.get_data
+            piece_hash = sha1(data).digest()
+            torrent_piece_hash = self.TorrentData.piece_hashes[piece.index]
 
-                async with asyncio.Lock():
-                    piece_dict[piece.piece_index] = Piece(self.TorrentData, piece.piece_index)
+            if not self.skip_hash_check:
+                if piece_hash != torrent_piece_hash:
+                    # TODO create corrupt pieces and blocks instances and remember the addresses of senders
+                    print('received corrupted piece ', piece.index)
 
-                piece.free()
-                return -1
+                    # TODO what happens if the last piece is found corrupted while in endgame mode?
+                    piece.reset()
+                    await self.piece_picker.add_failed_piece(piece)
 
-        # save to file
-        async with aiofiles.open(self.path, 'wb') as file:
-            writing_begin_index = self.TorrentData.info[b'piece length'] * piece.piece_index
-            await file.seek(writing_begin_index)
-            await file.write(piece.get_data)
+                    continue
 
-        # TODO send 'Have' messages to all peers uploading to (using queue.Queue() with threading lock)
+            print("\033[90m{}\033[00m".format(f'got piece. {round((1 - self.piece_picker.num_of_pieces_left / len(self.TorrentData.piece_hashes)) * 100, 2)}%'))
 
-        piece.free()
-        return 0
+            writing_begin_index = self.TorrentData.info[b'piece length'] * piece.index
+            os.lseek(self.fd, writing_begin_index, os.SEEK_SET)
+            os.write(self.fd, data)
+
+            # TODO send 'Have' messages to all peers uploading to (using queue.Queue() with threading lock)
+
+            self.piece_picker.num_of_pieces_left -= 1
+            piece.reset()
+
+    def __del__(self):
+        os.close(self.fd)
