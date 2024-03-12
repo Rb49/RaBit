@@ -8,9 +8,8 @@ import aiohttp
 from yarl import URL
 
 
-async def http_tracker_announce(tracker_url: str, info_hash: bytes, peer_id: bytes, downloaded: int, uploaded: int,
-                                left: int, event: int, port: int) -> Union[
-    Tuple[List[Tuple[Any, Any]], Iterable], Tuple[None, Iterable], str]:
+async def http_tracker_announce(tracker_url: str, info_hash: bytes, peer_id: bytes, downloaded: int, uploaded: int, left: int, event: int, port: int) \
+        -> Union[Tuple[List[Tuple[Any, Any]], Iterable], Tuple[None, Iterable], str]:
     """
     connect to a http tracker through GET
     :param tracker_url: url of the tracker
@@ -26,7 +25,7 @@ async def http_tracker_announce(tracker_url: str, info_hash: bytes, peer_id: byt
     events = ['none', 'completed', 'started', 'stopped']
 
     headers = {
-        'User-Agent': 'rbTorrent v1.0'
+        'User-Agent': 'RaBit v0.1'
     }
 
     params = {
@@ -50,7 +49,7 @@ async def http_tracker_announce(tracker_url: str, info_hash: bytes, peer_id: byt
                 peer_data = bencodepy.decode(peer_data)
 
                 try:
-                    return [(peer[b'ip'].decode('utf=8'), peer[b'port']) for peer in peer_data[b'peers']], peer_data
+                    return [(peer[b'ip'].decode('utf-8'), peer[b'port']) for peer in peer_data[b'peers']], peer_data
 
                 except TypeError:  # this means the tracker returned a compact response
                     ipv4peers, ipv6peers = [], []

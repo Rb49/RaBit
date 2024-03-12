@@ -1,4 +1,4 @@
-from src.geolocation.utils import calc_distance, get_info, get_banned_countries
+from src.geoip.utils import calc_distance, get_info, get_banned_countries
 import struct
 import socket
 from typing import Tuple, List, Any, Union
