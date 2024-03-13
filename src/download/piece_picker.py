@@ -36,9 +36,11 @@ class PiecePos(object):
 
 
 class PriorityBucket:
-    keys = []
+    keys: List[int] = []
+    buckets: List = []
 
     def __init__(self, pieces_list: List[PiecePos] = None):
+        PriorityBucket.buckets.append(self)
         if pieces_list:
             self.pieces_list: List[PiecePos] = pieces_list  # pieces "stack"
             self.length = len(pieces_list)
@@ -66,18 +68,16 @@ class PriorityBucket:
     def remove(self, piece: PiecePos):
         self.pieces_list.remove(piece)
         self.length -= 1
+        if self.is_empty:
+            del self
 
     def add_pieces(self, pieces: List[PiecePos]):
         for piece in pieces:
             self.add_piece(piece)
 
-    '''
-    def get_piece(self):
-        if self.is_empty:
-            return None
-        self.length -= 1
-        return self.pieces_list.pop()
-    '''
+    def __del__(self):
+        PriorityBucket.keys.remove(self.priority)
+        PriorityBucket.buckets.remove(self)
 
 
 class PiecePicker(object):
@@ -100,6 +100,7 @@ class PiecePicker(object):
         temp_list = self.pieces_map[:]
         shuffle(temp_list)
         self.buckets_dict[0] = PriorityBucket(temp_list)  # all pieces start with availability 0
+        self.buckets_dict[0].priority = 0
 
         self.downloading: Dict[int, DownloadingPiece] = dict()  # piece index -> DownloadingPiece
         self.pending_blocks: Dict[int, Tuple[Block, float]] = dict()
@@ -186,6 +187,8 @@ class PiecePicker(object):
 
     def change_availability(self, piece_index: int, difference: int):
         # this function is called from within an asyncio.Lock()
+        if piece_index in self.downloading:
+            return
 
         # get the bucket the piece is in
         piece: PiecePos = self.pieces_map[piece_index]

@@ -1,5 +1,7 @@
 import asyncio
 
+import bitarray
+
 from src.torrent.torrent_object import Torrent
 
 import time

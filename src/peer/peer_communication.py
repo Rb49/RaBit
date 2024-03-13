@@ -118,21 +118,20 @@ async def tcp_wire_communication(peerData: Tuple, TorrentData: Torrent, piece_pi
 
                     thisPeer.have_pieces[msg.piece_index] = True
                     async with asyncio.Lock():
-                        await piece_picker.change_availability(msg.piece_index, 1)
+                        piece_picker.change_availability(msg.piece_index, 1)
 
                 elif isinstance(msg, Bitfield):
                     msg: Bitfield
                     if all(msg.bitfield):
                         thisPeer.is_seed = True
                         print('seed')
-                        # continue
 
                     else:
                         print('not seed')
                         async with asyncio.Lock():
                             for index in range(len(msg.bitfield)):
                                 if msg.bitfield[index] and not thisPeer.have_pieces[index]:
-                                    await piece_picker.change_availability(index, 1)
+                                    piece_picker.change_availability(index, 1)
 
                     thisPeer.have_pieces |= msg.bitfield
 
@@ -224,6 +223,7 @@ async def tcp_wire_communication(peerData: Tuple, TorrentData: Torrent, piece_pi
         except asyncio.CancelledError as e:  # the task was canceled (probably because the download was finished)
             # print(e)
             pass
+
         except Exception as e:  # general error
             print(e)
             raise e
