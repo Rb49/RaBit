@@ -23,55 +23,50 @@ class Stream(object):
         return self
 
     async def __anext__(self):
-        try:
-            while True:
-                data = await self.reader.read(_BUFFER_SIZE)
-                self.buffer += data
-                if not data and not self.buffer:
-                    ...
-                    # raise StopAsyncIteration
+        while True:
+            data = await self.reader.read(_BUFFER_SIZE)
+            self.buffer += data
+            if not self.buffer:
+                raise StopAsyncIteration
 
-                length = struct.unpack('>I', self.buffer[0:4])[0] + 4
-                if length == 4:  # keepalive, ignore
-                    self.__consume(4)
-                    continue
+            length = struct.unpack('>I', self.buffer[0:4])[0] + 4
+            if length == 4:  # keepalive, ignore
+                self.__consume(4)
+                continue
 
-                if len(self.buffer) < length:
-                    continue
+            if len(self.buffer) < length:
+                continue
 
-                msg = self.buffer[:length]
-                msg_id = msg[4]
+            msg = self.buffer[:length]
+            msg_id = msg[4]
 
-                self.__consume(length)
+            self.__consume(length)
 
-                if msg_id == CHOKE:
-                    return Chock()
-                elif msg_id == UNCHOKE:
-                    return Unchock()
-                elif msg_id == INTERESTED:
-                    return Interested()
-                elif msg_id == NOT_INTERESTED:
-                    return NotInterested()
-                elif msg_id == HAVE:
-                    return Have.decode(msg)
-                elif msg_id == BITFIELD:
-                    return Bitfield.decode(msg, len(self.TorrentData.piece_hashes))
-                elif msg_id == REQUEST:
-                    return Request.decode(msg)
-                elif msg_id == PIECE:
-                    return Piece.decode(msg)
-                elif msg_id == CANCEL:
-                    return Cancel.decode(msg)
+            if msg_id == CHOKE:
+                return Chock()
+            elif msg_id == UNCHOKE:
+                return Unchock()
+            elif msg_id == INTERESTED:
+                return Interested()
+            elif msg_id == NOT_INTERESTED:
+                return NotInterested()
+            elif msg_id == HAVE:
+                return Have.decode(msg)
+            elif msg_id == BITFIELD:
+                return Bitfield.decode(msg, len(self.TorrentData.piece_hashes))
+            elif msg_id == REQUEST:
+                return Request.decode(msg)
+            elif msg_id == PIECE:
+                return Piece.decode(msg)
+            elif msg_id == CANCEL:
+                return Cancel.decode(msg)
 
-                # elif msg_id == PORT:
-                #     return Port(msg)
+            # elif msg_id == PORT:
+            #     return Port(msg)
 
-                else:
-                    # unsupported message
-                    raise AssertionError
-
-        except struct.error:
-            raise AssertionError
+            else:
+                # unsupported message
+                raise AssertionError
 
 
 async def tcp_wire_communication(peerData: Tuple, TorrentData: Torrent, piece_picker: PiecePicker):
@@ -97,7 +92,7 @@ async def tcp_wire_communication(peerData: Tuple, TorrentData: Torrent, piece_pi
 
             # send interested
             # I am always interested in the peer
-            writer.write(struct.pack('>IB', 1, 2))
+            writer.write(Interested.encode())
             await writer.drain()
             print("\033[92m{}\033[00m".format(f'connected {address}, {city}'))
 
@@ -105,7 +100,7 @@ async def tcp_wire_communication(peerData: Tuple, TorrentData: Torrent, piece_pi
                 if isinstance(msg, Chock):
                     thisPeer.is_chocked = True
                     # send interested
-                    writer.write(struct.pack('>IB', 1, 2))
+                    writer.write(Interested.encode())
                     await writer.drain()
                 elif isinstance(msg, Unchock):
                     thisPeer.is_chocked = False
@@ -164,29 +159,36 @@ async def tcp_wire_communication(peerData: Tuple, TorrentData: Torrent, piece_pi
                         raise AssertionError
 
                     # update pipeline size
-                    thisPeer.update_download_rate(len(msg.data))
+                    thisPeer.update_upload_rate(len(msg.data))
 
                     thisPeer.pipelined_requests.remove(block)
                     block.add_data(msg.data, thisPeer.address)
                     await piece_picker.report_block(block)
 
-                while not thisPeer.is_chocked and len(thisPeer.pipelined_requests) < thisPeer.MAX_PIPELINE_SIZE:
-                    if isinstance((request := await piece_picker.get_block(thisPeer.have_pieces)), Block):
-                        # print(repr(request))
-                        request_packet = struct.pack('>IBIII', 13, 6, request.index, request.begin, request.length)
-                        writer.write(request_packet)
-                        await writer.drain()
-                        thisPeer.pipelined_requests.append(request)
+                # send have messages
+                while not thisPeer.have_msg_queue.empty():
+                    have_msg: bytes = await thisPeer.have_msg_queue.get()
+                    writer.write(have_msg)
+                    await writer.drain()
 
-                        await asyncio.sleep(0.01)  # giving time for other connections to get pieces
+                # send requests
+                if len(thisPeer.pipelined_requests) < thisPeer.MAX_PIPELINE_SIZE / 2:  # save some cpu usage
+                    while not thisPeer.is_chocked and len(thisPeer.pipelined_requests) < thisPeer.MAX_PIPELINE_SIZE:
+                        if isinstance((request := await piece_picker.get_block(thisPeer.have_pieces)), Block):
+                            # print(repr(request))
+                            writer.write(Request.encode(request.index, request.begin, request.length))
+                            await writer.drain()
+                            thisPeer.pipelined_requests.add(request)
 
-                    else:  # endgame logic here
-                        ...
+                            await asyncio.sleep(0.01)  # giving time for other connections to get pieces
 
+                        else:  # endgame logic here (?)
+                            ...
+                            await asyncio.sleep(1)
 
-        except AssertionError as e:  # protocol error, blacklist this peer
-            # print(e)
-            pass
+        except (AssertionError, struct.error) as e:  # protocol error, TODO reduce reputation this peer
+            ...
+
         except ConnectionError as e:  # connection error
             # print(e)
             pass

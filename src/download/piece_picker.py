@@ -1,5 +1,7 @@
 from src.torrent.torrent_object import Torrent
 from .data_structures import *
+from src.peer.message_types import *
+from src.peer.peer_object import Peer
 
 from typing import List, Dict
 import bitstring
@@ -195,6 +197,14 @@ class PiecePicker(object):
     def deselect_block(self, block: Block):
         self.pending_blocks.pop(id(block))
         self.downloading[block.index].deselect_block(block)
+
+    @staticmethod
+    async def send_have(piece_index: int):
+        for peer in Peer.peer_instances:
+            if not peer.have_pieces[piece_index]:
+                have_msg: bytes = Have.encode(piece_index)
+                await peer.have_msg_queue.put(have_msg)
+
 
 
 

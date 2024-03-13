@@ -54,7 +54,6 @@ async def main() -> None:
 
 if __name__ == '__main__':
     import tracemalloc
-
     tracemalloc.start()
 
     # t = threading.Thread(target=lambda: asyncio.run(main()), daemon=True)

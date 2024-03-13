@@ -1,3 +1,5 @@
+import asyncio
+
 from src.torrent.torrent_object import Torrent
 
 import time
@@ -21,15 +23,16 @@ class Peer(object):
         self.address = address
 
         self.is_chocked = True  # am I chocked?
-        # self.is_interested = True  # am I interested in what the peer offers? always true on download
+        self.is_interested = True  # am I interested in what the peer offers? always true on download
         self.am_chocked = True  # have I chocked the peer?
         self.am_interested = False  # is the peer interested in what I offer?
 
         self.have_pieces = bitstring.BitArray(bin='0' * len(self.torrent.piece_hashes))
         self.is_seed = False
-        self.pipelined_requests = []
+        self.pipelined_requests: Set = set()
 
-        self.have_msg_sent: Set = set()
+        self.have_msg_queue: asyncio.Queue = asyncio.Queue()
+
         self.endgame_cancel_msg_sent: Set = set()
 
         self.last_data_sent = time.time()
@@ -41,8 +44,10 @@ class Peer(object):
         self.peer_id = None
         self.client = None
 
-    def update_download_rate(self, len_bytes_sent: int):
+    def update_upload_rate(self, len_bytes_sent: int):
         # idk how but this function generates ridiculously incredible downloading on account of cpu usage
+        # and breaks when working with real download rate (not len)
+
         rn = time.time()
         if (dt := rn - self.last_data_sent) < 0.05:
             return
@@ -55,7 +60,7 @@ class Peer(object):
             self.MAX_PIPELINE_SIZE = rate / 5 + 18
 
         self.last_data_sent = rn
-        self.download_rate = rate
+        self.upload_rate = rate
 
     def __del__(self):
         Peer.peer_instances.remove(self)

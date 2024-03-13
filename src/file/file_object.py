@@ -48,9 +48,8 @@ class File(object):
             os.lseek(self.fd, writing_begin_index, os.SEEK_SET)
             os.write(self.fd, data)
 
-            # TODO send 'Have' messages to all peers uploading to (using queue.Queue() with threading lock)
-
             self.piece_picker.num_of_pieces_left -= 1
+            await self.piece_picker.send_have(piece.index)
             piece.reset()
 
     def __del__(self):

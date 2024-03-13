@@ -45,7 +45,10 @@ class Block(object):
         return self.index == index and self.begin == begin and self.length == length
 
     def __repr__(self):
-        return f"index: {self.index}, begin: {self.begin}, length: {self.length}, state: {self.state}"
+        return f"index: {self.index}, begin: {self.begin}, length: {self.length}"
+
+    def __hash__(self):
+        return hash(repr(self))
 
 
 class FailedBlock(Block):
