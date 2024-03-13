@@ -97,5 +97,4 @@ class TitForTat(object):
                 await self.piece_picker.send_unchock(peer)
 
         else:
-            # the peer sent the message not in place?
-            raise AssertionError
+            pass  # do nothing
