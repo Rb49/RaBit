@@ -203,6 +203,10 @@ class PiecePicker(object):
         print('ENDGAME !!!')
         self.is_in_endgame = True
         unfiltered_blocks = list(map(lambda x: x[0], self.pending_blocks.values()))
+        for piece in self.downloading.values():
+            while isinstance((block := piece.get_next_request()), Block):
+                unfiltered_blocks.append(block)
+
         for peer in Peer.peer_instances:
             peer.is_in_endgame = True
             peer.endgame_blocks = set(filter(lambda x: peer.have_pieces[x.index], unfiltered_blocks))

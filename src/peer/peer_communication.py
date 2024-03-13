@@ -192,20 +192,12 @@ async def tcp_wire_communication(peerData: Tuple, TorrentData: Torrent, piece_pi
                     shuffle(available_blocks)
                     print(thisPeer.peer_id, len(available_blocks), piece_picker.num_of_pieces_left)
                     while not thisPeer.is_chocked and len(thisPeer.pipelined_requests) < thisPeer.MAX_PIPELINE_SIZE and available_blocks:
-                        request: Block = None
-
-                        # first iterate over primary data structures
-                        if isinstance((block := await piece_picker.get_block(thisPeer.have_pieces)), Block):
+                        for block in available_blocks:
                             request = block
-
+                            thisPeer.endgame_request_msg_sent.add(block)
+                            available_blocks.remove(block)
+                            break
                         else:
-                            for block in available_blocks:
-                                request = block
-                                thisPeer.endgame_request_msg_sent.add(block)
-                                available_blocks.remove(block)
-                                break
-
-                        if request is None:
                             print('standing by!')  # for urgent failed pieces
                             break
 
