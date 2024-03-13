@@ -3,7 +3,7 @@ from .data_structures import *
 from src.peer.message_types import *
 from src.peer.peer_object import Peer
 
-from typing import List, Dict
+from typing import List, Dict, Set
 import bitstring
 from dataclasses import dataclass
 import time
@@ -90,6 +90,7 @@ class PiecePicker(object):
 
         self.sequential = sequential
         self.is_in_endgame = False
+        self.endgame_received_blocks: Set = set()  # blocks received while in endgame mode
 
         # will be iterated like this: for key in sorted(self.buckets_dict.keys()): ...
         # should not be extremely expensive because the availability range is usually 10-20
@@ -141,29 +142,21 @@ class PiecePicker(object):
                         return block
 
             # TODO add endgame mode
-            if endgame_time:
-                print('ENDGAME !!!',  len(self.pending_blocks))
-                self.is_in_endgame = True
-
-            # get endgame block
-            '''
-            sorted_pending_blocks = sorted(self.pending_blocks.values(), key=lambda x: x[1], reverse=True)
-            for block, _ in sorted_pending_blocks:
-                if have_mask[block.index]:
-                    # self.pending_blocks.pop(id(block))
-                    return block
-            '''
-
-            if self.num_of_pieces_left == 0:  # confirmed by disk IO thread
-                print('finished!!')
-                quit()
+            if endgame_time and not self.is_in_endgame:
+                self.endgame()
 
     async def report_block(self, block: Block):
         async with asyncio.Lock():
+            # print(self.num_of_pieces_left)
             # the stream already verified the block and made sure we requested it
-            self.pending_blocks.pop(id(block))
-
-            # print(len(self.downloading), len(self.pending_blocks))
+            if self.is_in_endgame:
+                if block in self.endgame_received_blocks:
+                    print('got duplicate')
+                    return
+                else:
+                    self.add_endgame_block(block)
+            else:
+                self.pending_blocks.pop(id(block))
 
             piece = self.downloading[block.index]
             piece.current_block += 1
@@ -178,13 +171,18 @@ class PiecePicker(object):
                     await self.results_queue.put(piece)
 
     async def add_failed_piece(self, piece: DownloadingPiece):
-        # TODO record failed piece block hashes and store them
-        # re-add failed pieces directly to the download dict with a toggled urgent flag
-        # to download it successfully and ban the responsible peers as soon as possible
-        piece.urgent = True
-        async with asyncio.Lock():
-            self.downloading[piece.index] = piece
-            self.sort_downloading()
+        if not self.is_in_endgame:
+            # TODO record failed piece block hashes and store them
+            # re-add failed pieces directly to the download dict with a toggled urgent flag
+            # to download it successfully and ban the responsible peers as soon as possible
+            piece.urgent = True
+            async with asyncio.Lock():
+                self.downloading[piece.index] = piece
+                self.sort_downloading()
+
+        else:
+            for block in piece.blocks:
+                self.add_endgame_block(block)
 
     def change_availability(self, piece_index: int, difference: int):
         # this function is called from within an asyncio.Lock()
@@ -200,6 +198,20 @@ class PiecePicker(object):
     def deselect_block(self, block: Block):
         self.pending_blocks.pop(id(block))
         self.downloading[block.index].deselect_block(block)
+
+    def endgame(self):
+        print('ENDGAME !!!')
+        self.is_in_endgame = True
+        unfiltered_blocks = list(map(lambda x: x[0], self.pending_blocks.values()))
+        for peer in Peer.peer_instances:
+            peer.is_in_endgame = True
+            peer.endgame_blocks = set(filter(lambda x: peer.have_pieces[x.index], unfiltered_blocks))
+
+    def add_endgame_block(self, block: Block):
+        self.endgame_received_blocks.add(block)
+        for peer in Peer.peer_instances:
+            if peer.have_pieces[block.index]:
+                peer.endgame_blocks.add(block)
 
     @staticmethod
     async def send_have(piece_index: int):

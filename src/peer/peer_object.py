@@ -32,8 +32,10 @@ class Peer(object):
 
         self.control_msg_queue: asyncio.Queue = asyncio.Queue()
 
-        self.endgame_cancel_msg_sent: Set = set()
-        self.endgame_request_msg_sent: Set = set()
+        self.endgame_cancel_msg_sent: Set = set()  # blocks I already sent Cancel to
+        self.endgame_request_msg_sent: Set = set()  # blocks I requested
+        self.endgame_blocks: Set = set()  # blocks available to request
+        self.is_in_endgame = False
 
         self.last_data_sent = time.time()
 
@@ -47,6 +49,8 @@ class Peer(object):
     def update_upload_rate(self, len_bytes_sent: int):
         # idk how but this function generates ridiculously incredible downloading on account of cpu usage
         # and breaks when working with real download rate (not len)
+        if self.is_in_endgame:
+            self.MAX_PIPELINE_SIZE = 10
 
         rn = time.time()
         if (dt := rn - self.last_data_sent) < 0.05:
@@ -63,7 +67,7 @@ class Peer(object):
         self.upload_rate = rate
 
     def __repr__(self):
-        return f"peer id: {self.peer_id}, geodata: {self.geodata}"
+        return f"peer id: {self.peer_id}, address: {self.address}, geodata: {self.geodata}"
 
     def __hash__(self):
         return hash(repr(self))

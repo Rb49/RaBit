@@ -7,6 +7,7 @@ from src.download.piece_picker import PiecePicker, Block
 from src.download.upload_in_download import TitForTat
 import asyncio
 import struct
+from random import sample, shuffle
 
 _BUFFER_SIZE = 4096
 
@@ -108,7 +109,7 @@ async def tcp_wire_communication(peerData: Tuple, TorrentData: Torrent, piece_pi
                 # the peer is interested in what I have
                 elif isinstance(msg, Interested):
                     await chocking_manager.report_interested(thisPeer)
-                elif type(msg) is NotInterested:
+                elif isinstance(msg, NotInterested):
                     await chocking_manager.report_uninterested(thisPeer)
 
                 elif isinstance(msg, Have):
@@ -172,19 +173,55 @@ async def tcp_wire_communication(peerData: Tuple, TorrentData: Torrent, piece_pi
                     await writer.drain()
 
                 # send requests
-                if len(thisPeer.pipelined_requests) < thisPeer.MAX_PIPELINE_SIZE / 2:  # save some cpu usage
-                    while not thisPeer.is_chocked and len(thisPeer.pipelined_requests) < thisPeer.MAX_PIPELINE_SIZE:
-                        if isinstance((request := await piece_picker.get_block(thisPeer.have_pieces)), Block):
-                            # print(repr(request))
-                            writer.write(Request.encode(request.index, request.begin, request.length))
-                            await writer.drain()
-                            thisPeer.pipelined_requests.add(request)
+                if not thisPeer.is_in_endgame:
+                    if len(thisPeer.pipelined_requests) < thisPeer.MAX_PIPELINE_SIZE / 2:  # save some cpu usage
+                        while not thisPeer.is_chocked and len(thisPeer.pipelined_requests) < thisPeer.MAX_PIPELINE_SIZE:
+                            if isinstance((request := await piece_picker.get_block(thisPeer.have_pieces)), Block):
+                                writer.write(Request.encode(request.index, request.begin, request.length))
+                                await writer.drain()
+                                thisPeer.pipelined_requests.add(request)
 
-                            await asyncio.sleep(0.01)  # giving time for other connections to get pieces
+                                await asyncio.sleep(0.01)  # giving time for other connections to get pieces
+                            else:
+                                break
 
-                        else:  # endgame logic here (?)
-                            ...
-                            await asyncio.sleep(1)
+                if thisPeer.is_in_endgame:
+                    # available_blocks = all blocks - blocks I already requested - blocks somebody else got - blocks in my pipeline
+                    available_blocks = thisPeer.endgame_blocks - thisPeer.endgame_request_msg_sent - piece_picker.endgame_received_blocks - set(thisPeer.pipelined_requests)
+                    available_blocks = list(available_blocks)
+                    shuffle(available_blocks)
+                    print(thisPeer.peer_id, len(available_blocks), piece_picker.num_of_pieces_left)
+                    while not thisPeer.is_chocked and len(thisPeer.pipelined_requests) < thisPeer.MAX_PIPELINE_SIZE and available_blocks:
+                        request: Block = None
+
+                        # first iterate over primary data structures
+                        if isinstance((block := await piece_picker.get_block(thisPeer.have_pieces)), Block):
+                            request = block
+
+                        else:
+                            for block in available_blocks:
+                                request = block
+                                thisPeer.endgame_request_msg_sent.add(block)
+                                available_blocks.remove(block)
+                                break
+
+                        if request is None:
+                            print('standing by!')  # for urgent failed pieces
+                            break
+
+                        thisPeer.pipelined_requests.add(request)
+                        writer.write(Request.encode(request.index, request.begin, request.length))
+                        await writer.drain()
+
+                        await asyncio.sleep(0.01)  # giving time for other connections to get pieces
+
+                    # send cancels
+                    need_to_cancel = thisPeer.endgame_request_msg_sent - thisPeer.endgame_cancel_msg_sent
+                    need_to_cancel = need_to_cancel.intersection(piece_picker.endgame_received_blocks)
+                    for block in need_to_cancel:
+                        writer.write(Cancel.encode(block.index, block.begin, block.length))
+                        await writer.drain()
+                    thisPeer.endgame_cancel_msg_sent.update(need_to_cancel)
 
         except (AssertionError, struct.error) as e:  # protocol error, TODO reduce reputation this peer
             ...
@@ -204,6 +241,8 @@ async def tcp_wire_communication(peerData: Tuple, TorrentData: Torrent, piece_pi
             # print("Closing the connection.")
             writer.close()
             await writer.wait_closed()
+
+            await chocking_manager.report_uninterested(thisPeer)
 
             # change availability
             if not thisPeer.is_seed:

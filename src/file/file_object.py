@@ -21,7 +21,8 @@ class File(object):
     async def save_pieces_loop(self):
         while True:
             if self.piece_picker.num_of_pieces_left == 0:
-                quit()
+                # TODO a more elegant exit, let all interested disconnect and then switch to seeding in server sock
+                exit(0)
 
             with threading.Lock():
                 piece: DownloadingPiece = await self.results_queue.get()
@@ -44,12 +45,12 @@ class File(object):
 
             print("\033[90m{}\033[00m".format(f'got piece. {round((1 - self.piece_picker.num_of_pieces_left / len(self.TorrentData.piece_hashes)) * 100, 2)}%'))
 
-            # writing_begin_index = self.TorrentData.info[b'piece length'] * piece.index
-            # os.lseek(self.fd, writing_begin_index, os.SEEK_SET)
-            # os.write(self.fd, data)
+            writing_begin_index = self.TorrentData.info[b'piece length'] * piece.index
+            os.lseek(self.fd, writing_begin_index, 0)
+            os.write(self.fd, data)
 
             self.piece_picker.num_of_pieces_left -= 1
-            self.piece_picker.FILE_STATUS[piece.index] = True  # update my bitfield
+            self.piece_picker.FILE_STATUS[piece.index] = True  # update primary bitfield
             await self.piece_picker.send_have(piece.index)
             piece.reset()
 
