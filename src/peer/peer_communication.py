@@ -70,9 +70,6 @@ class Stream(object):
 
 
 async def tcp_wire_communication(peerData: Tuple, TorrentData: Torrent, piece_picker: PiecePicker):
-
-    # TODO remove pieces_dict !! use increase / decrease availability method instead
-
     address, city, distance = peerData
     try:
         reader, writer = await asyncio.wait_for(open_tcp_connection(address), timeout=3)
