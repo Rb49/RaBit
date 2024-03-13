@@ -241,7 +241,7 @@ async def tcp_wire_communication(peerData: Tuple, TorrentData: Torrent, piece_pi
                 async with asyncio.Lock():
                     for bit in thisPeer.have_pieces:
                         if bit:
-                            await piece_picker.change_availability(bit, -1)
+                            piece_picker.change_availability(bit, -1)
 
             # return requested blocks
             for block in thisPeer.pipelined_requests:
