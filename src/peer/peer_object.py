@@ -11,7 +11,6 @@ class Peer(object):
     """
     object to store attributes of a peer and some stats
     """
-    MAX_ENDGAME_PIPELINE = 2
     peer_instances: List = []
 
     def __init__(self, TorrentData: Torrent, address: Tuple[str, int], geodata: Tuple[str, str, float, float]):
@@ -31,9 +30,10 @@ class Peer(object):
         self.is_seed = False
         self.pipelined_requests: Set = set()
 
-        self.have_msg_queue: asyncio.Queue = asyncio.Queue()
+        self.control_msg_queue: asyncio.Queue = asyncio.Queue()
 
         self.endgame_cancel_msg_sent: Set = set()
+        self.endgame_request_msg_sent: Set = set()
 
         self.last_data_sent = time.time()
 
@@ -61,6 +61,12 @@ class Peer(object):
 
         self.last_data_sent = rn
         self.upload_rate = rate
+
+    def __repr__(self):
+        return f"peer id: {self.peer_id}, geodata: {self.geodata}"
+
+    def __hash__(self):
+        return hash(repr(self))
 
     def __del__(self):
         Peer.peer_instances.remove(self)

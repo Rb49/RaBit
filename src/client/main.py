@@ -7,6 +7,7 @@ from src.geoip.utils import get_my_public_ip
 from src.download.piece_picker import PiecePicker
 from src.peer.peer_communication import tcp_wire_communication
 from src.file.file_object import File
+from src.download.upload_in_download import TitForTat
 import threading
 
 import asyncio
@@ -18,7 +19,7 @@ async def main() -> None:
     # path for test torrent file
     # torrent_name = "Coding with AI For Dummies by Chris Minnick PDF.torrent"
     torrent_name = "debian-edu-12.4.0-amd64-netinst.iso.torrent"
-    # torrent_name = "Young.Sheldon.S07E01.HDTV.x264-TORRENTGALAXY.torrent"
+    torrent_name = "Young.Sheldon.S07E01.HDTV.x264-TORRENTGALAXY.torrent"
     # torrent_name = "The.Hunger.Games.The.Ballad.of.Songbirds.and.Snakes.2023.2160p.WEB-DL.DDP5.1.Atmos.DV.HDR.H.265-FLUX[TGx].torrent"
     test_path = "././data/" + torrent_name
 
@@ -38,6 +39,8 @@ async def main() -> None:
 
     # peer wire protocol
     piece_picker = PiecePicker(TorrentData)
+    tit_for_tat_manager = TitForTat(piece_picker)
+    tit_for_tat_loop = asyncio.create_task(tit_for_tat_manager.loop())
 
     # start disk IO thread
     file = File(TorrentData, piece_picker, piece_picker.results_queue, '././results/', False)
@@ -45,8 +48,8 @@ async def main() -> None:
 
     # TODO better peer management
     # TODO run a peer reputation db and reconnect to good peers if needed
-    work = [tcp_wire_communication(peer, TorrentData, piece_picker) for peer in peers_list]
-    await asyncio.gather(disk_loop, *work)
+    work = [tcp_wire_communication(peer, TorrentData, piece_picker, tit_for_tat_manager) for peer in peers_list]
+    await asyncio.gather(disk_loop, *work, tit_for_tat_loop)
 
     print('final: ', piece_picker.num_of_pieces_left)
     return

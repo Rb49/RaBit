@@ -22,6 +22,7 @@ class Chock:
     I cannot send requests to this peer anymore
     choke: <len=0001><id=0>
     """
+
     @staticmethod
     def encode() -> bytes:
         return struct.pack('>IB', 1, CHOKE)
@@ -32,6 +33,7 @@ class Unchock:
     I can now send requests to this peer
     unchoke: <len=0001><id=1>
     """
+
     @staticmethod
     def encode() -> bytes:
         return struct.pack('>IB', 1, UNCHOKE)
@@ -42,6 +44,7 @@ class Interested:
     let the peer know I want to download from it
     interested: <len=0001><id=2>
     """
+
     @staticmethod
     def encode() -> bytes:
         return struct.pack('>IB', 1, INTERESTED)
@@ -52,6 +55,7 @@ class NotInterested:
     let the peer know I do want to download from it
     not interested: <len=0001><id=3>
     """
+
     @staticmethod
     def encode() -> bytes:
         return struct.pack('>IB', 1, NOT_INTERESTED)
@@ -62,6 +66,7 @@ class Have:
     to let the downloader know it can request this piece
     have: <len=0005><id=4><piece index>
     """
+
     def __init__(self, piece_index):
         self.piece_index = piece_index
 
@@ -83,6 +88,7 @@ class Bitfield:
     to let the downloader know which pieces it can request
     bitfield: <len=0001+X><id=5><bitfield>
     """
+
     def __init__(self, bitfield: bitstring.bitarray):
         self.bitfield = bitfield
 
@@ -90,9 +96,11 @@ class Bitfield:
     def encode(bitfield: bitstring.BitArray) -> bytes:
         if len(bitfield) % 8 != 0:  # add padding
             bitfield += bitstring.BitArray(uint=0, length=(8 - (len(bitfield) % 8)))
-        return struct.pack(f'>IB{len(bitfield)}s',
-                           5,
-                           BITFIELD)
+
+        return struct.pack(f'>IB{len(bitfield.bytes)}s',
+                           len(bitfield.bytes) + 1,
+                           BITFIELD,
+                           bitfield.bytes)
 
     @classmethod
     def decode(cls, msg: bytes, pieces_num: int) -> object:
@@ -107,6 +115,7 @@ class Request:
     request the data of a block
     request: <len=0013><id=6><index><begin><length>
     """
+
     def __init__(self, piece_index: int, begin: int, length: int):
         self.piece_index = piece_index
         self.begin = begin
@@ -132,6 +141,7 @@ class Piece:
     contains the data of a requested block
     piece: <len=0009+X><id=7><index><begin><block>
     """
+
     def __init__(self, piece_index: int, begin: int, data: bytes):
         self.piece_index = piece_index
         self.begin = begin
@@ -161,6 +171,7 @@ class Cancel:
     cancel the pending block request
     cancel: <len=0013><id=8><index><begin><length>
     """
+
     def __init__(self, piece_index: int, begin: int, length: int):
         self.piece_index = piece_index
         self.begin = begin
@@ -186,6 +197,7 @@ class Port:
     the port this peer's DHT node is listening on
     port: <len=0003><id=9><listen-port>
     """
+
     def __init__(self, port: int):
         self.port = port
 

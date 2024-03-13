@@ -69,7 +69,7 @@ def calc_distance(ip_address1: str, ip_address2: str) -> Union[float, None]:
     # check if addresses are in the database
     info1: Tuple = get_info(ip_address1)
     info2: Tuple = get_info(ip_address2)
-    if None in [info1[2], info1[3], info2[2], info2[3]]:
+    if None in [info1, info2]:
         return None
 
     return __calc_haversine(info1[2], info1[3], info2[2], info2[3])

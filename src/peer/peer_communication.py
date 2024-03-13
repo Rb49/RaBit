@@ -4,6 +4,7 @@ from .peer_object import Peer
 from .handshake import handshake, open_tcp_connection
 from .message_types import *
 from src.download.piece_picker import PiecePicker, Block
+from src.download.upload_in_download import TitForTat
 import asyncio
 import struct
 
@@ -69,7 +70,7 @@ class Stream(object):
                 raise AssertionError
 
 
-async def tcp_wire_communication(peerData: Tuple, TorrentData: Torrent, piece_picker: PiecePicker):
+async def tcp_wire_communication(peerData: Tuple, TorrentData: Torrent, piece_picker: PiecePicker, chocking_manager: TitForTat):
     address, city, distance = peerData
     try:
         reader, writer = await asyncio.wait_for(open_tcp_connection(address), timeout=3)
@@ -86,6 +87,8 @@ async def tcp_wire_communication(peerData: Tuple, TorrentData: Torrent, piece_pi
             thisPeer.peer_id = peer_id
 
             # TODO now send bitfield / have all/none and fast allowed after fast extension support
+            writer.write(Bitfield.encode(piece_picker.FILE_STATUS[:]))
+            await writer.drain()
 
             # send interested
             # I am always interested in the peer
@@ -104,9 +107,9 @@ async def tcp_wire_communication(peerData: Tuple, TorrentData: Torrent, piece_pi
 
                 # the peer is interested in what I have
                 elif isinstance(msg, Interested):
-                    thisPeer.am_interested = True
+                    await chocking_manager.report_interested(thisPeer)
                 elif type(msg) is NotInterested:
-                    thisPeer.am_interested = False
+                    await chocking_manager.report_uninterested(thisPeer)
 
                 elif isinstance(msg, Have):
                     msg: Have
@@ -162,10 +165,10 @@ async def tcp_wire_communication(peerData: Tuple, TorrentData: Torrent, piece_pi
                     block.add_data(msg.data, thisPeer.address)
                     await piece_picker.report_block(block)
 
-                # send have messages
-                while not thisPeer.have_msg_queue.empty():
-                    have_msg: bytes = await thisPeer.have_msg_queue.get()
-                    writer.write(have_msg)
+                # send control messages
+                while not thisPeer.control_msg_queue.empty():
+                    msg: bytes = await thisPeer.control_msg_queue.get()
+                    writer.write(msg)
                     await writer.drain()
 
                 # send requests

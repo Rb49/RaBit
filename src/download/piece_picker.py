@@ -81,8 +81,11 @@ class PriorityBucket:
 
 
 class PiecePicker(object):
+    FILE_STATUS: bitstring.bitarray
+
     def __init__(self, TorrentData: Torrent, sequential: bool = False) -> None:
         self.TorrentData = TorrentData
+        PiecePicker.FILE_STATUS = bitstring.BitArray(bin='0' * len(TorrentData.piece_hashes))
         self.results_queue = BetterQueue()
 
         self.sequential = sequential
@@ -139,7 +142,7 @@ class PiecePicker(object):
 
             # TODO add endgame mode
             if endgame_time:
-                print('ENDGAME !!!', len(self.pending_blocks))
+                print('ENDGAME !!!',  len(self.pending_blocks))
                 self.is_in_endgame = True
 
             # get endgame block
@@ -203,7 +206,22 @@ class PiecePicker(object):
         for peer in Peer.peer_instances:
             if not peer.have_pieces[piece_index]:
                 have_msg: bytes = Have.encode(piece_index)
-                await peer.have_msg_queue.put(have_msg)
+                await peer.control_msg_queue.put(have_msg)
+
+    @staticmethod
+    async def send_chock(peer: Peer):
+        peer.am_chocked = True
+        chock_msg: bytes = Chock.encode()
+        await peer.control_msg_queue.put(chock_msg)
+        print('chocked ', repr(peer))
+
+    @staticmethod
+    async def send_unchock(peer: Peer):
+        peer.am_chocked = False
+        unchock_msg: bytes = Unchock.encode()
+        await peer.control_msg_queue.put(unchock_msg)
+        print('unchocked ', repr(peer))
+
 
 
 
