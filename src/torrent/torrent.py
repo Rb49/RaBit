@@ -19,9 +19,10 @@ def read_torrent(path: str) -> Torrent:
 
     # create a Torrent instance
     # need to add support for distributed torrents and magnet links, non multi-file torrents and no announcers
-    torrent_data = Torrent(info=content.get(b'info'),
+    torrent_data = Torrent(info=content[b'info'],
                                  info_hash=None,
                                  piece_hashes=None,
+                                 multi_file=bool(content[b'info'].get(b'files')),
                                  peer_id=None,
                                  announce=content.get(b'announce'),
                                  comment=content.get(b'comment'),

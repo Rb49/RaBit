@@ -12,6 +12,7 @@ class Torrent(object):
     info: OrderedDict  # metadate dict
     info_hash: Union[bytes, None]  # sha-1 hash of the entire bencoded info dict
     piece_hashes: Union[List[bytes], None]  # list of sha-1 hashes of all the pieces
+    multi_file: bool  # are there multiple files in this torrent?
 
     peer_id: Union[bytes, None]  # a randomly chosen 20-bytes peer id for this download
 
@@ -23,7 +24,6 @@ class Torrent(object):
     # other extensions to the protocol
     announce_list: Optional[list] = None  # support of multiple trackers
     nodes: Optional[list] = None  # support distributed hash tables
-    private: Optional[bool] = False  # if 'private' key in 'info' dict is 1 (private torrent)
 
     # download/upload stats
     downloaded: int = 0
