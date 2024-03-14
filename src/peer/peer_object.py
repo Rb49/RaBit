@@ -52,7 +52,7 @@ class Peer(object):
         # idk how but this function generates ridiculously incredible downloading on account of cpu usage
         # and breaks when working with real download rate (not len)
         if self.is_in_endgame:
-            limit = 10
+            limit = 2
         else:
             limit = 10000000  # very large number
 

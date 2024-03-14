@@ -156,7 +156,7 @@ class PiecePicker(object):
                 return
 
             if self.is_in_endgame:
-                self.add_endgame_block(block)
+                self.endgame_received_blocks.add(block)
             else:
                 self.pending_blocks.pop(id(block))
 
@@ -172,22 +172,21 @@ class PiecePicker(object):
                     await self.results_queue.put(piece)
 
     async def add_failed_piece(self, piece: DownloadingPiece):
-        if not self.is_in_endgame:
-            # TODO record failed piece block hashes and store them
-            # re-add failed pieces directly to the download dict with a toggled urgent flag
-            # to download it successfully and ban the responsible peers as soon as possible
-            piece.urgent = True
-            async with asyncio.Lock():
-                self.downloading[piece.index] = piece
+        # TODO record failed piece block hashes and store them
+        # re-add failed pieces directly to the download dict with a toggled urgent flag
+        # to download it successfully and ban the responsible peers as soon as possible
+        piece.urgent = True
+        async with asyncio.Lock():
+            self.downloading[piece.index] = piece
+            if not self.is_in_endgame:
                 self.sort_downloading()
-
-        else:
-            for block in piece.blocks:
-                self.add_endgame_block(block)
+            else:
+                for block in piece.blocks:
+                    self.add_endgame_block(block)
 
     def change_availability(self, piece_index: int, difference: int):
         # this function is called from within an asyncio.Lock()
-        if piece_index in self.downloading:
+        if piece_index in self.downloading or PiecePicker.FILE_STATUS[piece_index]:
             return
 
         # get the bucket the piece is in
@@ -217,8 +216,8 @@ class PiecePicker(object):
             peer.is_in_endgame = True
             peer.endgame_blocks = set(filter(lambda x: peer.have_pieces[x.index], unfiltered_blocks))
 
-    def add_endgame_block(self, block: Block):
-        self.endgame_received_blocks.add(block)
+    @staticmethod
+    def add_endgame_block(block: Block):
         for peer in Peer.peer_instances:
             if peer.have_pieces[block.index]:
                 peer.endgame_blocks.add(block)
@@ -244,7 +243,9 @@ class PiecePicker(object):
         await peer.control_msg_queue.put(unchock_msg)
         print('unchocked ', repr(peer))
 
-
+    @property
+    def get_health(self):
+        return round((1 - self.buckets_dict[0].length / len(self.TorrentData.piece_hashes)) * 100, 2)
 
 
 

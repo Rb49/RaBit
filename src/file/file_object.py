@@ -51,8 +51,8 @@ class File(object):
                 end_position = self.TorrentData.length - writing_begin_index
                 data = data[:end_position]
 
-            os.lseek(self.fd, writing_begin_index, os.SEEK_SET)
-            os.write(self.fd, data)
+            # os.lseek(self.fd, writing_begin_index, os.SEEK_SET)
+            # os.write(self.fd, data)
 
             self.piece_picker.num_of_pieces_left -= 1
             self.piece_picker.FILE_STATUS[piece.index] = True  # update primary bitfield

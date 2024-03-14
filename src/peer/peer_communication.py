@@ -7,7 +7,7 @@ from src.download.piece_picker import PiecePicker, Block
 from src.download.upload_in_download import TitForTat
 import asyncio
 import struct
-from random import sample, shuffle
+from random import sample, shuffle, random
 
 _BUFFER_SIZE = 4096
 
@@ -137,16 +137,13 @@ async def tcp_wire_communication(peerData: Tuple, TorrentData: Torrent, piece_pi
                     if all(msg.bitfield):
                         thisPeer.is_seed = True
                         print('seed')
-                        async with asyncio.Lock():
-                            for piece in piece_picker.pieces_map:
-                                piece.peer_count += 1
-
                     else:
                         print('not seed')
-                        async with asyncio.Lock():
-                            for index in range(len(msg.bitfield)):
-                                if msg.bitfield[index] and not thisPeer.have_pieces[index]:
-                                    piece_picker.change_availability(index, 1)
+
+                    async with asyncio.Lock():
+                        for index in range(len(msg.bitfield)):
+                            if msg.bitfield[index] and not thisPeer.have_pieces[index]:
+                                piece_picker.change_availability(index, 1)
 
                     thisPeer.have_pieces |= msg.bitfield
 
@@ -200,19 +197,13 @@ async def tcp_wire_communication(peerData: Tuple, TorrentData: Torrent, piece_pi
                         # available_blocks = all blocks - blocks I already requested - blocks somebody else got - blocks in my pipeline
                         available_blocks = thisPeer.endgame_blocks - thisPeer.endgame_request_msg_sent - piece_picker.endgame_received_blocks - set(thisPeer.pipelined_requests)
                         available_blocks = list(available_blocks)
-                        shuffle(available_blocks)
-                        print(thisPeer.peer_id, len(available_blocks), piece_picker.num_of_pieces_left, piece_picker.downloading)
+                        available_blocks.sort(key=lambda x: (piece_picker.pieces_map[x.index].peer_count, random()), reverse=True)
+                        print(len(Peer.peer_instances), thisPeer.peer_id, thisPeer.is_seed, len(available_blocks), piece_picker.num_of_pieces_left, piece_picker.downloading)
                         if not available_blocks:
                             break
 
-                        for block in available_blocks:
-                            request = block
-                            thisPeer.endgame_request_msg_sent.add(block)
-                            available_blocks.remove(block)
-                            break
-                        else:
-                            print('standing by!')  # for urgent failed pieces
-                            break
+                        request = available_blocks.pop()
+                        thisPeer.endgame_request_msg_sent.add(request)
 
                         thisPeer.pipelined_requests.add(request)
                         writer.write(Request.encode(request.index, request.begin, request.length))
