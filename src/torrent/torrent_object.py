@@ -15,6 +15,7 @@ class Torrent(object):
     multi_file: bool  # are there multiple files in this torrent?
 
     peer_id: Union[bytes, None]  # a randomly chosen 20-bytes peer id for this download
+    length: int = 0
 
     announce: Optional[bytes] = None  # tracker
     comment: Optional[Union[bytes, None]] = None  # comment added by uploader, optional

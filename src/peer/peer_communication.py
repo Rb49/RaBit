@@ -124,8 +124,11 @@ async def tcp_wire_communication(peerData: Tuple, TorrentData: Torrent, piece_pi
                 elif isinstance(msg, Have):
                     msg: Have
                     assert not thisPeer.is_seed  # a seed will not send have msg. if a peer completes its bitfield don't consider him a seed.
-
                     thisPeer.have_pieces[msg.piece_index] = True
+                    if all(thisPeer.have_pieces):
+                        thisPeer.is_seed = True
+                        print('seed')
+
                     async with asyncio.Lock():
                         piece_picker.change_availability(msg.piece_index, 1)
 
@@ -134,6 +137,9 @@ async def tcp_wire_communication(peerData: Tuple, TorrentData: Torrent, piece_pi
                     if all(msg.bitfield):
                         thisPeer.is_seed = True
                         print('seed')
+                        async with asyncio.Lock():
+                            for piece in piece_picker.pieces_map:
+                                piece.peer_count += 1
 
                     else:
                         print('not seed')
@@ -245,11 +251,10 @@ async def tcp_wire_communication(peerData: Tuple, TorrentData: Torrent, piece_pi
             await chocking_manager.report_uninterested(thisPeer)
 
             # change availability
-            if not thisPeer.is_seed:
-                async with asyncio.Lock():
-                    for bit in thisPeer.have_pieces:
-                        if bit:
-                            piece_picker.change_availability(bit, -1)
+            async with asyncio.Lock():
+                for bit in thisPeer.have_pieces:
+                    if bit:
+                        piece_picker.change_availability(bit, -1)
 
             # return requested blocks
             for block in thisPeer.pipelined_requests:
