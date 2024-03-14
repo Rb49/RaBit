@@ -44,11 +44,15 @@ class File(object):
 
                     continue
 
-            print("\033[90m{}\033[00m".format(f'got piece. {round((1 - self.piece_picker.num_of_pieces_left / len(self.TorrentData.piece_hashes)) * 100, 2)}%'))
+            print("\033[90m{}\033[00m".format(f'got piece. {round((1 - (self.piece_picker.num_of_pieces_left - 1) / len(self.TorrentData.piece_hashes)) * 100, 2)}%'))
 
             writing_begin_index = self.TorrentData.info[b'piece length'] * piece.index
-            # os.lseek(self.fd, writing_begin_index, 0)
-            # os.write(self.fd, data)
+            if piece.index == len(self.TorrentData.piece_hashes) - 1:
+                end_position = self.TorrentData.length - writing_begin_index
+                data = data[:end_position]
+
+            os.lseek(self.fd, writing_begin_index, os.SEEK_SET)
+            os.write(self.fd, data)
 
             self.piece_picker.num_of_pieces_left -= 1
             self.piece_picker.FILE_STATUS[piece.index] = True  # update primary bitfield
