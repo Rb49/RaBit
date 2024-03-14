@@ -146,21 +146,21 @@ class PiecePicker(object):
             if endgame_time and not self.is_in_endgame:
                 self.endgame()
 
-    async def report_block(self, block: Block):
+    async def report_block(self, block: Block, add_data_args: Tuple[bytes, Tuple[str, int]]):
         async with asyncio.Lock():
             # print(self.num_of_pieces_left)
             # the stream already verified the block and made sure we requested it
+            if not block.add_data(*add_data_args):
+                self.TorrentData.wasted += len(add_data_args[0])
+                print('got duplicate')
+                return
+
             if self.is_in_endgame:
-                if block in self.endgame_received_blocks:
-                    print('got duplicate')
-                    return
-                else:
-                    self.add_endgame_block(block)
+                self.add_endgame_block(block)
             else:
                 self.pending_blocks.pop(id(block))
 
-            piece = self.downloading[block.index]
-            piece.current_block += 1
+            piece = self.downloading[block.index]  # all endgame pieces must be in this dict
             # check if the piece is complete
             # print(piece.current_block, piece.blocks_length)
             if piece.is_completed:
@@ -199,7 +199,10 @@ class PiecePicker(object):
         self.buckets_dict[piece.peer_count].add_piece(piece)
 
     def deselect_block(self, block: Block):
-        self.pending_blocks.pop(id(block))
+        if not self.is_in_endgame:
+            self.pending_blocks.pop(id(block))
+        else:
+            self.add_endgame_block(block)
         self.downloading[block.index].deselect_block(block)
 
     def endgame(self):

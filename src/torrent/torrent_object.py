@@ -28,3 +28,5 @@ class Torrent(object):
     # download/upload stats
     downloaded: int = 0
     uploaded: int = 0
+    wasted: int = 0
+    corrupted: int = 0

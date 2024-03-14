@@ -38,6 +38,7 @@ class File(object):
                     print('received corrupted piece ', piece.index)
 
                     # TODO what happens if the last piece is found corrupted while in endgame mode?
+                    self.TorrentData.corrupted += len(data)
                     piece.reset()
                     await self.piece_picker.add_failed_piece(piece)
 

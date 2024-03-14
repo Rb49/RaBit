@@ -1,7 +1,6 @@
 from src.peer.message_types import BLOCK_SIZE
-from src.peer.peer_object import Peer
 
-from typing import List, Tuple
+from typing import List, Tuple, Any
 from dataclasses import dataclass
 from random import random
 
@@ -25,6 +24,7 @@ class Block(object):
     index: int
     begin: int
     length: int
+    piece: Any  # corresponding DownloadingPiece instance
 
     data: bytes = None
     state: int = OPEN
@@ -37,9 +37,13 @@ class Block(object):
         self.downloaded_from = None
 
     def add_data(self, data: bytes, address: Tuple[str, int]):
-        self.data = data
-        self.state = FINISHED
-        self.downloaded_from = address[0]
+        if self.data is None:
+            self.data = data
+            self.state = FINISHED
+            self.downloaded_from = address[0]
+            self.piece.current_block += 1
+            return True
+        return False
 
     def is_equal(self, index: int, begin: int, length: int) -> bool:
         return self.index == index and self.begin == begin and self.length == length
@@ -69,7 +73,7 @@ class DownloadingPiece(object):
             end = min((i + 1) * self.block_size, self.piece_length)
             length = end - begin
             if length != 0:
-                block = Block(self.index, begin, length)
+                block = Block(self.index, begin, length, self)
                 self.blocks.append(block)
 
         self.current_block = 0
@@ -99,6 +103,8 @@ class DownloadingPiece(object):
         self.all_requested = False
         for blk in self.blocks:
             if blk is block:
+                if blk.state == FINISHED:
+                    self.current_block -= 1 if self.current_block > 0 else 0
                 blk.reset()
                 return
 

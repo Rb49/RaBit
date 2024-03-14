@@ -52,7 +52,9 @@ class Peer(object):
         # idk how but this function generates ridiculously incredible downloading on account of cpu usage
         # and breaks when working with real download rate (not len)
         if self.is_in_endgame:
-            self.MAX_PIPELINE_SIZE = 10
+            limit = 10
+        else:
+            limit = 10000000  # very large number
 
         rn = time.time()
         if (dt := rn - self.last_data_sent) < 0.05:
@@ -61,9 +63,9 @@ class Peer(object):
         rate = (len_bytes_sent / 1024) / dt
         # update pipeline size using rtorrent algorithm
         if rate < 20:
-            self.MAX_PIPELINE_SIZE = rate + 2
+            self.MAX_PIPELINE_SIZE = min(rate + 2, limit)
         else:
-            self.MAX_PIPELINE_SIZE = rate / 5 + 18
+            self.MAX_PIPELINE_SIZE = min(rate / 5 + 18, limit)
 
         self.last_data_sent = rn
         self.upload_rate = rate

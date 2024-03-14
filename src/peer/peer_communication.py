@@ -13,8 +13,10 @@ _BUFFER_SIZE = 4096
 
 
 class Stream(object):
-    def __init__(self, reader, TorrentData: Torrent):
+    def __init__(self, reader, writer, thisPeer, TorrentData: Torrent):
         self.reader = reader
+        self.writer = writer
+        self.thisPeer = thisPeer
         self.buffer = b''
         self.TorrentData = TorrentData
 
@@ -26,10 +28,17 @@ class Stream(object):
 
     async def __anext__(self):
         while True:
+            # send control messages
+            while not self.thisPeer.control_msg_queue.empty():
+                msg: bytes = await self.thisPeer.control_msg_queue.get()
+                self.writer.write(msg)
+                await self.writer.drain()
+
             data = await self.reader.read(_BUFFER_SIZE)
             self.buffer += data
             if not self.buffer:
-                raise StopAsyncIteration
+                #  raise StopAsyncIteration
+                ...
 
             length = struct.unpack('>I', self.buffer[0:4])[0] + 4
             if length == 4:  # keepalive, ignore
@@ -97,7 +106,7 @@ async def tcp_wire_communication(peerData: Tuple, TorrentData: Torrent, piece_pi
             await writer.drain()
             print("\033[92m{}\033[00m".format(f'connected {address}, {city}'))
 
-            async for msg in Stream(reader, TorrentData):
+            async for msg in Stream(reader, writer, thisPeer, TorrentData):
                 if isinstance(msg, Chock):
                     thisPeer.is_chocked = True
                     # send interested
@@ -160,16 +169,12 @@ async def tcp_wire_communication(peerData: Tuple, TorrentData: Torrent, piece_pi
 
                     # update pipeline size
                     thisPeer.update_upload_rate(len(msg.data))
-
                     thisPeer.pipelined_requests.remove(block)
-                    block.add_data(msg.data, thisPeer.address)
-                    await piece_picker.report_block(block)
 
-                # send control messages
-                while not thisPeer.control_msg_queue.empty():
-                    msg: bytes = await thisPeer.control_msg_queue.get()
-                    writer.write(msg)
-                    await writer.drain()
+                    if thisPeer.is_in_endgame:
+                        thisPeer.endgame_cancel_msg_sent.add(block)
+
+                    await piece_picker.report_block(block, (msg.data, thisPeer.address))
 
                 # send requests
                 if not thisPeer.is_in_endgame:
@@ -185,12 +190,15 @@ async def tcp_wire_communication(peerData: Tuple, TorrentData: Torrent, piece_pi
                                 break
 
                 if thisPeer.is_in_endgame:
-                    # available_blocks = all blocks - blocks I already requested - blocks somebody else got - blocks in my pipeline
-                    available_blocks = thisPeer.endgame_blocks - thisPeer.endgame_request_msg_sent - piece_picker.endgame_received_blocks - set(thisPeer.pipelined_requests)
-                    available_blocks = list(available_blocks)
-                    shuffle(available_blocks)
-                    print(thisPeer.peer_id, len(available_blocks), piece_picker.num_of_pieces_left)
-                    while not thisPeer.is_chocked and len(thisPeer.pipelined_requests) < thisPeer.MAX_PIPELINE_SIZE and available_blocks:
+                    while not thisPeer.is_chocked and len(thisPeer.pipelined_requests) < thisPeer.MAX_PIPELINE_SIZE:
+                        # available_blocks = all blocks - blocks I already requested - blocks somebody else got - blocks in my pipeline
+                        available_blocks = thisPeer.endgame_blocks - thisPeer.endgame_request_msg_sent - piece_picker.endgame_received_blocks - set(thisPeer.pipelined_requests)
+                        available_blocks = list(available_blocks)
+                        shuffle(available_blocks)
+                        print(thisPeer.peer_id, len(available_blocks), piece_picker.num_of_pieces_left, piece_picker.downloading)
+                        if not available_blocks:
+                            break
+
                         for block in available_blocks:
                             request = block
                             thisPeer.endgame_request_msg_sent.add(block)
@@ -207,8 +215,8 @@ async def tcp_wire_communication(peerData: Tuple, TorrentData: Torrent, piece_pi
                         await asyncio.sleep(0.01)  # giving time for other connections to get pieces
 
                     # send cancels
-                    need_to_cancel = thisPeer.endgame_request_msg_sent - thisPeer.endgame_cancel_msg_sent
-                    need_to_cancel = need_to_cancel.intersection(piece_picker.endgame_received_blocks)
+                    requested_not_canceled = thisPeer.endgame_request_msg_sent - thisPeer.endgame_cancel_msg_sent
+                    need_to_cancel = requested_not_canceled.intersection(piece_picker.endgame_received_blocks)
                     for block in need_to_cancel:
                         writer.write(Cancel.encode(block.index, block.begin, block.length))
                         await writer.drain()
