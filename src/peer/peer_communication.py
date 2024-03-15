@@ -197,7 +197,7 @@ async def tcp_wire_communication(peerData: Tuple, TorrentData: Torrent, piece_pi
                         # available_blocks = all blocks - blocks I already requested - blocks somebody else got - blocks in my pipeline
                         available_blocks = thisPeer.endgame_blocks - thisPeer.endgame_request_msg_sent - piece_picker.endgame_received_blocks - set(thisPeer.pipelined_requests)
                         available_blocks = list(available_blocks)
-                        available_blocks.sort(key=lambda x: (piece_picker.pieces_map[x.index].peer_count, random()), reverse=True)
+                        available_blocks.sort(key=lambda x: piece_picker.pieces_map[x.index].peer_count + random(), reverse=True)
                         print(len(Peer.peer_instances), thisPeer.peer_id, thisPeer.is_seed, len(available_blocks), piece_picker.num_of_pieces_left, piece_picker.downloading)
                         if not available_blocks:
                             break
@@ -241,15 +241,15 @@ async def tcp_wire_communication(peerData: Tuple, TorrentData: Torrent, piece_pi
 
             await chocking_manager.report_uninterested(thisPeer)
 
+            # return requested blocks
+            for block in thisPeer.pipelined_requests:
+                piece_picker.deselect_block(block)
+
             # change availability
             async with asyncio.Lock():
                 for bit in thisPeer.have_pieces:
                     if bit:
                         piece_picker.change_availability(bit, -1)
-
-            # return requested blocks
-            for block in thisPeer.pipelined_requests:
-                piece_picker.deselect_block(block)
 
     except Exception as e:  # general error related to the connection
         print(e)

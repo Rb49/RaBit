@@ -103,7 +103,7 @@ class PiecePicker(object):
         self.buckets_dict[0].priority = 0
 
         self.downloading: Dict[int, DownloadingPiece] = dict()  # piece index -> DownloadingPiece
-        self.pending_blocks: Dict[int, Tuple[Block, float]] = dict()
+        self.pending_blocks: Dict[Block, Tuple[Block, float]] = dict()
 
         self.num_of_pieces_left = len(TorrentData.piece_hashes)
 
@@ -117,7 +117,7 @@ class PiecePicker(object):
             for index, piece in self.downloading.items():
                 if have_mask[index]:
                     if isinstance((block := piece.get_next_request()), Block):
-                        self.pending_blocks[id(block)] = (block, time.time())
+                        self.pending_blocks[block] = (block, time.time())
                         return block
 
             # add another piece to the downloading dict
@@ -139,7 +139,7 @@ class PiecePicker(object):
                         # self.sort_downloading()  # no need to sort, the first pieces should be the most requested
 
                         block = newPiece.get_next_request()
-                        self.pending_blocks[id(block)] = (block, time.time())
+                        self.pending_blocks[block] = (block, time.time())
                         return block
 
             # TODO add endgame mode
@@ -158,7 +158,7 @@ class PiecePicker(object):
             if self.is_in_endgame:
                 self.endgame_received_blocks.add(block)
             else:
-                self.pending_blocks.pop(id(block))
+                self.pending_blocks.pop(block)
 
             piece = self.downloading[block.index]  # all endgame pieces must be in this dict
             # check if the piece is complete
@@ -199,7 +199,7 @@ class PiecePicker(object):
 
     def deselect_block(self, block: Block):
         if not self.is_in_endgame:
-            self.pending_blocks.pop(id(block))
+            self.pending_blocks.pop(block)
         else:
             self.add_endgame_block(block)
         self.downloading[block.index].deselect_block(block)
