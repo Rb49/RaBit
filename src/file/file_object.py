@@ -14,7 +14,7 @@ class File(object):
         self.TorrentData = TorrentData
         self.results_queue = results_queue
         self.file_name = path + TorrentData.info[b'name'].decode('utf-8')
-        self.fd = os.open(self.file_name, os.O_RDWR | os.O_CREAT)
+        self.fd = os.open(self.file_name, os.O_RDWR | os.O_CREAT | os.O_BINARY)
         self.skip_hash_check = skip_hash_check
         self.piece_picker = piece_picker
 
@@ -22,6 +22,7 @@ class File(object):
         while True:
             if self.piece_picker.num_of_pieces_left == 0:
                 # TODO a more elegant exit, let all interested disconnect and then switch to seeding in server sock
+                os.close(self.fd)
                 exit(0)
 
             with threading.Lock():
@@ -29,7 +30,6 @@ class File(object):
 
             # hash check
             data = piece.get_data
-            print(type(data), len(data))
             piece_hash = sha1(data).digest()
             torrent_piece_hash = self.TorrentData.piece_hashes[piece.index]
 
