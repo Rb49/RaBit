@@ -10,7 +10,7 @@ def count_different_bytes(file1_path, file2_path):
     return count
 
 file1_path = r"C:\Users\roeyb\Downloads\debian-edu-12.4.0-amd64-netinst.iso"
-file2_path = r"C:\Users\roeyb\PycharmProjects\RaBit2\results\debian-edu-12.4.0-amd64-netinst.iso"
+file2_path = r"C:\Users\roeyb\OneDrive\Documents\GitHub\RaBit\RaBit\results\debian-edu-12.4.0-amd64-netinst.iso"
 
 try:
     different_bytes_count = count_different_bytes(file1_path, file2_path)

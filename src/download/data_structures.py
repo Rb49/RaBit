@@ -110,9 +110,6 @@ class DownloadingPiece(object):
 
     @property
     def get_data(self) -> bytes:
-        if not self.is_completed:
-            return None
-
         data = b''.join([block.data for block in self.blocks])
         return data
 

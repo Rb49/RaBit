@@ -14,10 +14,9 @@ class Peer(object):
     object to store attributes of a peer and some stats
     """
     peer_instances: List = []
+    MAX_ENDGAME_REQUESTS = 2
 
     def __init__(self, TorrentData: Torrent, address: Tuple[str, int], geodata: Tuple[str, str, float, float]):
-        Peer.peer_instances.append(self)
-
         self.torrent = TorrentData
 
         self.MAX_PIPELINE_SIZE = 10  # 10 is default
@@ -43,29 +42,34 @@ class Peer(object):
 
         self.download_rate = 0  # in KiB/s
         self.upload_rate = 0  # in KiB/s
+        self.downloaded = 0  # in bytes
+        self.uploaded = 0  # in bytes
 
         self.geodata = geodata
         self.peer_id = None
         self.client = None
 
+    def add_peer_id(self, peer_id: bytes):
+        self.peer_id = peer_id
+        Peer.peer_instances.append(self)
+
     def update_upload_rate(self, len_bytes_sent: int):
+        # TODO make real upload rate using a counter
         # idk how but this function generates ridiculously incredible downloading on account of cpu usage
         # and breaks when working with real download rate (not len)
-        if self.is_in_endgame:
-            limit = 2
-        else:
-            limit = 10000000  # very large number
-
         rn = time.time()
         if (dt := rn - self.last_data_sent) < 0.05:
             return
-
         rate = (len_bytes_sent / 1024) / dt
-        # update pipeline size using rtorrent algorithm
-        if rate < 20:
-            self.MAX_PIPELINE_SIZE = min(rate + 2, limit)
+
+        if self.is_in_endgame:
+            self.MAX_PIPELINE_SIZE = Peer.MAX_ENDGAME_REQUESTS
         else:
-            self.MAX_PIPELINE_SIZE = min(rate / 5 + 18, limit)
+            # update pipeline size using rtorrent algorithm
+            if rate < 20:
+                self.MAX_PIPELINE_SIZE = rate + 2
+            else:
+                self.MAX_PIPELINE_SIZE = rate / 5 + 18
 
         self.last_data_sent = rn
         self.upload_rate = rate
@@ -75,6 +79,3 @@ class Peer(object):
 
     def __hash__(self):
         return hash(repr(self))
-
-    def __del__(self):
-        Peer.peer_instances.remove(self)
