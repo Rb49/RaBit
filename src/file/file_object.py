@@ -14,7 +14,7 @@ class File(object):
         self.TorrentData = TorrentData
         self.results_queue = results_queue
         self.file_name = path + TorrentData.info[b'name'].decode('utf-8')
-        self.fd = os.open(self.file_name, os.O_RDWR | os.O_CREAT)
+        self.fd = os.open(self.file_name, os.O_RDWR | os.O_CREAT | os.O_BINARY)
         self.skip_hash_check = skip_hash_check
         self.piece_picker = piece_picker
 
@@ -22,6 +22,7 @@ class File(object):
         while True:
             if self.piece_picker.num_of_pieces_left == 0:
                 # TODO a more elegant exit, let all interested disconnect and then switch to seeding in server sock
+                os.close(self.fd)
                 exit(0)
 
             with threading.Lock():
@@ -38,16 +39,21 @@ class File(object):
                     print('received corrupted piece ', piece.index)
 
                     # TODO what happens if the last piece is found corrupted while in endgame mode?
+                    self.TorrentData.corrupted += len(data)
                     piece.reset()
                     await self.piece_picker.add_failed_piece(piece)
 
                     continue
 
-            print("\033[90m{}\033[00m".format(f'got piece. {round((1 - self.piece_picker.num_of_pieces_left / len(self.TorrentData.piece_hashes)) * 100, 2)}%'))
+            print("\033[90m{}\033[00m".format(f'got piece. {round((1 - (self.piece_picker.num_of_pieces_left - 1) / len(self.TorrentData.piece_hashes)) * 100, 2)}%. index: {piece.index}'))
 
             writing_begin_index = self.TorrentData.info[b'piece length'] * piece.index
-            # os.lseek(self.fd, writing_begin_index, 0)
-            # os.write(self.fd, data)
+            if piece.index == len(self.TorrentData.piece_hashes) - 1:
+                end_position = self.TorrentData.length - writing_begin_index
+                data = data[:end_position]
+
+            os.lseek(self.fd, writing_begin_index, os.SEEK_SET)
+            os.write(self.fd, data)
 
             self.piece_picker.num_of_pieces_left -= 1
             self.piece_picker.FILE_STATUS[piece.index] = True  # update primary bitfield

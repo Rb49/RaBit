@@ -18,7 +18,7 @@ from random import shuffle
 async def main() -> None:
     # path for test torrent file
     torrent_name = "Coding with AI For Dummies by Chris Minnick PDF.torrent"
-    # torrent_name = "debian-edu-12.4.0-amd64-netinst.iso.torrent"
+    torrent_name = "debian-edu-12.4.0-amd64-netinst.iso.torrent"
     # torrent_name = "Young.Sheldon.S07E01.HDTV.x264-TORRENTGALAXY.torrent"
     # torrent_name = "The.Hunger.Games.The.Ballad.of.Songbirds.and.Snakes.2023.2160p.WEB-DL.DDP5.1.Atmos.DV.HDR.H.265-FLUX[TGx].torrent"
     test_path = "././data/" + torrent_name
@@ -32,7 +32,7 @@ async def main() -> None:
 
     # my_ip = get_my_public_ip()
     # TODO save ip in config file and update only when expired
-    my_ip = '176.230.227.216'
+    my_ip = '176.230.227.247'
     peers_list = format_peers_list(peers_list, my_ip)
 
     # --------
@@ -49,9 +49,9 @@ async def main() -> None:
     # TODO better peer management
     # TODO run a peer reputation db and reconnect to good peers if needed
     work = [tcp_wire_communication(peer, TorrentData, piece_picker, tit_for_tat_manager) for peer in peers_list]
+    print(len(work))
     await asyncio.gather(disk_loop, *work, tit_for_tat_loop)
 
-    print('final: ', piece_picker.num_of_pieces_left)
     return
 
 

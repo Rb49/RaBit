@@ -23,7 +23,7 @@ class TitForTat(object):
             sorted_peers = sorted(list(filter(lambda x: x.am_interested, self.peers)), key=lambda x: x.upload_rate, reverse=True)
             self.downloaders = sorted_peers[:TitForTat.MAX_UNCHOCKED_PEERS]
             if self.downloaders:
-                self.good_uninterested_peers = list(filter(lambda x: not x.am_interested and x.upload_rate > self.downloaders[-1], self.peers))
+                self.good_uninterested_peers = list(filter(lambda x: not x.am_interested and x.upload_rate > self.downloaders[-1].upload_rate, self.peers))
             else:
                 self.good_uninterested_peers = sorted(list(filter(lambda x: not x.am_interested, self.peers)), key=lambda x: x.upload_rate, reverse=True)[:TitForTat.MAX_UNCHOCKED_PEERS]
 
@@ -65,16 +65,19 @@ class TitForTat(object):
 
     async def report_interested(self, peer: Peer):
         peer.am_interested = True
-        if peer in self.good_uninterested_peers:
-            kicked_peer = self.downloaders.pop()  # worse downloader
-            await self.piece_picker.send_chock(kicked_peer)
-
+        if len(self.downloaders) < TitForTat.MAX_UNCHOCKED_PEERS:
             self.downloaders.append(peer)
             self.downloaders.sort(key=lambda x: x.upload_rate, reverse=True)
 
+            if peer in self.good_uninterested_peers:
+                self.good_uninterested_peers.remove(peer)
+
             await self.piece_picker.send_unchock(peer)
 
-        elif len(self.downloaders) < TitForTat.MAX_UNCHOCKED_PEERS:
+        elif peer in self.good_uninterested_peers:
+            kicked_peer = self.downloaders.pop()  # worse downloader
+            await self.piece_picker.send_chock(kicked_peer)
+
             self.downloaders.append(peer)
             self.downloaders.sort(key=lambda x: x.upload_rate, reverse=True)
 
@@ -95,6 +98,9 @@ class TitForTat(object):
                 self.downloaders.append(new_peer)
                 self.downloaders.sort(key=lambda x: x.upload_rate, reverse=True)
                 await self.piece_picker.send_unchock(peer)
+
+        elif peer in self.good_uninterested_peers:
+            self.good_uninterested_peers.remove(peer)
 
         else:
             pass  # do nothing

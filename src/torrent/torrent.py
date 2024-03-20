@@ -31,6 +31,12 @@ def read_torrent(path: str) -> Torrent:
                                  announce_list=content.get(b'announce-list'),
                                  nodes=content.get(b'nodes'))
 
+    if torrent_data.multi_file:
+        for file in torrent_data.info[b'files']:
+            torrent_data.length += file[b'length']
+    else:
+        torrent_data.length = content[b'info'].get(b'length')
+
     # set info_hash, piece_hashes and peer_id:
     # hashes are in sha1, 20 bytes long
     pieces = torrent_data.info[b'pieces']
