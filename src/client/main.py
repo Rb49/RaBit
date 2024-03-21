@@ -17,7 +17,7 @@ from random import shuffle
 
 async def main() -> None:
     # path for test torrent file
-    torrent_name = "Coding with AI For Dummies by Chris Minnick PDF.torrent"
+    # torrent_name = "Coding with AI For Dummies by Chris Minnick PDF.torrent"
     torrent_name = "debian-edu-12.4.0-amd64-netinst.iso.torrent"
     # torrent_name = "Young.Sheldon.S07E01.HDTV.x264-TORRENTGALAXY.torrent"
     # torrent_name = "The.Hunger.Games.The.Ballad.of.Songbirds.and.Snakes.2023.2160p.WEB-DL.DDP5.1.Atmos.DV.HDR.H.265-FLUX[TGx].torrent"

@@ -13,16 +13,30 @@ class File(object):
     def __init__(self, TorrentData: Torrent, piece_picker: PiecePicker, results_queue: BetterQueue, path: str, skip_hash_check: bool = False):
         self.TorrentData = TorrentData
         self.results_queue = results_queue
-        self.file_name = path + TorrentData.info[b'name'].decode('utf-8')
-        self.fd = os.open(self.file_name, os.O_RDWR | os.O_CREAT | os.O_BINARY)
         self.skip_hash_check = skip_hash_check
         self.piece_picker = piece_picker
+
+        if not TorrentData.multi_file:
+            self.file_names = [path + TorrentData.info[b'name'].decode('utf-8')]
+            self.fds = [os.open(self.file_names[0], os.O_RDWR | os.O_CREAT | os.O_BINARY)]
+            self.file_indices = [TorrentData.length]
+        else:
+            os.makedirs((path := path + TorrentData.info[b'name'].decode('utf-8')), exist_ok=True)
+            self.file_names = [path + '/' + name[b'path'][0].decode('utf-8') for name in TorrentData.info[b'files']]
+            self.fds = [os.open(file_name, os.O_RDWR | os.O_CREAT | os.O_BINARY) for file_name in self.file_names]
+
+            total = 0
+            self.file_indices = []
+            for name in TorrentData.info[b'files']:
+                total += name[b'length']
+                self.file_indices.append(total)
 
     async def save_pieces_loop(self):
         while True:
             if self.piece_picker.num_of_pieces_left == 0:
                 # TODO a more elegant exit, let all interested disconnect and then switch to seeding in server sock
-                os.close(self.fd)
+                for fd in self.fds:
+                    os.close(fd)
                 exit(0)
 
             with threading.Lock():
@@ -38,7 +52,6 @@ class File(object):
                     # TODO create corrupt pieces and blocks instances and remember the addresses of senders
                     print('received corrupted piece ', piece.index)
 
-                    # TODO what happens if the last piece is found corrupted while in endgame mode?
                     self.TorrentData.corrupted += len(data)
                     piece.reset()
                     await self.piece_picker.add_failed_piece(piece)
@@ -49,11 +62,24 @@ class File(object):
 
             writing_begin_index = self.TorrentData.info[b'piece length'] * piece.index
             if piece.index == len(self.TorrentData.piece_hashes) - 1:
-                end_position = self.TorrentData.length - writing_begin_index
-                data = data[:end_position]
+                end_position = min(self.TorrentData.length, writing_begin_index + len(data))
+                data = data[:end_position - writing_begin_index]
 
-            os.lseek(self.fd, writing_begin_index, os.SEEK_SET)
-            os.write(self.fd, data)
+            # get file fd
+            relative_start = 0
+            for index, fd in enumerate(self.fds):
+                indice = self.file_indices[index]
+                if indice - (writing_begin_index + relative_start) < 0:
+                    continue
+                relative_start = min(relative_start, indice)
+                relative_end = min(indice, len(data))
+                data_block = data[relative_start:relative_end]
+                if not data_block:
+                    break
+                print(relative_start, relative_end)
+                os.lseek(fd, writing_begin_index + relative_start, os.SEEK_SET)
+                os.write(fd, data_block)
+                relative_start = relative_end
 
             self.piece_picker.num_of_pieces_left -= 1
             self.piece_picker.FILE_STATUS[piece.index] = True  # update primary bitfield
@@ -61,4 +87,5 @@ class File(object):
             piece.reset()
 
     def __del__(self):
-        os.close(self.fd)
+        for fd in self.fds:
+            os.close(fd)
