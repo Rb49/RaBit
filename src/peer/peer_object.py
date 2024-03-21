@@ -14,7 +14,7 @@ class Peer(object):
     object to store attributes of a peer and some stats
     """
     peer_instances: List = []
-    MAX_ENDGAME_REQUESTS = 2
+    MAX_ENDGAME_REQUESTS = 5
 
     def __init__(self, TorrentData: Torrent, address: Tuple[str, int], geodata: Tuple[str, str, float, float]):
         self.torrent = TorrentData
@@ -63,7 +63,7 @@ class Peer(object):
         rate = (len_bytes_sent / 1024) / dt
 
         if self.is_in_endgame:
-            self.MAX_PIPELINE_SIZE = Peer.MAX_ENDGAME_REQUESTS
+            self.MAX_PIPELINE_SIZE = min(rate + 2, Peer.MAX_ENDGAME_REQUESTS)
         else:
             # update pipeline size using rtorrent algorithm
             if rate < 20:
