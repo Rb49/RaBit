@@ -4,7 +4,7 @@ from src.torrent.torrent_object import Torrent
 
 import asyncio
 from hashlib import sha1
-from typing import Dict, List
+from typing import Dict, List, Tuple
 import threading
 import os
 
@@ -20,16 +20,30 @@ class File(object):
             self.file_names = [path + TorrentData.info[b'name'].decode('utf-8')]
             self.fds = [os.open(self.file_names[0], os.O_RDWR | os.O_CREAT | os.O_BINARY)]
             self.file_indices = [TorrentData.length]
+            self.multi_file = False
         else:
             os.makedirs((path := path + TorrentData.info[b'name'].decode('utf-8')), exist_ok=True)
             self.file_names = [path + '/' + name[b'path'][0].decode('utf-8') for name in TorrentData.info[b'files']]
             self.fds = [os.open(file_name, os.O_RDWR | os.O_CREAT | os.O_BINARY) for file_name in self.file_names]
+            self.multi_file = True
 
             total = 0
             self.file_indices = []
             for name in TorrentData.info[b'files']:
                 total += name[b'length']
                 self.file_indices.append(total)
+
+    def get_piece(self, piece_index: int, begin: int, length: int) -> Tuple[int, int, bytes]:
+        reading_begin_index = self.TorrentData.info[b'piece length'] * piece_index + begin
+        if not self.multi_file:
+            fd = self.fds[0]
+            os.lseek(fd, reading_begin_index, os.SEEK_SET)
+            data = os.read(fd, length)
+            if len(data) < length:  # add padding to the last piece
+                data += b'\x00' * (length - len(data))
+            return piece_index, begin, data
+        else:
+            ...
 
     async def save_pieces_loop(self):
         while True:
@@ -58,7 +72,7 @@ class File(object):
 
                     continue
 
-            print("\033[90m{}\033[00m".format(f'got piece. {round((1 - (self.piece_picker.num_of_pieces_left - 1) / len(self.TorrentData.piece_hashes)) * 100, 2)}%. index: {piece.index}'))
+            print("\033[90m{}\033[00m".format(f'got piece. {round((1 - (self.piece_picker.num_of_pieces_left - 1) / len(self.TorrentData.piece_hashes)) * 100, 2)}%. have index: {piece.index}'))
 
             writing_begin_index = self.TorrentData.info[b'piece length'] * piece.index
             if piece.index == len(self.TorrentData.piece_hashes) - 1:

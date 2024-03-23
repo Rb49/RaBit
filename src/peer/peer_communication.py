@@ -1,4 +1,4 @@
-from typing import Dict, Tuple
+from typing import Dict, Tuple, List
 from src.torrent.torrent_object import Torrent
 from .peer_object import Peer
 from .handshake import handshake, open_tcp_connection
@@ -8,6 +8,9 @@ from src.download.upload_in_download import TitForTat
 import asyncio
 import struct
 from random import sample, shuffle, random, seed
+from queue import Queue
+
+from ..file.file_object import File
 
 _BUFFER_SIZE = 4096
 
@@ -87,8 +90,7 @@ class Stream(object):
                 raise AssertionError
 
 
-async def tcp_wire_communication(peerData: Tuple, TorrentData: Torrent, piece_picker: PiecePicker,
-                                 chocking_manager: TitForTat):
+async def tcp_wire_communication(peerData: Tuple, TorrentData: Torrent, file_manager: File, piece_picker: PiecePicker, chocking_manager: TitForTat):
     address, city, distance = peerData
     try:
         reader, writer = await asyncio.wait_for(open_tcp_connection(address), timeout=3)
@@ -96,6 +98,7 @@ async def tcp_wire_communication(peerData: Tuple, TorrentData: Torrent, piece_pi
             return
 
         thisPeer = Peer(TorrentData, address, city)
+        request_queue: List[Tuple[int, int, int]] = []
         try:
             # start with a handshake
             peer_id = await asyncio.wait_for(handshake(TorrentData, reader, writer), timeout=10)
@@ -157,11 +160,18 @@ async def tcp_wire_communication(peerData: Tuple, TorrentData: Torrent, piece_pi
 
                 # TODO implement uploading
                 elif isinstance(msg, Request):
-                    ...
+                    if not thisPeer.am_chocked:
+                        if piece_picker.FILE_STATUS[msg.piece_index]:
+                            request_queue.append((msg.piece_index, msg.begin, msg.length))
+                        else:
+                            pass
 
                 # TODO implement uploading
                 elif isinstance(msg, Cancel):
-                    ...
+                    if (details := (msg.piece_index, msg.begin, msg.length)) in request_queue:
+                        request_queue.remove(details)
+                    else:
+                        pass
 
                 # TODO add port type
 
@@ -240,6 +250,13 @@ async def tcp_wire_communication(peerData: Tuple, TorrentData: Torrent, piece_pi
                     # request more blocks and don't get stuck on specific blocks
                     Peer.MAX_ENDGAME_REQUESTS += len(need_to_cancel)
                     thisPeer.MAX_PIPELINE_SIZE += len(need_to_cancel)
+
+                # fulfill requests
+                while request_queue:
+                    params = file_manager.get_piece(*request_queue.pop())
+                    writer.write(Piece.encode(*params))
+                    await writer.drain()
+                    print('fulfilled request!')
 
                 '''
                 writer.write(b'\x00\x00\x00\x00')

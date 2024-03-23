@@ -1,21 +1,15 @@
-def count_different_bytes(file1_path, file2_path):
-    with open(file1_path, 'rb') as file1, open(file2_path, 'rb') as file2:
-        bytes1 = file1.read()
-        bytes2 = file2.read()
+import os
 
-    if len(bytes1) != len(bytes2):
-        raise ValueError("Files are not of the same size")
-    print(len(bytes1), len(bytes2))
-    count = sum(1 for b1, b2 in zip(bytes1, bytes2) if b1 != b2)
-    return count
+# Open a file in binary read mode
+with open('example.txt', 'rb') as file:
+    # Get the file descriptor
+    fd = file.fileno()
 
-file1_path = r"C:\Users\roeyb\Downloads\debian-edu-12.4.0-amd64-netinst.iso"
-file2_path = r"C:\Users\roeyb\OneDrive\Documents\GitHub\RaBit\RaBit\results\debian-edu-12.4.0-amd64-netinst.iso"
+    # Seek to a specific index within the file (e.g., index 50)
+    os.lseek(fd, 0, os.SEEK_SET)
 
-try:
-    different_bytes_count = count_different_bytes(file1_path, file2_path)
-    print(f"Number of different bytes between {file1_path} and {file2_path}: {different_bytes_count}")
-except FileNotFoundError:
-    print("One or both files not found.")
-except ValueError as e:
-    print(e)
+    # Read up to 100 bytes from the file
+    data = os.read(fd, 100)
+
+    # Print the data
+    print(data)

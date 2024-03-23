@@ -75,7 +75,7 @@ class TitForTat(object):
             await self.piece_picker.send_unchock(peer)
 
         elif peer in self.good_uninterested_peers:
-            kicked_peer = self.downloaders.pop()  # worse downloader
+            kicked_peer = self.downloaders.pop()  # worst downloader
             await self.piece_picker.send_chock(kicked_peer)
 
             self.downloaders.append(peer)

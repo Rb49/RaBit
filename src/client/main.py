@@ -18,6 +18,7 @@ from random import shuffle
 async def main() -> None:
     # path for test torrent file
     # torrent_name = "Coding with AI For Dummies by Chris Minnick PDF.torrent"
+    # torrent_name = "The Best American Short Stories, 2011–2023 (13 books).torrent"
     torrent_name = "debian-edu-12.4.0-amd64-netinst.iso.torrent"
     # torrent_name = "Young.Sheldon.S07E01.HDTV.x264-TORRENTGALAXY.torrent"
     # torrent_name = "The.Hunger.Games.The.Ballad.of.Songbirds.and.Snakes.2023.2160p.WEB-DL.DDP5.1.Atmos.DV.HDR.H.265-FLUX[TGx].torrent"
@@ -48,7 +49,7 @@ async def main() -> None:
 
     # TODO better peer management
     # TODO run a peer reputation db and reconnect to good peers if needed
-    work = [tcp_wire_communication(peer, TorrentData, piece_picker, tit_for_tat_manager) for peer in peers_list]
+    work = [tcp_wire_communication(peer, TorrentData, file, piece_picker, tit_for_tat_manager) for peer in peers_list]
     print(len(work))
     await asyncio.gather(disk_loop, *work, tit_for_tat_loop)
 
@@ -58,6 +59,10 @@ async def main() -> None:
 if __name__ == '__main__':
     import tracemalloc
     tracemalloc.start()
+
+    import sys
+    if sys.version_info[0:2] != (3, 10):
+        raise Exception("Wrong Python version! Use version 3.10 only.")
 
     # t = threading.Thread(target=lambda: asyncio.run(main()), daemon=True)
     # t.start()
