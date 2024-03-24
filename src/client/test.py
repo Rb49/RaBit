@@ -1,15 +1,16 @@
-import os
+import miniupnpc
 
-# Open a file in binary read mode
-with open('example.txt', 'rb') as file:
-    # Get the file descriptor
-    fd = file.fileno()
 
-    # Seek to a specific index within the file (e.g., index 50)
-    os.lseek(fd, 0, os.SEEK_SET)
+def forward_port(port):
+    upnp = miniupnpc.UPnP()
+    upnp.discoverdelay = 200
+    upnp.discover()
+    upnp.selectigd()
+    external_ip = upnp.externalipaddress()
+    print("External IP address:", external_ip)
+    upnp.addportmapping(port, 'TCP', upnp.lanaddr, port, 'Forwarded port', '')
 
-    # Read up to 100 bytes from the file
-    data = os.read(fd, 100)
 
-    # Print the data
-    print(data)
+if __name__ == "__main__":
+    port_to_forward = 8080  # Change this to the desired port
+    forward_port(port_to_forward)

@@ -85,8 +85,8 @@ class File(object):
                 indice = self.file_indices[index]
                 if indice - (writing_begin_index + relative_start) < 0:
                     continue
-                relative_start = min(relative_start, indice)
-                relative_end = min(indice, len(data))
+                relative_start = min(relative_start, indice - writing_begin_index)
+                relative_end = min(indice - writing_begin_index, len(data))
                 data_block = data[relative_start:relative_end]
                 if not data_block:
                     break

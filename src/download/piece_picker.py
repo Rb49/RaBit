@@ -164,7 +164,7 @@ class PiecePicker(object):
             # check if the piece is complete
             # print(piece.current_block, piece.blocks_length)
             if piece.is_completed:
-                print('have ', piece.index, len(piece.get_data))
+                # print('have ', piece.index, len(piece.get_data))
                 if not self.is_in_endgame:
                     self.downloading.pop(piece.index)
 
