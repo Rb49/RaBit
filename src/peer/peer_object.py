@@ -1,12 +1,9 @@
-import asyncio
-
-import bitarray
-
 from src.torrent.torrent_object import Torrent
 
 import time
 from typing import Tuple, List, Set
 import bitstring
+import asyncio
 
 
 class Peer(object):
