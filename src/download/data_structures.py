@@ -1,6 +1,6 @@
 from src.peer.message_types import BLOCK_SIZE
 
-from typing import List, Tuple, Any
+from typing import List, Tuple, Any, Set
 from dataclasses import dataclass
 from random import random
 
@@ -54,9 +54,9 @@ class Block(object):
     def __hash__(self):
         return hash(repr(self))
 
-
-class FailedBlock(Block):
-    pass
+    @property
+    def data_hash(self):
+        return hash(self.data)
 
 
 class DownloadingPiece(object):
@@ -80,6 +80,7 @@ class DownloadingPiece(object):
         self.blocks_length = len(self.blocks)
 
         self.urgent = False  # true if the piece needs to be completed as fast as possible due to a failed request
+        self.previous_tries: List[FailedPiece] = []
 
     def reset(self):
         self.all_requested = False
@@ -121,6 +122,42 @@ class DownloadingPiece(object):
     def priority(self):
         return (not self.urgent), self.all_requested, (1 - self.current_block / self.blocks_length), random()
 
+    def get_bad_peers(self) -> Set[str]:
+        # runs at successful hash check
+        bad_peers = set()
+        while self.previous_tries:
+            failed_piece = self.previous_tries.pop()
+            bad_peers.update(failed_piece.get_bad_peers(self))
+        return bad_peers
 
-class FailedPiece(DownloadingPiece):
-    pass
+
+class FailedPiece(object):
+    """
+    an instance will be created for each piece failure
+    """
+    def __init__(self, failed_piece: DownloadingPiece):
+        self.piece_index = failed_piece.index
+        self.failed_blocks: List[Tuple[int, str]] = [(block.data_hash, block.downloaded_from) for block in failed_piece.blocks]
+
+    def get_bad_peers(self, verified_piece: DownloadingPiece) -> Set[str]:
+        verified_blocks: List[Tuple[int, str]] = [(block.data_hash, block.downloaded_from) for block in verified_piece.blocks]
+
+        bad_peers = set()
+        for good_block, bad_block in zip(verified_blocks, self.failed_blocks):
+            if good_block[0] == bad_block[0]:
+                continue
+
+            # bad peer detected!
+            bad_peers.add(bad_block[1])
+
+        return bad_peers
+
+
+
+
+
+
+
+
+
+
