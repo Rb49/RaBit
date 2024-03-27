@@ -6,3 +6,4 @@ yarl~=1.9.3
 requests~=2.31.0
 geoip2~=4.7.0
 upnpclient==1.0.3
+crc32c~=2.4
