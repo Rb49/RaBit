@@ -5,6 +5,7 @@ from .handshake import handshake, open_tcp_connection
 from .message_types import *
 from src.download.piece_picker import PiecePicker, Block
 from src.download.upload_in_download import TitForTat
+import src.app_data.db_utils as db_utils
 import asyncio
 import struct
 from random import sample, shuffle, random, seed
@@ -13,6 +14,7 @@ from queue import Queue
 from ..file.file_object import File
 
 _BUFFER_SIZE = 4096
+_MAX_REQUESTS = 500
 
 
 class Stream(object):
@@ -37,6 +39,8 @@ class Stream(object):
 
     async def __anext__(self):
         while True:
+            assert not self.thisPeer.found_dirty  # get rid of a connection with a dirty peer
+
             data = b''
 
             async def __get_data():
@@ -46,9 +50,7 @@ class Stream(object):
             await asyncio.gather(self.__send_control_messages(), __get_data())
             self.buffer += data
             if not self.buffer:
-                #  raise StopAsyncIteration
-                ...
-                continue
+                raise StopAsyncIteration
 
             length = struct.unpack('>I', self.buffer[0:4])[0] + 4
             if length == 4:  # keepalive
@@ -99,6 +101,7 @@ async def tcp_wire_communication(peerData: Tuple, TorrentData: Torrent, file_man
 
         thisPeer = Peer(TorrentData, address, city)
         request_queue: List[Tuple[int, int, int]] = []
+        balance_counter = 0
         try:
             # start with a handshake
             peer_id = await asyncio.wait_for(handshake(TorrentData, reader, writer), timeout=10)
@@ -108,7 +111,7 @@ async def tcp_wire_communication(peerData: Tuple, TorrentData: Torrent, file_man
             thisPeer.add_peer_id(peer_id)
 
             # TODO now send bitfield / have all/none and fast allowed after fast extension support
-            writer.write(Bitfield.encode(piece_picker.FILE_STATUS[:]))
+            writer.write(Bitfield.encode(piece_picker.FILE_STATUS))
             await writer.drain()
 
             # send interested
@@ -158,15 +161,17 @@ async def tcp_wire_communication(peerData: Tuple, TorrentData: Torrent, file_man
 
                     thisPeer.have_pieces |= msg.bitfield
 
-                # TODO implement uploading
                 elif isinstance(msg, Request):
                     if not thisPeer.am_chocked:
                         if piece_picker.FILE_STATUS[msg.piece_index]:
                             request_queue.append((msg.piece_index, msg.begin, msg.length))
+                            if len(request_queue) > _MAX_REQUESTS:
+                                # attempted dos detected
+                                db_utils.BannedPeersDB().insert_ip(thisPeer.address[0])
+                                raise AssertionError
                         else:
                             pass
 
-                # TODO implement uploading
                 elif isinstance(msg, Cancel):
                     if (details := (msg.piece_index, msg.begin, msg.length)) in request_queue:
                         request_queue.remove(details)
@@ -180,6 +185,7 @@ async def tcp_wire_communication(peerData: Tuple, TorrentData: Torrent, file_man
                     # update statistics
                     TorrentData.downloaded += len(msg.data)
                     thisPeer.uploaded += len(msg.data)
+                    balance_counter += 1
 
                     # check if I requested this block?
                     for block in thisPeer.pipelined_requests:
@@ -226,7 +232,7 @@ async def tcp_wire_communication(peerData: Tuple, TorrentData: Torrent, file_man
                         available_blocks = thisPeer.endgame_blocks - thisPeer.endgame_request_msg_sent - piece_picker.endgame_received_blocks
                         available_blocks = list(available_blocks)
                         available_blocks.sort(key=lambda x: piece_picker.pieces_map[x.index].peer_count + random(), reverse=True)
-                        print(len(Peer.peer_instances), thisPeer.peer_id, thisPeer.is_seed, len(available_blocks), piece_picker.num_of_pieces_left, Peer.peer_instances)
+                        print(len(Peer.peer_instances), thisPeer.peer_id, thisPeer.is_seed, len(available_blocks), piece_picker.num_of_pieces_left)
                         if not available_blocks:
                             break
 
@@ -252,10 +258,15 @@ async def tcp_wire_communication(peerData: Tuple, TorrentData: Torrent, file_man
                     thisPeer.MAX_PIPELINE_SIZE += len(need_to_cancel)
 
                 # fulfill requests
-                while request_queue:
+                while request_queue and balance_counter:
+                    # don't contribute more than the peer's contribution
                     params = file_manager.get_piece(*request_queue.pop())
                     writer.write(Piece.encode(*params))
                     await writer.drain()
+                    balance_counter -= 1
+                    # update statistics
+                    TorrentData.uploaded += len(params[2])
+                    thisPeer.downloaded += len(params[2])
                     print('fulfilled request!')
 
                 '''
@@ -278,8 +289,9 @@ async def tcp_wire_communication(peerData: Tuple, TorrentData: Torrent, file_man
         finally:
             print("\033[91m{}\033[00m".format(f'failed {repr(thisPeer)}'))
             # print("Closing the connection.")
-            writer.close()
-            await writer.wait_closed()
+            if writer is not None:
+                writer.close()
+                await writer.wait_closed()
 
             await chocking_manager.report_uninterested(thisPeer)
 
