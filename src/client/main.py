@@ -1,5 +1,3 @@
-import os
-from typing import Dict
 import src.app_data.db_utils as db_utils
 from src.torrent.torrent import read_torrent
 from src.tracker.announce import announce
@@ -10,11 +8,10 @@ from src.peer.peer_communication import tcp_wire_communication
 from src.file.file_object import File
 from src.download.upload_in_download import TitForTat
 from src.seeding.server import start_seeding_server
-import threading
 
+import threading
+import os
 import asyncio
-import queue
-from random import shuffle
 
 
 async def work_wrapper(disk_loop, tit_for_tat_loop, *work):
