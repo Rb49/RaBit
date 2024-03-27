@@ -11,7 +11,7 @@ class Peer(object):
     object to store attributes of a peer and some stats
     """
     peer_instances: List = []
-    MAX_ENDGAME_REQUESTS = 5
+    MAX_ENDGAME_REQUESTS = 2
 
     def __init__(self, TorrentData: Torrent, address: Tuple[str, int], geodata: Tuple[str, str, float, float]):
         self.torrent = TorrentData
@@ -45,6 +45,7 @@ class Peer(object):
         self.geodata = geodata
         self.peer_id = None
         self.client = None
+        self.found_dirty = False
 
     def add_peer_id(self, peer_id: bytes):
         self.peer_id = peer_id
