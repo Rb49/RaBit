@@ -85,7 +85,7 @@ async def handle_leecher(reader, writer):
             sorted_leechers = sorted(Leecher.leecher_instances, key=lambda x: x.priority)
             if ip_priority > sorted_leechers[0]:
                 # kick that peer
-                sorted_leechers[-1].writer.close()
+                sorted_leechers[0].writer.close()
                 await sorted_leechers[0].writer.wait_closed()
             else:
                 raise ConnectionRefusedError
