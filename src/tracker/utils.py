@@ -1,4 +1,5 @@
-from src.geoip.utils import calc_distance, get_info, get_banned_countries
+import src.app_data.db_utils as db_utils
+from src.geoip.utils import calc_distance, get_info
 import struct
 import socket
 from typing import Tuple, List, Any, Union
@@ -20,8 +21,12 @@ def format_peers_list(peers: List[Tuple[str, int]], my_ip: str) -> List[Tuple[Tu
     for i in range(len(peers)):
         peers[i] = peers[i], (get_info(peers[i][0])), calc_distance(peers[i][0], my_ip)
 
+    # remove banned peers
+    database = db_utils.BannedPeersDB()
+    peers = list(filter(lambda x: not database.find_ip(x[0][0]), peers))
+
     # remove peers from banned countries
-    banned_list = get_banned_countries()
+    banned_list = db_utils.get_banned_countries()
     peers = list(filter(lambda x: x[1][1] if x[1] is not None else '' not in banned_list, peers))
 
     # remove peers with distance 0 (could be me)
