@@ -1,23 +1,16 @@
+import src.app_data.db_utils as db_utils
+
 from geoip2 import database, errors
 from math import radians, cos, sin, atan2, sqrt
 from typing import Tuple, Union
 import requests
 from pathlib import Path
-import json
 
 
 __database_path = 'GeoLite2-City.mmdb'
-__banned_json = 'banned_countries.json'
 
 
-def get_banned_countries():
-    # TODO move the function and json to a single config file
-    with open(__abs_db_path(__banned_json), 'r') as json_file:
-        banned_list = json.load(json_file)
-        return banned_list
-
-
-def __abs_db_path(file_name: str) -> Path:
+def abs_db_path(file_name: str) -> Path:
     """
     computes the absolute path of the file (based on this root dir)
     :return: absolute path
@@ -46,17 +39,23 @@ def __calc_haversine(lat1: float, long1: float, lat2: float, long2: float) -> fl
     return d
 
 
-def get_my_public_ip() -> Union[str, None]:
+async def get_my_public_ip() -> Union[str, None]:
     """
-    uses the ipify api to get my public ip, for geolocation calculations
-    Note: blocking function!
+    gets external_ip from the router
+    backup: uses the ipify api to get my public ip, for geolocation calculations
+    note: blocking function!
     :return: ip address | None is failed
     """
-    try:
-        return requests.get('https://api.ipify.org', timeout=2).content.decode('utf8')
-    except Exception as e:
-        # print(e)
-        return None
+    external_ip = db_utils.get_configuration('external_ip')
+    if not external_ip:
+        # backup
+        try:
+            external_ip = requests.get('https://api.ipify.org', timeout=2).content.decode('utf8')
+            await db_utils.set_configuration('external_ip', external_ip)
+            return external_ip
+        except:
+            return None
+    return external_ip
 
 
 def calc_distance(ip_address1: str, ip_address2: str) -> Union[float, None]:
@@ -81,7 +80,7 @@ def get_info(ip_address: str) -> Union[Tuple[str, str, float, float], None]:
     :param ip_address: ip_address
     :return: tuple: city, country, latitude, longitude | None if failed
     """
-    with database.Reader(__abs_db_path(__database_path)) as reader:
+    with database.Reader(abs_db_path(__database_path)) as reader:
         try:
             response = reader.city(ip_address)
             city = response.city.name
