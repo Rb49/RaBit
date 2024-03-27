@@ -93,7 +93,8 @@ class Bitfield:
         self.bitfield = bitfield
 
     @staticmethod
-    def encode(bitfield: bitstring.BitArray) -> bytes:
+    def encode(org_bitfield: bitstring.BitArray) -> bytes:
+        bitfield = org_bitfield[:]
         if len(bitfield) % 8 != 0:  # add padding
             bitfield += bitstring.BitArray(uint=0, length=(8 - (len(bitfield) % 8)))
 
