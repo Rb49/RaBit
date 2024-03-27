@@ -46,12 +46,3 @@ async def handshake(TorrentData: Torrent, reader, writer) -> Union[bytes, None]:
     # validate the protocol
     peer_id = __validate_handshake(data, TorrentData.info_hash)
     return peer_id
-
-
-'''
-async def put_back_requests(peer: Peer, failed_queue: asyncio.Queue):
-    while peer.pipelined_requests:
-        if block := peer.pipelined_requests.pop():
-            await failed_queue.put(block)
-
-'''
