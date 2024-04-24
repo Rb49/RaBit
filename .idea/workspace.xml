@@ -1,0 +1,301 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="AutoImportSettings">
+    <option name="autoReloadType" value="SELECTIVE" />
+  </component>
+  <component name="ChangeListManager">
+    <list default="true" id="f9fdccf0-d0c7-4e07-872b-f2b1497a2201" name="Changes" comment="Revert &quot;improved gitignore and cleaned up&quot;&#10;&#10;This reverts commit c1868fe9" />
+    <option name="SHOW_DIALOG" value="false" />
+    <option name="HIGHLIGHT_CONFLICTS" value="true" />
+    <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
+    <option name="LAST_RESOLUTION" value="IGNORE" />
+  </component>
+  <component name="Git.Settings">
+    <option name="RECENT_BRANCH_BY_REPOSITORY">
+      <map>
+        <entry key="$PROJECT_DIR$" value="file-system-and-forwarding" />
+      </map>
+    </option>
+    <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
+    <option name="RESET_MODE" value="HARD" />
+  </component>
+  <component name="HighlightingSettingsPerFile">
+    <setting file="file://$PROJECT_DIR$/src/download/download_session_object.py" root0="FORCE_HIGHLIGHTING" />
+  </component>
+  <component name="MarkdownSettingsMigration">
+    <option name="stateVersion" value="1" />
+  </component>
+  <component name="ProjectColorInfo">{
+  &quot;associatedIndex&quot;: 5
+}</component>
+  <component name="ProjectId" id="2eQYAT1e3Sl1pdkXVbbmbW1tA70" />
+  <component name="ProjectLevelVcsManager">
+    <ConfirmationsSetting value="1" id="Add" />
+  </component>
+  <component name="ProjectViewState">
+    <option name="hideEmptyMiddlePackages" value="true" />
+    <option name="showLibraryContents" value="true" />
+    <option name="sortByType" value="true" />
+    <option name="sortKey" value="BY_TYPE" />
+  </component>
+  <component name="PropertiesComponent">{
+  &quot;keyToString&quot;: {
+    &quot;ASKED_MARK_IGNORED_FILES_AS_EXCLUDED&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.OpenProjectViewOnStart&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,
+    &quot;dart.analysis.tool.window.visible&quot;: &quot;false&quot;,
+    &quot;git-widget-placeholder&quot;: &quot;main&quot;,
+    &quot;last_opened_file_path&quot;: &quot;C:/Users/roeyb/OneDrive/Documents/GitHub/RaBit/RaBit/data&quot;
+  }
+}</component>
+  <component name="RecentsManager">
+    <key name="CopyFile.RECENT_KEYS">
+      <recent name="C:\Users\roeyb\OneDrive\Documents\GitHub\RaBit\RaBit\data" />
+      <recent name="C:\Users\roeyb\OneDrive\Documents\GitHub\RaBit\RaBit\src\app_data" />
+    </key>
+  </component>
+  <component name="RunAnythingCache">
+    <option name="myCommands">
+      <command value="pip install -r requirements.txt" />
+    </option>
+  </component>
+  <component name="RunManager">
+    <configuration name="main" type="PythonConfigurationType" factoryName="Python">
+      <module name="rbTorrent" />
+      <option name="INTERPRETER_OPTIONS" value="" />
+      <option name="PARENT_ENVS" value="true" />
+      <envs>
+        <env name="PYTHONUNBUFFERED" value="1" />
+      </envs>
+      <option name="SDK_HOME" value="" />
+      <option name="SDK_NAME" value="myenv4" />
+      <option name="WORKING_DIRECTORY" value="" />
+      <option name="IS_MODULE_SDK" value="false" />
+      <option name="ADD_CONTENT_ROOTS" value="true" />
+      <option name="ADD_SOURCE_ROOTS" value="true" />
+      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/src/client/main.py" />
+      <option name="PARAMETERS" value="" />
+      <option name="SHOW_COMMAND_LINE" value="false" />
+      <option name="EMULATE_TERMINAL" value="false" />
+      <option name="MODULE_MODE" value="false" />
+      <option name="REDIRECT_INPUT" value="false" />
+      <option name="INPUT_FILE" value="" />
+      <method v="2" />
+    </configuration>
+  </component>
+  <component name="SpellCheckerSettings" RuntimeDictionaries="0" Folders="0" CustomDictionaries="0" DefaultDictionary="application-level" UseSingleDictionary="true" transferred="true" />
+  <component name="TaskManager">
+    <task id="LOCAL-00001" summary="fix up">
+      <option name="closed" value="true" />
+      <created>1711837929441</created>
+      <option name="number" value="00001" />
+      <option name="presentableId" value="LOCAL-00001" />
+      <option name="project" value="LOCAL" />
+      <updated>1711837929441</updated>
+    </task>
+    <task active="true" id="Default" summary="Default task">
+      <changelist id="f9fdccf0-d0c7-4e07-872b-f2b1497a2201" name="Changes" comment="fix up" />
+      <created>1711838126841</created>
+      <option name="number" value="Default" />
+      <option name="presentableId" value="Default" />
+      <updated>1711838126841</updated>
+    </task>
+    <task id="LOCAL-00002" summary="fix up">
+      <option name="closed" value="true" />
+      <created>1711883974793</created>
+      <option name="number" value="00002" />
+      <option name="presentableId" value="LOCAL-00002" />
+      <option name="project" value="LOCAL" />
+      <updated>1711883974793</updated>
+    </task>
+    <task id="LOCAL-00003" summary="fix up">
+      <option name="closed" value="true" />
+      <created>1711884028682</created>
+      <option name="number" value="00003" />
+      <option name="presentableId" value="LOCAL-00003" />
+      <option name="project" value="LOCAL" />
+      <updated>1711884028682</updated>
+    </task>
+    <task id="LOCAL-00004" summary="fix up">
+      <option name="closed" value="true" />
+      <created>1711884150454</created>
+      <option name="number" value="00004" />
+      <option name="presentableId" value="LOCAL-00004" />
+      <option name="project" value="LOCAL" />
+      <updated>1711884150454</updated>
+    </task>
+    <task id="LOCAL-00005" summary="writing control messages directly without a queue">
+      <option name="closed" value="true" />
+      <created>1711890349588</created>
+      <option name="number" value="00005" />
+      <option name="presentableId" value="LOCAL-00005" />
+      <option name="project" value="LOCAL" />
+      <updated>1711890349588</updated>
+    </task>
+    <task id="LOCAL-00006" summary="partial fingerprinting of azureus-style clients software">
+      <option name="closed" value="true" />
+      <created>1711917695233</created>
+      <option name="number" value="00006" />
+      <option name="presentableId" value="LOCAL-00006" />
+      <option name="project" value="LOCAL" />
+      <updated>1711917695233</updated>
+    </task>
+    <task id="LOCAL-00007" summary="partial fingerprinting of azureus-style clients software">
+      <option name="closed" value="true" />
+      <created>1711917922790</created>
+      <option name="number" value="00007" />
+      <option name="presentableId" value="LOCAL-00007" />
+      <option name="project" value="LOCAL" />
+      <updated>1711917922790</updated>
+    </task>
+    <task id="LOCAL-00008" summary="partial fingerprinting of azureus-style clients software">
+      <option name="closed" value="true" />
+      <created>1711918373855</created>
+      <option name="number" value="00008" />
+      <option name="presentableId" value="LOCAL-00008" />
+      <option name="project" value="LOCAL" />
+      <updated>1711918373855</updated>
+    </task>
+    <task id="LOCAL-00009" summary="added tracker object and process interval value">
+      <option name="closed" value="true" />
+      <created>1712510217890</created>
+      <option name="number" value="00009" />
+      <option name="presentableId" value="LOCAL-00009" />
+      <option name="project" value="LOCAL" />
+      <updated>1712510217890</updated>
+    </task>
+    <task id="LOCAL-00010" summary="fixed multi file handling">
+      <option name="closed" value="true" />
+      <created>1712510236913</created>
+      <option name="number" value="00010" />
+      <option name="presentableId" value="LOCAL-00010" />
+      <option name="project" value="LOCAL" />
+      <updated>1712510236913</updated>
+    </task>
+    <task id="LOCAL-00011" summary="updated README.md">
+      <option name="closed" value="true" />
+      <created>1713382760104</created>
+      <option name="number" value="00011" />
+      <option name="presentableId" value="LOCAL-00011" />
+      <option name="project" value="LOCAL" />
+      <updated>1713382760104</updated>
+    </task>
+    <task id="LOCAL-00012" summary="better version detection">
+      <option name="closed" value="true" />
+      <created>1713683855932</created>
+      <option name="number" value="00012" />
+      <option name="presentableId" value="LOCAL-00012" />
+      <option name="project" value="LOCAL" />
+      <updated>1713683855932</updated>
+    </task>
+    <task id="LOCAL-00013" summary="ssdp discovery before trying to register port mapping">
+      <option name="closed" value="true" />
+      <created>1713683885114</created>
+      <option name="number" value="00013" />
+      <option name="presentableId" value="LOCAL-00013" />
+      <option name="project" value="LOCAL" />
+      <updated>1713683885114</updated>
+    </task>
+    <task id="LOCAL-00014" summary="multi-file support is complete">
+      <option name="closed" value="true" />
+      <created>1713683904101</created>
+      <option name="number" value="00014" />
+      <option name="presentableId" value="LOCAL-00014" />
+      <option name="project" value="LOCAL" />
+      <updated>1713683904101</updated>
+    </task>
+    <task id="LOCAL-00015" summary="fixed tracker list">
+      <option name="closed" value="true" />
+      <created>1713683936423</created>
+      <option name="number" value="00015" />
+      <option name="presentableId" value="LOCAL-00015" />
+      <option name="project" value="LOCAL" />
+      <updated>1713683936423</updated>
+    </task>
+    <task id="LOCAL-00016" summary="added slots param, should be memory more efficient (?)">
+      <option name="closed" value="true" />
+      <created>1713683970441</created>
+      <option name="number" value="00016" />
+      <option name="presentableId" value="LOCAL-00016" />
+      <option name="project" value="LOCAL" />
+      <updated>1713683970441</updated>
+    </task>
+    <task id="LOCAL-00017" summary="some cosmetic changes">
+      <option name="closed" value="true" />
+      <created>1713684030920</created>
+      <option name="number" value="00017" />
+      <option name="presentableId" value="LOCAL-00017" />
+      <option name="project" value="LOCAL" />
+      <updated>1713684030920</updated>
+    </task>
+    <task id="LOCAL-00018" summary="seeding server is now operational">
+      <option name="closed" value="true" />
+      <created>1713897602703</created>
+      <option name="number" value="00018" />
+      <option name="presentableId" value="LOCAL-00018" />
+      <option name="project" value="LOCAL" />
+      <updated>1713897602703</updated>
+    </task>
+    <task id="LOCAL-00019" summary="stream management is better, bug fixes and Piece encoding fixed">
+      <option name="closed" value="true" />
+      <created>1713897676760</created>
+      <option name="number" value="00019" />
+      <option name="presentableId" value="LOCAL-00019" />
+      <option name="project" value="LOCAL" />
+      <updated>1713897676760</updated>
+    </task>
+    <option name="localTasksCounter" value="20" />
+    <servers />
+  </component>
+  <component name="Vcs.Log.Tabs.Properties">
+    <option name="TAB_STATES">
+      <map>
+        <entry key="MAIN">
+          <value>
+            <State>
+              <option name="FILTERS">
+                <map>
+                  <entry key="branch">
+                    <value>
+                      <list>
+                        <option value="master" />
+                      </list>
+                    </value>
+                  </entry>
+                </map>
+              </option>
+            </State>
+          </value>
+        </entry>
+      </map>
+    </option>
+  </component>
+  <component name="VcsManagerConfiguration">
+    <MESSAGE value="fix up" />
+    <MESSAGE value="writing control messages directly without a queue" />
+    <MESSAGE value="partial fingerprinting of azureus-style clients software" />
+    <MESSAGE value="added tracker object and process interval value" />
+    <MESSAGE value="fixed multi file handling" />
+    <MESSAGE value="updated README.md" />
+    <MESSAGE value="better version detection" />
+    <MESSAGE value="ssdp discovery before trying to register port mapping" />
+    <MESSAGE value="multi-file support is complete" />
+    <MESSAGE value="fixed tracker list" />
+    <MESSAGE value="added slots param, should be memory more efficient (?)" />
+    <MESSAGE value="some cosmetic changes" />
+    <MESSAGE value="seeding server is now operational" />
+    <MESSAGE value="stream management is better, bug fixes and Piece encoding fixed" />
+    <option name="LAST_COMMIT_MESSAGE" value="stream management is better, bug fixes and Piece encoding fixed" />
+  </component>
+  <component name="XDebuggerManager">
+    <breakpoint-manager>
+      <breakpoints>
+        <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
+          <url>file://$PROJECT_DIR$/src/download/download_session_object.py</url>
+          <line>63</line>
+          <option name="timeStamp" value="2" />
+        </line-breakpoint>
+      </breakpoints>
+    </breakpoint-manager>
+  </component>
+</project>

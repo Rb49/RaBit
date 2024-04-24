@@ -1,0 +1,8 @@
+data/
+!data/data_dir
+results/
+!results/results_dir
+*.db
+*.json
+*.pyc
+*.torrent
