@@ -26,6 +26,3 @@ You won't be able to:
 > 2. install requirements with ```pip install -r requirements.txt```
 > 3. rename module name in `.idea/workspace.xml` to `RaBit`
 > 4. run `src/client/main.py` from `RaBit/` directory
-
-### Contributions
-This project was written only by Rb49, as opposed to the contributors list.
