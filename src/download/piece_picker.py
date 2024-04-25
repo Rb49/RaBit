@@ -75,12 +75,14 @@ class PriorityBucket(object):
 
 
 class PiecePicker(object):
-    FILE_STATUS: bitstring.bitarray
+    FILE_STATUS: Dict[bytes, bitstring.BitArray] = dict()
 
-    def __init__(self, TorrentData: Torrent, bitarray: bitstring.bitarray, index_range: List[int] = None) -> None:
+    def __init__(self, TorrentData: Torrent, session, bitarray: bitstring.bitarray, index_range: List[int] = None) -> None:
         self.TorrentData = TorrentData
         self.results_queue = BetterQueue()
-        PiecePicker.FILE_STATUS = bitarray
+
+        self.session = session
+        PiecePicker.FILE_STATUS[TorrentData.info_hash] = bitarray
 
         self.is_in_endgame = False
         self.endgame_received_blocks: Set = set()  # blocks received while in endgame mode
@@ -158,8 +160,8 @@ class PiecePicker(object):
         async with asyncio.Lock():
             # the stream already verified the block and made sure we requested it
             self.last_data_received = time.time()
-            if not block.add_data(*add_data_args) or PiecePicker.FILE_STATUS[block.index]:
-                self.TorrentData.wasted += len(add_data_args[0])
+            if not block.add_data(*add_data_args) or PiecePicker.FILE_STATUS[self.TorrentData.info_hash][block.index]:
+                self.session.wasted += len(add_data_args[0])
                 print('got duplicate')
                 return
 
@@ -192,7 +194,7 @@ class PiecePicker(object):
             else:
                 set_blocks = set(piece.blocks)
                 self.endgame_received_blocks -= set_blocks
-                for peer in Peer.peer_instances:
+                for peer in Peer.peer_instances[self.TorrentData.info_hash]:
                     peer.endgame_request_msg_sent -= set_blocks
 
                 for block in piece.blocks:
@@ -203,7 +205,7 @@ class PiecePicker(object):
         if self.is_in_endgame:
             return
 
-        if piece_index in self.downloading or PiecePicker.FILE_STATUS[piece_index]:
+        if piece_index in self.downloading or PiecePicker.FILE_STATUS[self.TorrentData.info_hash][piece_index]:
             return
 
         # get the bucket the piece is in
@@ -222,9 +224,6 @@ class PiecePicker(object):
         self.downloading[block.index].deselect_block(block)
 
     def endgame(self):
-        # if self.num_of_pieces_left / len(self.TorrentData.piece_hashes) > 0.05:
-        #     return
-
         unfiltered_blocks = list(self.pending_blocks.keys())
         for piece in self.downloading.values():
             while isinstance((block := piece.get_next_request()), Block):
@@ -233,20 +232,18 @@ class PiecePicker(object):
         print('ENDGAME !!!')
         self.is_in_endgame = True
 
-        for peer in Peer.peer_instances:
+        for peer in Peer.peer_instances[self.TorrentData.info_hash]:
             peer.is_in_endgame = True
             peer.endgame_blocks = set(filter(lambda x: peer.have_pieces[x.index], unfiltered_blocks))
 
-    @staticmethod
-    def add_endgame_block(block: Block):
-        for peer in Peer.peer_instances:
+    def add_endgame_block(self, block: Block):
+        for peer in Peer.peer_instances[self.TorrentData.info_hash]:
             if peer.have_pieces[block.index]:
                 peer.endgame_blocks.add(block)
 
-    @staticmethod
-    async def send_have(piece_index: int):
+    async def send_have(self, piece_index: int):
         async with asyncio.Lock():
-            for peer in Peer.peer_instances:
+            for peer in Peer.peer_instances[self.TorrentData.info_hash]:
                 if not peer.have_pieces[piece_index]:
                     have_msg: bytes = Have.encode(piece_index)
                     peer.control_msg_queue.append(have_msg)

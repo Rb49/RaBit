@@ -1,22 +1,25 @@
 import src.app_data.db_utils as db_utils
 from src.torrent.torrent import read_torrent
-from src.tracker.announce import initial_announce
+from src.tracker.initial_announce import initial_announce
 from src.tracker.utils import format_peers_list
 from src.geoip.utils import get_my_public_ip
 from src.download.piece_picker import PiecePicker
 from src.peer.peer_communication import tcp_wire_communication
 from src.file.file_object import File
 from src.download.upload_in_download import TitForTat
-from src.tracker.tracker_object import Tracker
+from src.tracker.tracker_object import Tracker, ANNOUNCING, WORKING
+from src.seeding.announce_loop import announce_loop
 
 import threading
 import asyncio
 from hashlib import sha1
 import bitstring
-from typing import List, Tuple
+from typing import List, Tuple, Dict, Any
 
 
 class DownloadSession(object):
+    Sessions: Dict[bytes, Any] = dict()
+
     def __init__(self, torrent_path: str, result_dir: str):
         self.torrent_path = torrent_path
         self.TorrentData = None
@@ -38,9 +41,14 @@ class DownloadSession(object):
     async def download(self) -> bool:
         # should be called from protected code
 
-        # read torrent file
-        self.state = 'Reading torrent'
+        # read TorrentData file
+        self.state = 'Reading TorrentData'
         self.TorrentData = read_torrent(self.torrent_path)
+
+        # is it already being downloaded?
+        if self.TorrentData.info_hash in DownloadSession.Sessions:
+            print('already downloading!')
+            return False
 
         self.state = 'Verifying files'
         bitarray, missing = self.verify_torrent()
@@ -54,11 +62,15 @@ class DownloadSession(object):
         else:
             extra = len(self.TorrentData.piece_hashes) * self.TorrentData.info[b'piece length'] - self.TorrentData.length
             self.left = len(missing) * self.TorrentData.info[b'piece length'] - extra
+            self.downloaded = self.TorrentData.length - self.left
 
         db_utils.CompletedTorrentsDB().delete_torrent(self.TorrentData.info_hash)
 
-        # add the torrent file path for fail safety
+        # add the TorrentData file path for fail safety
         db_utils.add_ongoing_torrent(self.torrent_path)
+
+        # add self to dict
+        DownloadSession.Sessions[self.TorrentData.info_hash] = self
 
         # initial announce
         self.state = 'Announcing'
@@ -70,20 +82,22 @@ class DownloadSession(object):
         if not peers_list:
             self.state = 'Failed'
             print("couldn't find any peers!")
+            DownloadSession.Sessions.pop(self.TorrentData.info_hash)
             return False
 
         # --------
         # peer wire protocol
         self.state = 'Downloading...'
+        announce_loop_task = asyncio.create_task(announce_loop(self, tracker_list))
 
-        piece_picker = PiecePicker(self.TorrentData, bitarray, missing)
+        piece_picker = PiecePicker(self.TorrentData, self, bitarray, missing)
         tit_for_tat_manager = TitForTat(piece_picker)
 
         # start disk IO thread
         await db_utils.set_configuration('download_dir', self.result_dir)
-        file = File(self.TorrentData, piece_picker, piece_picker.results_queue, self.torrent_path, self.result_dir, False)
+        file = File(self.TorrentData, self, piece_picker, piece_picker.results_queue, self.torrent_path, self.result_dir, False)
 
-        work = [tcp_wire_communication(peer, self.TorrentData, file, piece_picker, tit_for_tat_manager) for peer in peers_list]
+        work = [tcp_wire_communication(peer, self.TorrentData, self, file, piece_picker, tit_for_tat_manager) for peer in peers_list]
         try:
             thread = threading.Thread(target=lambda: asyncio.run(DownloadSession.work_wrapper(file.save_pieces_loop, tit_for_tat_manager.loop, *work)), daemon=True)
             thread.start()
@@ -93,20 +107,30 @@ class DownloadSession(object):
 
         if db_utils.CompletedTorrentsDB().find_info_hash(self.TorrentData.info_hash):
             # announce completion
-            # TODO turn torrent statistics to self statistics
-            total_download, total_upload = self.TorrentData.downloaded + self.TorrentData.corrupted + self.TorrentData.wasted, self.TorrentData.uploaded
+            total_download, total_upload = self.downloaded + self.corrupted + self.wasted, self.uploaded
             # TODO use the tracker update thread to announce complete
-            for tracker in tracker_list:
-                if tracker.state == 'working':
-                    await tracker.re_announce(total_download, total_upload, 0, 1)
+
+            async def final_announce(tracker: Tracker):
+                if tracker.state in (ANNOUNCING, WORKING):
+                    try:
+                        await asyncio.wait_for(tracker.re_announce(total_download, total_upload, 0, 1), 2)
+                    except asyncio.TimeoutError:
+                        pass
+
+            work = [final_announce(tracker) for tracker in tracker_list]
+            await asyncio.gather(*work)
 
         else:
             self.state = 'Failed'
             print('Failed!')
+            DownloadSession.Sessions.pop(self.TorrentData.info_hash)
+            announce_loop_task.cancel()
             return False
 
         self.state = 'Completed'
         print(tracker_list)
+        DownloadSession.Sessions.pop(self.TorrentData.info_hash)
+        announce_loop_task.cancel()
         return True
 
     def verify_torrent(self) -> Tuple[bitstring.BitArray, List[int]]:
@@ -118,7 +142,7 @@ class DownloadSession(object):
             try:
                 bitarray = bitstring.BitArray(bin='1' * len(self.TorrentData.piece_hashes))
                 missing = []
-                temp_file = File(self.TorrentData, None, None, None, self.result_dir)
+                temp_file = File(self.TorrentData, None, None, None, None, self.result_dir)
                 for index, torrent_piece_hash in enumerate(self.TorrentData.piece_hashes):
                     # hash check
                     if index != len(self.TorrentData.piece_hashes) - 1:

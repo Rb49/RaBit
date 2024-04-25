@@ -2,7 +2,7 @@ from src.torrent.torrent_object import Torrent
 import src.app_data.db_utils as db_utils
 
 import time
-from typing import Tuple, List, Set
+from typing import Tuple, List, Set, Dict
 import bitstring
 
 
@@ -10,13 +10,13 @@ class Peer(object):
     """
     object to store attributes of a peer and some stats
     """
-    peer_instances: List = []
+    peer_instances: Dict[bytes, List] = dict()
     MAX_ENDGAME_REQUESTS = 5
 
     def __init__(self, writer, TorrentData: Torrent, address: Tuple[str, int], geodata: Tuple[str, str, float, float]):
         self.writer = writer
 
-        self.torrent = TorrentData
+        self.TorrentData = TorrentData
 
         self.MAX_PIPELINE_SIZE = 10  # 10 is default
         self.address = address
@@ -26,7 +26,7 @@ class Peer(object):
         self.am_chocked = True  # have I chocked the peer?
         self.am_interested = False  # is the peer interested in what I offer?
 
-        self.have_pieces = bitstring.BitArray(bin='0' * len(self.torrent.piece_hashes))
+        self.have_pieces = bitstring.BitArray(bin='0' * len(self.TorrentData.piece_hashes))
         self.is_seed = False
         self.pipelined_requests: Set = set()
         self.control_msg_queue: List[bytes] = []
@@ -51,7 +51,7 @@ class Peer(object):
     def add_peer_id(self, peer_id: bytes):
         self.peer_id = peer_id
         self.client = db_utils.get_client(peer_id)
-        Peer.peer_instances.append(self)
+        Peer.peer_instances[self.TorrentData.info_hash].append(self)
 
     def update_upload_rate(self, len_bytes_sent: int):
         # TODO make real upload rate using a counter

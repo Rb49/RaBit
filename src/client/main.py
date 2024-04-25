@@ -25,12 +25,12 @@ if __name__ == '__main__':
             break
         time.sleep(0.5)
 
-    # torrent_path = r"C:\Users\roeyb\OneDrive\Documents\GitHub\RaBit\RaBit\data\ubuntu-23.10-live-server-amd64.iso.torrent"
-    # torrent_path = r"C:\Users\roeyb\OneDrive\Documents\GitHub\RaBit\RaBit\data\debian-edu-12.4.0-amd64-netinst.iso.torrent"
-    # torrent_path = r"C:\Users\roeyb\OneDrive\Documents\GitHub\RaBit\RaBit\data\The Best American Short Stories, 2011–2023 (13 books).torrent"
-    # torrent_path = r"C:\Users\roeyb\OneDrive\Documents\GitHub\RaBit\RaBit\data\Young.Sheldon.S07E01.HDTV.x264-TORRENTGALAXY.torrent"
+    # torrent_path = r"C:\Users\roeyb\OneDrive\Documents\GitHub\RaBit\RaBit\data\ubuntu-23.10-live-server-amd64.iso.TorrentData"
+    # torrent_path = r"C:\Users\roeyb\OneDrive\Documents\GitHub\RaBit\RaBit\data\debian-edu-12.4.0-amd64-netinst.iso.TorrentData"
+    # torrent_path = r"C:\Users\roeyb\OneDrive\Documents\GitHub\RaBit\RaBit\data\The Best American Short Stories, 2011–2023 (13 books).TorrentData"
+    # torrent_path = r"C:\Users\roeyb\OneDrive\Documents\GitHub\RaBit\RaBit\data\Young.Sheldon.S07E01.HDTV.x264-TORRENTGALAXY.TorrentData"
     torrent_path = r"C:\Users\roeyb\OneDrive\Documents\GitHub\RaBit\RaBit\data\The Complete Art of War_ Sun Tzu-Sun Pin [blackatk].torrent"
-    # torrent_path = r"C:\Users\roeyb\OneDrive\Documents\GitHub\RaBit\RaBit\data\The.Rock.1996.1080p.BluRay.x265-RARBG.torrent"
+    # torrent_path = r"C:\Users\roeyb\OneDrive\Documents\GitHub\RaBit\RaBit\data\The.Rock.1996.1080p.BluRay.x265-RARBG.TorrentData"
 
     result_path = r"C:\Users\roeyb\OneDrive\Documents\GitHub\RaBit\RaBit\results"
 

@@ -13,11 +13,12 @@ class TitForTat(object):
     _MAX_OPTIMISTIC_PEERS = db_utils.get_configuration('max_optimistic_unchock')
 
     def __init__(self, piece_picker):
-        self.peers: List[Peer] = Peer.peer_instances  # all connected peers
+        self.piece_picker: PiecePicker = piece_picker
+        Peer.peer_instances[piece_picker.TorrentData.info_hash] = []  # this init happens before any peer is connected
+        self.peers: List[Peer] = Peer.peer_instances[piece_picker.TorrentData.info_hash]  # all connected peers
         self.downloaders: List[Peer] = []  # downloaders interested in what I offer
         self.good_uninterested_peers: List[Peer] = []  # not interested peers and upload better than downloaders
         self.optimistic_unchock_peers: List[Peer] = []  # not interested peers randomly chosen
-        self.piece_picker: PiecePicker = piece_picker
 
     async def loop(self):
         three_iteration_counter = 0
