@@ -211,10 +211,10 @@ class PiecePicker(object):
         # get the bucket the piece is in
         piece: PiecePos = self.pieces_map[piece_index]
         bucket: PriorityBucket = self.buckets_dict[piece.peer_count]
-
-        bucket.remove(piece)
-        piece.peer_count += difference
-        self.buckets_dict[piece.peer_count].add_piece(piece)
+        if piece in bucket.pieces_list:
+            bucket.remove(piece)
+            piece.peer_count += difference
+            self.buckets_dict[piece.peer_count].add_piece(piece)
 
     def deselect_block(self, block: Block):
         if not self.is_in_endgame:
