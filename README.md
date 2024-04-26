@@ -4,7 +4,7 @@
 
 - [x] http and udp trackers + compact response support (BEP 3, BEP 7, BEP 15, BEP 23)
 - [x] download a multi-file torrent using all strategies (BEP 3, BEP 20)
-- [ ] download multiple torrents at the same time
+- [x] download multiple torrents simultaneously
 - [x] seeding 
 - [x] tracker updating in intervals
 - [x] smart ban 
