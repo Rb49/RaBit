@@ -272,6 +272,7 @@ async def add_newly_completed_torrent(info_hash: bytes):
                 file.reopen_files()
                 file.close_files()
                 FileObjects[info_hash] = file
+                asyncio.create_task(announce_loop(file.trackers, file))
                 print('ready to seed ', file)
             except OSError:
                 db_utils.CompletedTorrentsDB().delete_torrent(info_hash)
