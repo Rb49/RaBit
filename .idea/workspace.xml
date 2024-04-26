@@ -4,18 +4,12 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="f9fdccf0-d0c7-4e07-872b-f2b1497a2201" name="Changes" comment="updated city db to a recent version">
+    <list default="true" id="f9fdccf0-d0c7-4e07-872b-f2b1497a2201" name="Changes" comment="announcing in given tracker intervals">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/README.md" beforeDir="false" afterPath="$PROJECT_DIR$/README.md" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/app_data/config.json" beforeDir="false" afterPath="$PROJECT_DIR$/src/app_data/config.json" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/app_data/ongoing_torrents.json" beforeDir="false" afterPath="$PROJECT_DIR$/src/app_data/ongoing_torrents.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/client/main.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/client/main.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/client/test.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/client/test.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/download/download_session_object.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/download/download_session_object.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/file/file_object.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/file/file_object.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/seeding/announce_loop.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/seeding/announce_loop.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/seeding/handshake.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/seeding/handshake.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/seeding/server.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/seeding/server.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/seeding/utils.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/seeding/utils.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -32,7 +26,7 @@
   <component name="Git.Settings">
     <option name="RECENT_BRANCH_BY_REPOSITORY">
       <map>
-        <entry key="$PROJECT_DIR$" value="file-system-and-forwarding" />
+        <entry key="$PROJECT_DIR$" value="master" />
       </map>
     </option>
     <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
@@ -58,16 +52,16 @@
     <option name="sortByType" value="true" />
     <option name="sortKey" value="BY_TYPE" />
   </component>
-  <component name="PropertiesComponent">{
-  &quot;keyToString&quot;: {
-    &quot;ASKED_MARK_IGNORED_FILES_AS_EXCLUDED&quot;: &quot;true&quot;,
-    &quot;RunOnceActivity.OpenProjectViewOnStart&quot;: &quot;true&quot;,
-    &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,
-    &quot;dart.analysis.tool.window.visible&quot;: &quot;false&quot;,
-    &quot;git-widget-placeholder&quot;: &quot;master&quot;,
-    &quot;last_opened_file_path&quot;: &quot;C:/Users/roeyb/OneDrive/Documents/GitHub/RaBit/RaBit/data&quot;
+  <component name="PropertiesComponent"><![CDATA[{
+  "keyToString": {
+    "ASKED_MARK_IGNORED_FILES_AS_EXCLUDED": "true",
+    "RunOnceActivity.OpenProjectViewOnStart": "true",
+    "RunOnceActivity.ShowReadmeOnStart": "true",
+    "dart.analysis.tool.window.visible": "false",
+    "git-widget-placeholder": "temp-branch",
+    "last_opened_file_path": "C:/Users/roeyb/OneDrive/Documents/GitHub/RaBit/RaBit/data"
   }
-}</component>
+}]]></component>
   <component name="RecentsManager">
     <key name="CopyFile.RECENT_KEYS">
       <recent name="C:\Users\roeyb\OneDrive\Documents\GitHub\RaBit\RaBit\data" />
@@ -312,7 +306,31 @@
       <option name="project" value="LOCAL" />
       <updated>1714068840906</updated>
     </task>
-    <option name="localTasksCounter" value="26" />
+    <task id="LOCAL-00026" summary="re-wrote handling of torrents at seeding, and support for multiple torrents">
+      <option name="closed" value="true" />
+      <created>1714123866811</created>
+      <option name="number" value="00026" />
+      <option name="presentableId" value="LOCAL-00026" />
+      <option name="project" value="LOCAL" />
+      <updated>1714123866811</updated>
+    </task>
+    <task id="LOCAL-00027" summary="small fix">
+      <option name="closed" value="true" />
+      <created>1714124138322</created>
+      <option name="number" value="00027" />
+      <option name="presentableId" value="LOCAL-00027" />
+      <option name="project" value="LOCAL" />
+      <updated>1714124138322</updated>
+    </task>
+    <task id="LOCAL-00028" summary="announcing in given tracker intervals">
+      <option name="closed" value="true" />
+      <created>1714155141066</created>
+      <option name="number" value="00028" />
+      <option name="presentableId" value="LOCAL-00028" />
+      <option name="project" value="LOCAL" />
+      <updated>1714155141066</updated>
+    </task>
+    <option name="localTasksCounter" value="29" />
     <servers />
   </component>
   <component name="Vcs.Log.Tabs.Properties">
@@ -358,6 +376,9 @@
     <MESSAGE value="adding support for multiple downloads at the same time" />
     <MESSAGE value="fixed piece picker algorithm bug" />
     <MESSAGE value="updated city db to a recent version" />
-    <option name="LAST_COMMIT_MESSAGE" value="updated city db to a recent version" />
+    <MESSAGE value="re-wrote handling of torrents at seeding, and support for multiple torrents" />
+    <MESSAGE value="small fix" />
+    <MESSAGE value="announcing in given tracker intervals" />
+    <option name="LAST_COMMIT_MESSAGE" value="announcing in given tracker intervals" />
   </component>
 </project>
