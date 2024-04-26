@@ -3,6 +3,7 @@ import copy
 
 import src.app_data.db_utils as db_utils
 from src.file.file_object import PickableFile
+from src.seeding.server import FileObjects
 from src.geoip.utils import get_info
 from .utils import *
 from typing import Tuple, Union
@@ -61,19 +62,15 @@ async def handshake(reader, writer) -> Union[Tuple[PickableFile, bytes], Tuple[N
     for path in file_object.file_names:
         if not os.path.exists(path):
             db_utils.CompletedTorrentsDB().delete_torrent(info_hash)
+            FileObjects.pop(info_hash)
             print('files not found!')
             return None, None
 
     # send handshake
     handshake_packet = __build__handshake_packet(info_hash, file_object.peer_id)
+    del file_object
     writer.write(handshake_packet)
     await writer.drain()
-
-    # store in global to prevent high ram usage in ddos
-    if file_object.info_hash not in FileObjects:
-        async with asyncio.Lock():
-            FileObjects[info_hash] = copy.deepcopy(file_object)
-    del file_object
 
     return info_hash, peer_id
 

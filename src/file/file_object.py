@@ -187,12 +187,15 @@ class PickableFile(object):
         self.info_hash = file_object.TorrentData.info_hash
         self.peer_id = file_object.TorrentData.peer_id
         self.length = file_object.TorrentData.length
+        self.trackers = file_object.session.trackers
         self.piece_length = file_object.TorrentData.info[b'piece length']
         self.num_pieces = len(file_object.TorrentData.piece_hashes)
         # statistics
         self.downloaded = file_object.session.downloaded
+        self.corrupted = file_object.session.corrupted
+        self.wasted = file_object.session.wasted
         self.uploaded = file_object.session.uploaded
-        # TODO add trackers
+        # file details
         self.file_names = file_object.file_names
         self.fds = []
         self.file_indices = file_object.file_indices
@@ -239,6 +242,9 @@ class PickableFile(object):
             data += b'\x00' * (length - len(data))
 
         return piece_index, begin, data
+
+    def __repr__(self):
+        return f"name: {self.file_names}, info hash: {self.info_hash}"
 
     def __del__(self):
         try:

@@ -1,11 +1,14 @@
 import copy
+import os
 import threading
+from typing import List
 
 from .utils import *
 from src.peer.message_types import *
 from src.seeding.leecher_object import Leecher
 from src.seeding.handshake import handshake, validate_peer_ip
 from src.file.file_object import PickableFile
+from .announce_loop import announce_loop
 
 import asyncio
 import upnpclient
@@ -101,7 +104,7 @@ async def handle_leecher(reader, writer):
         info_hash, peer_id = await handshake(reader, writer)
         assert info_hash
 
-        file_object: PickableFile = copy.deepcopy(FileObjects[info_hash])  # TODO don't use deepcopy, maybe a singleton?
+        file_object = copy.deepcopy(FileObjects[info_hash])
         file_object.reopen_files()
 
         # send obfuscated bitfield
@@ -171,16 +174,16 @@ async def handle_leecher(reader, writer):
             FileObjects[info_hash].close_files()
             Leecher.leecher_instances.remove(leecher)
             file_object.close_files()
+            del file_object
             del leecher
 
         return
 
 
-
 async def start_seeding_server():
     global SEEDING_SERVER_IS_UP
     try:
-        internal_ipv4, internal_ipv6 = get_internal_ip()
+        internal_ipv4 = get_internal_ip()
         assert internal_ipv4
 
         async def forward_port(internal_ip: str, internal_port, external_port, last_forward, version: str) -> Tuple[asyncio.base_events.Server, float]:
@@ -229,17 +232,14 @@ async def start_seeding_server():
         server_v4, last_forward_v4 = await forward_port(internal_ipv4, internal_port_v4, external_port_v4, last_forward_v4, 'v4')
         SEEDING_SERVER_IS_UP = True
 
+        # load all completed torrents
+        init_completed_torrents()
+
         # run server and updates thread
         update_coroutine = await asyncio.to_thread(update_mapping, internal_port_v4, external_port_v4, internal_ipv4, last_forward_v4, 'v4')
         async with server_v4:
             await asyncio.gather(server_v4.serve_forever(), update_coroutine)
 
-        '''
-        internal_port_v6, external_port_v6, last_forward_v6 = load_forwarding('v6')
-        if internal_port_v6 == 0:
-            internal_port_v6 = -1
-        server_v6 = await forward_port(internal_ipv6, internal_port_v6, external_port_v6, last_forward_v6, 'v6')
-        '''
 
     except AssertionError:
         ...
@@ -249,6 +249,32 @@ async def start_seeding_server():
     finally:
         SEEDING_SERVER_IS_UP = False
         return
+
+
+def init_completed_torrents():
+    all_torrents: List[PickableFile] = db_utils.CompletedTorrentsDB().get_all_torrents()
+    for file in all_torrents:
+        try:
+            file.reopen_files()
+            file.close_files()
+            FileObjects[file.info_hash] = file
+            asyncio.create_task(announce_loop(file.trackers, file))
+            print('ready to seed ', file)
+        except OSError:
+            db_utils.CompletedTorrentsDB().delete_torrent(file.info_hash)
+
+
+async def add_newly_completed_torrent(info_hash: bytes):
+    file: PickableFile = db_utils.CompletedTorrentsDB().get_torrent(info_hash)
+    if file:
+        async with asyncio.Lock():
+            try:
+                file.reopen_files()
+                file.close_files()
+                FileObjects[info_hash] = file
+                print('ready to seed ', file)
+            except OSError:
+                db_utils.CompletedTorrentsDB().delete_torrent(info_hash)
 
 
 async def update_mapping(internal_port: int, external_port: int, internal_ip: str, last_forward: float, version: str):

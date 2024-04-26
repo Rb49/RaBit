@@ -4,11 +4,30 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="f9fdccf0-d0c7-4e07-872b-f2b1497a2201" name="Changes" comment="Revert &quot;improved gitignore and cleaned up&quot;&#10;&#10;This reverts commit c1868fe9" />
+    <list default="true" id="f9fdccf0-d0c7-4e07-872b-f2b1497a2201" name="Changes" comment="updated city db to a recent version">
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/README.md" beforeDir="false" afterPath="$PROJECT_DIR$/README.md" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/app_data/config.json" beforeDir="false" afterPath="$PROJECT_DIR$/src/app_data/config.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/app_data/ongoing_torrents.json" beforeDir="false" afterPath="$PROJECT_DIR$/src/app_data/ongoing_torrents.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/client/test.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/client/test.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/download/download_session_object.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/download/download_session_object.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/file/file_object.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/file/file_object.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/seeding/announce_loop.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/seeding/announce_loop.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/seeding/handshake.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/seeding/handshake.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/seeding/server.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/seeding/server.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/seeding/utils.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/seeding/utils.py" afterDir="false" />
+    </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
     <option name="LAST_RESOLUTION" value="IGNORE" />
+  </component>
+  <component name="FileTemplateManagerImpl">
+    <option name="RECENT_TEMPLATES">
+      <list>
+        <option value="Python Script" />
+      </list>
+    </option>
   </component>
   <component name="Git.Settings">
     <option name="RECENT_BRANCH_BY_REPOSITORY">
@@ -18,6 +37,7 @@
     </option>
     <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
     <option name="RESET_MODE" value="HARD" />
+    <option name="UPDATE_TYPE" value="REBASE" />
   </component>
   <component name="HighlightingSettingsPerFile">
     <setting file="file://$PROJECT_DIR$/src/download/download_session_object.py" root0="FORCE_HIGHLIGHTING" />
@@ -44,7 +64,7 @@
     &quot;RunOnceActivity.OpenProjectViewOnStart&quot;: &quot;true&quot;,
     &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,
     &quot;dart.analysis.tool.window.visible&quot;: &quot;false&quot;,
-    &quot;git-widget-placeholder&quot;: &quot;main&quot;,
+    &quot;git-widget-placeholder&quot;: &quot;master&quot;,
     &quot;last_opened_file_path&quot;: &quot;C:/Users/roeyb/OneDrive/Documents/GitHub/RaBit/RaBit/data&quot;
   }
 }</component>
@@ -244,7 +264,55 @@
       <option name="project" value="LOCAL" />
       <updated>1713897676760</updated>
     </task>
-    <option name="localTasksCounter" value="20" />
+    <task id="LOCAL-00020" summary="added files">
+      <option name="closed" value="true" />
+      <created>1713949032625</created>
+      <option name="number" value="00020" />
+      <option name="presentableId" value="LOCAL-00020" />
+      <option name="project" value="LOCAL" />
+      <updated>1713949032625</updated>
+    </task>
+    <task id="LOCAL-00021" summary="updated README.md">
+      <option name="closed" value="true" />
+      <created>1713949119417</created>
+      <option name="number" value="00021" />
+      <option name="presentableId" value="LOCAL-00021" />
+      <option name="project" value="LOCAL" />
+      <updated>1713949119417</updated>
+    </task>
+    <task id="LOCAL-00022" summary="added data dirs">
+      <option name="closed" value="true" />
+      <created>1713949788077</created>
+      <option name="number" value="00022" />
+      <option name="presentableId" value="LOCAL-00022" />
+      <option name="project" value="LOCAL" />
+      <updated>1713949788077</updated>
+    </task>
+    <task id="LOCAL-00023" summary="adding support for multiple downloads at the same time">
+      <option name="closed" value="true" />
+      <created>1714059092673</created>
+      <option name="number" value="00023" />
+      <option name="presentableId" value="LOCAL-00023" />
+      <option name="project" value="LOCAL" />
+      <updated>1714059092673</updated>
+    </task>
+    <task id="LOCAL-00024" summary="fixed piece picker algorithm bug">
+      <option name="closed" value="true" />
+      <created>1714068811041</created>
+      <option name="number" value="00024" />
+      <option name="presentableId" value="LOCAL-00024" />
+      <option name="project" value="LOCAL" />
+      <updated>1714068811041</updated>
+    </task>
+    <task id="LOCAL-00025" summary="updated city db to a recent version">
+      <option name="closed" value="true" />
+      <created>1714068840906</created>
+      <option name="number" value="00025" />
+      <option name="presentableId" value="LOCAL-00025" />
+      <option name="project" value="LOCAL" />
+      <updated>1714068840906</updated>
+    </task>
+    <option name="localTasksCounter" value="26" />
     <servers />
   </component>
   <component name="Vcs.Log.Tabs.Properties">
@@ -276,7 +344,6 @@
     <MESSAGE value="partial fingerprinting of azureus-style clients software" />
     <MESSAGE value="added tracker object and process interval value" />
     <MESSAGE value="fixed multi file handling" />
-    <MESSAGE value="updated README.md" />
     <MESSAGE value="better version detection" />
     <MESSAGE value="ssdp discovery before trying to register port mapping" />
     <MESSAGE value="multi-file support is complete" />
@@ -285,17 +352,12 @@
     <MESSAGE value="some cosmetic changes" />
     <MESSAGE value="seeding server is now operational" />
     <MESSAGE value="stream management is better, bug fixes and Piece encoding fixed" />
-    <option name="LAST_COMMIT_MESSAGE" value="stream management is better, bug fixes and Piece encoding fixed" />
-  </component>
-  <component name="XDebuggerManager">
-    <breakpoint-manager>
-      <breakpoints>
-        <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
-          <url>file://$PROJECT_DIR$/src/download/download_session_object.py</url>
-          <line>63</line>
-          <option name="timeStamp" value="2" />
-        </line-breakpoint>
-      </breakpoints>
-    </breakpoint-manager>
+    <MESSAGE value="added files" />
+    <MESSAGE value="updated README.md" />
+    <MESSAGE value="added data dirs" />
+    <MESSAGE value="adding support for multiple downloads at the same time" />
+    <MESSAGE value="fixed piece picker algorithm bug" />
+    <MESSAGE value="updated city db to a recent version" />
+    <option name="LAST_COMMIT_MESSAGE" value="updated city db to a recent version" />
   </component>
 </project>

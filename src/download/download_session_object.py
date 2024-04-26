@@ -1,4 +1,6 @@
 import src.app_data.db_utils as db_utils
+from src.peer.peer_object import Peer
+from src.seeding.server import add_newly_completed_torrent
 from src.torrent.torrent import read_torrent
 from src.tracker.initial_announce import initial_announce
 from src.tracker.utils import format_peers_list
@@ -30,6 +32,7 @@ class DownloadSession(object):
         self.corrupted = 0
         self.wasted = 0
         self.state = None
+        self.trackers = []
 
     @staticmethod
     async def work_wrapper(disk_loop, tit_for_tat_loop, *work):
@@ -74,7 +77,7 @@ class DownloadSession(object):
 
         # initial announce
         self.state = 'Announcing'
-        peers_list, tracker_list = await initial_announce(self.TorrentData, self.downloaded, self.uploaded, self.left, db_utils.get_configuration('v4_forward')['external_port'], 2)
+        peers_list, self.trackers = await initial_announce(self.TorrentData, self.downloaded, self.uploaded, self.left, db_utils.get_configuration('v4_forward')['external_port'], 2)
         # format peer list: sort and remove unwanted peers
         my_ip = await get_my_public_ip()
         peers_list = format_peers_list(peers_list, my_ip)
@@ -88,7 +91,7 @@ class DownloadSession(object):
         # --------
         # peer wire protocol
         self.state = 'Downloading...'
-        announce_loop_task = asyncio.create_task(announce_loop(self, tracker_list))
+        announce_loop_task = asyncio.create_task(announce_loop(self.trackers, self))
 
         piece_picker = PiecePicker(self.TorrentData, self, bitarray, missing)
         tit_for_tat_manager = TitForTat(piece_picker)
@@ -117,19 +120,20 @@ class DownloadSession(object):
                     except asyncio.TimeoutError:
                         pass
 
-            work = [final_announce(tracker) for tracker in tracker_list]
+            work = [final_announce(tracker) for tracker in self.trackers]
+            await add_newly_completed_torrent(self.TorrentData.info_hash)
             await asyncio.gather(*work)
 
         else:
             self.state = 'Failed'
             print('Failed!')
-            DownloadSession.Sessions.pop(self.TorrentData.info_hash)
             announce_loop_task.cancel()
             return False
 
         self.state = 'Completed'
-        print(tracker_list)
+        # cleanup
         DownloadSession.Sessions.pop(self.TorrentData.info_hash)
+        Peer.peer_instances.pop(self.TorrentData.info_hash)
         announce_loop_task.cancel()
         return True
 
