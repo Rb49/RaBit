@@ -153,7 +153,7 @@ async def handle_leecher(reader, writer):
                 writer.write(Piece.encode(*piece_params))
                 await writer.drain()
                 # update statistics
-                file_object.uploaded += len(piece_params[2])
+                FileObjects[file_object.info_hash].uploaded += len(piece_params[2])
                 leecher.downloaded += len(piece_params[2])
                 leecher.update_download_rate(len(piece_params[2]))
 

@@ -14,8 +14,11 @@ async def announce_loop(trackers: List[Tracker], session):
             if tracker.last_announce + tracker.interval <= time.time():
                 download = session.corrupted + session.wasted + session.downloaded
                 upload = session.uploaded
-                left = session.left
-                asyncio.create_task(tracker.re_announce(download, upload, left))
+                if isinstance(session, PickableFile):
+                    left = 0
+                else:
+                    left = session.left
+                asyncio.create_task(tracker.re_announce(download, upload, left, 0))
                 print('announced! ', tracker)
             else:
                 break
