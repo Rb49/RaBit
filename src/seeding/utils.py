@@ -39,22 +39,15 @@ def load_forwarding(version: str) -> Tuple[int, int, float]:
         return values
 
 
-def get_internal_ip() -> Union[Tuple[str, str], Tuple[None, None]]:
+def get_internal_ip() -> Union[str, None]:
     try:
         s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
         s.connect(('8.8.8.8', 8888))  # some address
         nat_ipv4 = s.getsockname()[0]
         s.close()
-        '''
-        s = socket.socket(socket.AF_INET6, socket.SOCK_DGRAM)
-        s.connect(('2001:4860:4860::8888', 53))  # some IPv6 address
-        nat_ipv6 = s.getsockname()[0]
-        s.close()
-        return nat_ipv4, nat_ipv6
-        '''
-        return nat_ipv4, None
+        return nat_ipv4
     except:
-        return None, None
+        return None
 
 
 async def forward_port_upnp(devices, external_port: int, internal_port: int, protocol: str, nat_ip: str, lease_duration: int) -> bool:

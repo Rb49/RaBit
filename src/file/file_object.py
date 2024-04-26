@@ -26,12 +26,13 @@ def format_file_name(file_name: str) -> str:
 
 
 class File(object):
-    def __init__(self, TorrentData: Torrent, piece_picker: PiecePicker, results_queue: BetterQueue, torrent_path: str, path: str, skip_hash_check: bool = False):
+    def __init__(self, TorrentData: Torrent, session, piece_picker: PiecePicker, results_queue: BetterQueue, torrent_path: str, path: str, skip_hash_check: bool = False):
         self.TorrentData = TorrentData
         self.results_queue = results_queue
         self.skip_hash_check = skip_hash_check
         self.piece_picker = piece_picker
         self.torrent_path = torrent_path
+        self.session = session
 
         if not TorrentData.multi_file:
             self.file_names = [os.path.join(path, format_file_name(TorrentData.info[b'name'].decode('utf-8')))]
@@ -122,7 +123,7 @@ class File(object):
                     # TODO create corrupt pieces and blocks instances and remember the addresses of senders
                     print('received corrupted piece ', piece.index)
 
-                    self.TorrentData.corrupted += len(data)
+                    self.session.corrupted += len(data)
 
                     piece.previous_tries.append(FailedPiece(piece))
                     piece.reset()
@@ -130,17 +131,18 @@ class File(object):
 
                     continue
 
-            print("\033[90m{}\033[00m".format(f'got piece. {round((1 - (self.piece_picker.num_of_pieces_left - 1) / len(self.piece_picker.pieces_map)) * 100, 2)}%. have index: {piece.index}. from {len(Peer.peer_instances)} peers.'))
+            print("\033[90m{}\033[00m".format(f'got piece. {round((1 - (self.piece_picker.num_of_pieces_left - 1) / len(self.piece_picker.pieces_map)) * 100, 2)}%. have index: {piece.index}. from {len(Peer.peer_instances[self.piece_picker.TorrentData.info_hash])} peers.'))
 
             # ban bad peers if any
             bad_peers = piece.get_bad_peers()
-            async with asyncio.Lock():
-                database = db_utils.BannedPeersDB()
-                for peer_ip in bad_peers:
-                    database.insert_ip(peer_ip)
-                    peer = list(filter(lambda x: x.address[0] == peer_ip, Peer.peer_instances))[0]
-                    peer.found_dirty = True
-                    print('banned ', peer_ip)
+            if bad_peers:
+                async with asyncio.Lock():
+                    database = db_utils.BannedPeersDB()
+                    for peer_ip in bad_peers:
+                        database.insert_ip(peer_ip)
+                        peer = list(filter(lambda x: x.address[0] == peer_ip, Peer.peer_instances[self.piece_picker.TorrentData.info_hash]))[0]
+                        peer.found_dirty = True
+                        print('banned ', peer_ip)
 
             piece_abs_index = self.TorrentData.info[b'piece length'] * piece.index
 
@@ -185,12 +187,15 @@ class PickableFile(object):
         self.info_hash = file_object.TorrentData.info_hash
         self.peer_id = file_object.TorrentData.peer_id
         self.length = file_object.TorrentData.length
+        self.trackers = file_object.session.trackers
         self.piece_length = file_object.TorrentData.info[b'piece length']
         self.num_pieces = len(file_object.TorrentData.piece_hashes)
         # statistics
-        self.downloaded = file_object.TorrentData.downloaded
-        self.uploaded = file_object.TorrentData.uploaded
-
+        self.downloaded = file_object.session.downloaded
+        self.corrupted = file_object.session.corrupted
+        self.wasted = file_object.session.wasted
+        self.uploaded = file_object.session.uploaded
+        # file details
         self.file_names = file_object.file_names
         self.fds = []
         self.file_indices = file_object.file_indices
@@ -237,6 +242,9 @@ class PickableFile(object):
             data += b'\x00' * (length - len(data))
 
         return piece_index, begin, data
+
+    def __repr__(self):
+        return f"name: {self.file_names}, info hash: {self.info_hash}"
 
     def __del__(self):
         try:

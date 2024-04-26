@@ -48,8 +48,12 @@ async def http_tracker_announce(tracker_url: str, info_hash: bytes, peer_id: byt
                 peer_data = await response.read()
                 peer_data = bencodepy.decode(peer_data)
 
+                interval = peer_data.get(b'min interval')
+                if not interval:
+                    interval = peer_data[b'interval']
+
                 try:
-                    return [(peer[b'ip'].decode('utf-8'), peer[b'port']) for peer in peer_data[b'peers']], peer_data[b'interval']
+                    return [(peer[b'ip'].decode('utf-8'), peer[b'port']) for peer in peer_data[b'peers']], interval
 
                 except TypeError:  # this means the tracker returned a compact response
                     ipv4peers, ipv6peers = [], []
@@ -61,7 +65,7 @@ async def http_tracker_announce(tracker_url: str, info_hash: bytes, peer_id: byt
                         ipv6peers = format_announce_response(data, 'v6', '>', 0)[0]
 
                     ipv4peers.extend(ipv6peers)
-                    return ipv4peers, peer_data[b'interval']
+                    return ipv4peers, interval
 
             else:
                 return f"Failed to connect to the tracker. HTTP Status Code: {response.status}"

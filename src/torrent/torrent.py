@@ -7,8 +7,8 @@ import string
 
 def read_torrent(path: str) -> Torrent:
     """
-    function to read a torrent file into a torrent file object
-    :param path: path of torrent file
+    function to read a TorrentData file into a TorrentData file object
+    :param path: path of TorrentData file
     :return: TorrentObject
     """
 
@@ -28,8 +28,7 @@ def read_torrent(path: str) -> Torrent:
                                  comment=content.get(b'comment'),
                                  created_by=content.get(b'created by'),
                                  date_created=content.get(b'date created'),
-                                 announce_list=content.get(b'announce-list'),
-                                 nodes=content.get(b'nodes'))
+                                 announce_list=content.get(b'announce-list'))
 
     if torrent_data.multi_file:
         for file in torrent_data.info[b'files']:
