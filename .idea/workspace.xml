@@ -7,9 +7,9 @@
     <list default="true" id="f9fdccf0-d0c7-4e07-872b-f2b1497a2201" name="Changes" comment="announcing in given tracker intervals">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/app_data/config.json" beforeDir="false" afterPath="$PROJECT_DIR$/src/app_data/config.json" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/app_data/ongoing_torrents.json" beforeDir="false" afterPath="$PROJECT_DIR$/src/app_data/ongoing_torrents.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/app_data/db_utils.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/app_data/db_utils.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/client/main.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/client/main.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/client/test.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/client/test.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/download/download_session_object.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/download/download_session_object.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -58,7 +58,7 @@
     "RunOnceActivity.OpenProjectViewOnStart": "true",
     "RunOnceActivity.ShowReadmeOnStart": "true",
     "dart.analysis.tool.window.visible": "false",
-    "git-widget-placeholder": "temp-branch",
+    "git-widget-placeholder": "master",
     "last_opened_file_path": "C:/Users/roeyb/OneDrive/Documents/GitHub/RaBit/RaBit/data"
   }
 }]]></component>

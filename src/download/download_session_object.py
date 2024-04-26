@@ -70,7 +70,7 @@ class DownloadSession(object):
         db_utils.CompletedTorrentsDB().delete_torrent(self.TorrentData.info_hash)
 
         # add the TorrentData file path for fail safety
-        db_utils.add_ongoing_torrent(self.torrent_path)
+        db_utils.add_ongoing_torrent(self.torrent_path, self.result_dir)
 
         # add self to dict
         DownloadSession.Sessions[self.TorrentData.info_hash] = self
@@ -141,7 +141,7 @@ class DownloadSession(object):
         # do not re-download existing torrent pieces!
         missing = None
         bitarray = bitstring.BitArray(bin='0' * len(self.TorrentData.piece_hashes))
-        if self.torrent_path in db_utils.get_ongoing_torrents() or db_utils.CompletedTorrentsDB().find_info_hash(self.TorrentData.info_hash):
+        if self.torrent_path in map(lambda x: x[0], db_utils.get_ongoing_torrents()) or db_utils.CompletedTorrentsDB().find_info_hash(self.TorrentData.info_hash):
             temp_file = None
             try:
                 bitarray = bitstring.BitArray(bin='1' * len(self.TorrentData.piece_hashes))
@@ -163,7 +163,6 @@ class DownloadSession(object):
                 bitarray = bitstring.BitArray(bin='0' * len(self.TorrentData.piece_hashes))
             finally:
                 del temp_file
-
         return bitarray, missing
 
 

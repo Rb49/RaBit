@@ -5,7 +5,7 @@ import re
 from pathlib import Path
 import sqlite3
 import pickle
-from typing import Union, Any, Dict, List
+from typing import Union, Any, Dict, List, Tuple
 import json
 import threading
 
@@ -58,32 +58,31 @@ def get_client(peer_id: bytes) -> str:
         return 'Unrecognized client'
 
 
-def get_ongoing_torrents() -> List[str]:
+def get_ongoing_torrents() -> List[Tuple[str]]:
     with open(abs_db_path('ongoing_torrents.json'), 'r') as json_file:
-        torrents: List[str] = json.load(json_file)
+        torrents: List[Tuple[str]] = json.load(json_file)
         return torrents
 
 
-def add_ongoing_torrent(path: str):
+def add_ongoing_torrent(torrent_file_path: str, download_dir_path: str):
     with threading.Lock():
         with open(abs_db_path('ongoing_torrents.json'), 'r+') as json_file:
-            torrents: List[str] = json.load(json_file)
-            if path not in torrents:
-                torrents.append(path)
+            torrents: List[Tuple[str]] = json.load(json_file)
+            if torrent_file_path not in map(lambda x: x[0], torrents):
+                torrents.append((torrent_file_path, download_dir_path))
                 json_file.seek(0)
                 json_file.truncate()
                 json.dump(torrents, json_file)
 
 
-def remove_ongoing_torrent(path: str):
+def remove_ongoing_torrent(torrent_file_path: str):
     with threading.Lock():
         with open(abs_db_path('ongoing_torrents.json'), 'r+') as json_file:
             torrents: List[str] = json.load(json_file)
-            if path in torrents:
-                torrents.remove(path)
-                json_file.seek(0)
-                json_file.truncate()
-                json.dump(torrents, json_file)
+            torrents = list(filter(lambda x: x[0] != torrent_file_path, torrents))
+            json_file.seek(0)
+            json_file.truncate()
+            json.dump(torrents, json_file)
 
 
 class Singleton(object):

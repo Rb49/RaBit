@@ -23,11 +23,22 @@ def main(*torrents, **kwargs):
         download_dir = db_utils.get_configuration('download_dir')
 
     threads = []
+
+    ongoing_torrents = db_utils.get_ongoing_torrents()
+    for data in ongoing_torrents:
+        torrent, path = data
+        session = DownloadSession(torrent, path)
+        download_thread = threading.Thread(target=lambda: asyncio.run(session.download()), daemon=True)
+        threads.append(download_thread)
+        download_thread.start()
+
+    torrents = set(torrents) - set(map(lambda x: x[0], ongoing_torrents))
     for torrent_path in torrents:
         session = DownloadSession(torrent_path, download_dir)
         download_thread = threading.Thread(target=lambda: asyncio.run(session.download()), daemon=True)
         threads.append(download_thread)
         download_thread.start()
+
     for thread in threads:
         thread.join()
         print('download complete!')
@@ -50,9 +61,8 @@ if __name__ == '__main__':
 
     main(
         r"C:\Users\roeyb\OneDrive\Documents\GitHub\RaBit\RaBit\data\The Best American Short Stories, 2011–2023 (13 books).torrent",
-        r"C:\Users\roeyb\OneDrive\Documents\GitHub\RaBit\RaBit\data\Young.Sheldon.S07E01.HDTV.x264-TORRENTGALAXY.torrent",
         r"C:\Users\roeyb\OneDrive\Documents\GitHub\RaBit\RaBit\data\The Complete Art of War_ Sun Tzu-Sun Pin [blackatk].torrent",
-        result_path=r"C:\Users\roeyb\OneDrive\Documents\GitHub\RaBit\RaBit\results"
+        download_dir=r"C:\Users\roeyb\OneDrive\Documents\GitHub\RaBit\RaBit\results"
     )
 
     exit(0)
