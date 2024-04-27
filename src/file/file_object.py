@@ -244,7 +244,7 @@ class PickableFile(object):
         return piece_index, begin, data
 
     def __repr__(self):
-        return f"name: {self.file_names[0]}, info hash: {self.info_hash}, uploaded: {self.uploaded}"
+        return f"uploaded: {self.uploaded}, name: {self.file_names[0]}, info hash: {self.info_hash}"
 
     def __del__(self):
         try:

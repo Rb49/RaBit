@@ -67,9 +67,9 @@ def get_ongoing_torrents() -> List[Tuple[str]]:
 def add_ongoing_torrent(torrent_file_path: str, download_dir_path: str):
     with threading.Lock():
         with open(abs_db_path('ongoing_torrents.json'), 'r+') as json_file:
-            torrents: List[Tuple[str]] = json.load(json_file)
+            torrents: List[List[str]] = json.load(json_file)
             if torrent_file_path not in map(lambda x: x[0], torrents):
-                torrents.append((torrent_file_path, download_dir_path))
+                torrents.append([torrent_file_path, download_dir_path])
                 json_file.seek(0)
                 json_file.truncate()
                 json.dump(torrents, json_file)

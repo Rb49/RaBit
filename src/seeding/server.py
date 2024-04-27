@@ -177,7 +177,6 @@ async def handle_leecher(reader, writer):
             file_object.close_files()
             del leecher
             # update db statistics
-            print(FileObjects[file_object.info_hash].uploaded)
             db_utils.CompletedTorrentsDB().update_torrent(FileObjects[file_object.info_hash])
             del file_object
 

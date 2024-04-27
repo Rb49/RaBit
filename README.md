@@ -16,7 +16,6 @@
 You won't be able to:
 
 - use protocol extensions
-- download many torrents at once (for now)
 - seed in ipv6
 - download / seed without an upnp-enabled router or from a double nat
 - download from magnet links (perhaps with an existing service api)

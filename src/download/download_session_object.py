@@ -63,8 +63,6 @@ class DownloadSession(object):
             self.left = len(missing) * self.TorrentData.info[b'piece length'] - extra
             self.downloaded = self.TorrentData.length - self.left
 
-        db_utils.CompletedTorrentsDB().delete_torrent(self.TorrentData.info_hash)
-
         # add the TorrentData file path for fail safety
         db_utils.add_ongoing_torrent(self.torrent_path, self.result_dir)
 
@@ -84,6 +82,9 @@ class DownloadSession(object):
             db_utils.CompletedTorrentsDB().insert_torrent(PickableFile(File(self.TorrentData, self, None, None, self.torrent_path, self.result_dir)))
             db_utils.remove_ongoing_torrent(self.torrent_path)
             return True
+
+        # TODO keep track of uploaded stats (?)
+        db_utils.CompletedTorrentsDB().delete_torrent(self.TorrentData.info_hash)
 
         if not peers_list:
             self.state = 'Failed'

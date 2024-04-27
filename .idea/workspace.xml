@@ -4,10 +4,13 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="f9fdccf0-d0c7-4e07-872b-f2b1497a2201" name="Changes" comment="taking care of a special case where the entire file is already present">
+    <list default="true" id="f9fdccf0-d0c7-4e07-872b-f2b1497a2201" name="Changes" comment="updating seeding db with upload statistics">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/README.md" beforeDir="false" afterPath="$PROJECT_DIR$/README.md" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/app_data/config.json" beforeDir="false" afterPath="$PROJECT_DIR$/src/app_data/config.json" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/app_data/db_utils.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/app_data/db_utils.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/download/download_session_object.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/download/download_session_object.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/file/file_object.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/file/file_object.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/seeding/server.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/seeding/server.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
@@ -367,7 +370,23 @@
       <option name="project" value="LOCAL" />
       <updated>1714207592601</updated>
     </task>
-    <option name="localTasksCounter" value="32" />
+    <task id="LOCAL-00032" summary="safer cleanup">
+      <option name="closed" value="true" />
+      <created>1714208366298</created>
+      <option name="number" value="00032" />
+      <option name="presentableId" value="LOCAL-00032" />
+      <option name="project" value="LOCAL" />
+      <updated>1714208366298</updated>
+    </task>
+    <task id="LOCAL-00033" summary="updating seeding db with upload statistics">
+      <option name="closed" value="true" />
+      <created>1714208420270</created>
+      <option name="number" value="00033" />
+      <option name="presentableId" value="LOCAL-00033" />
+      <option name="project" value="LOCAL" />
+      <updated>1714208420270</updated>
+    </task>
+    <option name="localTasksCounter" value="34" />
     <servers />
   </component>
   <component name="Vcs.Log.Tabs.Properties">
@@ -394,7 +413,6 @@
     </option>
   </component>
   <component name="VcsManagerConfiguration">
-    <MESSAGE value="fix up" />
     <MESSAGE value="writing control messages directly without a queue" />
     <MESSAGE value="partial fingerprinting of azureus-style clients software" />
     <MESSAGE value="added tracker object and process interval value" />
@@ -418,6 +436,8 @@
     <MESSAGE value="announcing in given tracker intervals" />
     <MESSAGE value="automatically resumes unfinished torrents after shutdown" />
     <MESSAGE value="taking care of a special case where the entire file is already present" />
-    <option name="LAST_COMMIT_MESSAGE" value="taking care of a special case where the entire file is already present" />
+    <MESSAGE value="safer cleanup" />
+    <MESSAGE value="updating seeding db with upload statistics" />
+    <option name="LAST_COMMIT_MESSAGE" value="updating seeding db with upload statistics" />
   </component>
 </project>
