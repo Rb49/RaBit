@@ -7,7 +7,7 @@ from src.tracker.utils import format_peers_list
 from src.geoip.utils import get_my_public_ip
 from src.download.piece_picker import PiecePicker
 from src.peer.peer_communication import tcp_wire_communication
-from src.file.file_object import File
+from src.file.file_object import File, PickableFile
 from src.download.upload_in_download import TitForTat
 from src.tracker.tracker_object import Tracker, ANNOUNCING, WORKING
 from src.seeding.announce_loop import announce_loop
@@ -44,7 +44,7 @@ class DownloadSession(object):
     async def download(self) -> bool:
         # should be called from protected code
 
-        # read TorrentData file
+        # read torrent file
         self.state = 'Reading TorrentData'
         self.TorrentData = read_torrent(self.torrent_path)
 
@@ -55,10 +55,6 @@ class DownloadSession(object):
 
         self.state = 'Verifying files'
         bitarray, missing = self.verify_torrent()
-
-        if all(bitarray):
-            print('got all!')
-            return True
 
         if missing is None:
             self.left = self.TorrentData.length
@@ -81,6 +77,13 @@ class DownloadSession(object):
         # format peer list: sort and remove unwanted peers
         my_ip = await get_my_public_ip()
         peers_list = format_peers_list(peers_list, my_ip)
+
+        # verify torrent
+        if all(bitarray):
+            print('got all!')
+            db_utils.CompletedTorrentsDB().insert_torrent(PickableFile(File(self.TorrentData, self, None, None, self.torrent_path, self.result_dir)))
+            db_utils.remove_ongoing_torrent(self.torrent_path)
+            return True
 
         if not peers_list:
             self.state = 'Failed'
@@ -124,18 +127,18 @@ class DownloadSession(object):
             await add_newly_completed_torrent(self.TorrentData.info_hash)
             await asyncio.gather(*work)
 
+            self.state = 'Completed'
+            # cleanup
+            DownloadSession.Sessions.pop(self.TorrentData.info_hash)
+            Peer.peer_instances.pop(self.TorrentData.info_hash)
+            announce_loop_task.cancel()
+            return True
+
         else:
             self.state = 'Failed'
             print('Failed!')
             announce_loop_task.cancel()
             return False
-
-        self.state = 'Completed'
-        # cleanup
-        DownloadSession.Sessions.pop(self.TorrentData.info_hash)
-        Peer.peer_instances.pop(self.TorrentData.info_hash)
-        announce_loop_task.cancel()
-        return True
 
     def verify_torrent(self) -> Tuple[bitstring.BitArray, List[int]]:
         # do not re-download existing torrent pieces!
