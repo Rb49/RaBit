@@ -1,6 +1,6 @@
 import src.app_data.db_utils as db_utils
 from src.file.file_object import PickableFile
-from src.seeding.server import FileObjects
+from src.seeding.utils import FileObjects
 from src.geoip.utils import get_info
 
 from typing import Tuple, Union

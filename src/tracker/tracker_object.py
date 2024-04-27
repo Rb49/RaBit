@@ -63,7 +63,7 @@ class Tracker(object):
             self.last_announce = time.time()
 
     def __repr__(self):
-        return f"state: {self.state}, interval: {self.interval}, url: {self.url}"
+        return f"state: {self.state}, interval: {self.interval}, url: {self.url}, info hash: {self.info_hash}"
 
     def __hash__(self):
         return hash(repr(self))
