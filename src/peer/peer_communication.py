@@ -1,16 +1,16 @@
-from typing import Tuple, List
 from src.torrent.torrent_object import Torrent
-from .peer_object import Peer
-from .handshake import handshake, open_tcp_connection
-from .message_types import *
 from src.download.piece_picker import PiecePicker, Block
 from src.download.upload_in_download import TitForTat
 from src.file.file_object import File
 import src.app_data.db_utils as db_utils
+from .peer_object import Peer
+from .handshake import handshake, open_tcp_connection
+from .message_types import *
+
 import asyncio
 import struct
 from random import random, seed
-
+from typing import Tuple, List, Any
 
 _BUFFER_SIZE = 4096
 _MAX_REQUESTS = 500
@@ -29,7 +29,11 @@ class Stream(object):
     def __aiter__(self):
         return self
 
-    async def __anext__(self):
+    async def __anext__(self) -> Any:
+        """
+        reads and formats messages from an outgoing peer
+        :return: msg instance corresponding to the type
+        """
         while True:
             assert not self.thisPeer.found_dirty  # get rid of a connection with a dirty peer
 
@@ -98,7 +102,17 @@ class Stream(object):
                 raise AssertionError
 
 
-async def tcp_wire_communication(peerData: Tuple, TorrentData: Torrent, session, file_manager: File, piece_picker: PiecePicker, chocking_manager: TitForTat):
+async def tcp_wire_communication(peerData: Tuple, TorrentData: Torrent, session, file_manager: File, piece_picker: PiecePicker, chocking_manager: TitForTat) -> None:
+    """
+    main function for communicating with a peer
+    :param peerData: geodata of the peer
+    :param TorrentData: torrent data instance
+    :param session: DownloadingSession instance with session stats
+    :param file_manager: File instance managing disk IO operations
+    :param piece_picker: PiecePicker instance for requesting and reporting blocks
+    :param chocking_manager: tit-for-tat algorithm for chocking management
+    :return: None
+    """
     address, city, distance = peerData
     try:
         reader, writer = await asyncio.wait_for(open_tcp_connection(address), timeout=3)

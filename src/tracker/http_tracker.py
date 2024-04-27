@@ -1,9 +1,8 @@
 from .utils import format_announce_response
+
 from urllib.parse import urlencode
 import bencodepy
-from collections import OrderedDict
-from typing import Union, List, Tuple, Any, Iterable
-import asyncio
+from typing import Union, List, Tuple
 import aiohttp
 from yarl import URL
 

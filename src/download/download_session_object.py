@@ -20,9 +20,17 @@ from typing import List, Tuple, Dict, Any
 
 
 class DownloadSession(object):
+    """
+    download session instance. monitors the download and starts everything related to it.
+    """
     Sessions: Dict[bytes, Any] = dict()
 
-    def __init__(self, torrent_path: str, result_dir: str):
+    def __init__(self, torrent_path: str, result_dir: str) -> None:
+        """
+        :param torrent_path: path of the .torrent file
+        :param result_dir: path to where downloaded files will be saved
+        :return: None
+        """
         self.torrent_path = torrent_path
         self.TorrentData = None
         self.result_dir = result_dir
@@ -42,6 +50,10 @@ class DownloadSession(object):
         await asyncio.gather(tit_for_tat_loop, disk_loop, *work)
 
     async def download(self) -> bool:
+        """
+        main function for downloading a .torrent file
+        :return: whatever the download was successful
+        """
         # should be called from protected code
 
         # read torrent file
@@ -142,7 +154,11 @@ class DownloadSession(object):
             return False
 
     def verify_torrent(self) -> Tuple[bitstring.BitArray, List[int]]:
-        # do not re-download existing torrent pieces!
+        """
+        goes over the entire torrent and checks which pieces are missing to not re-download existing torrent pieces
+        :return: bitarray of pieces availability, a range of missing pieces indexes (tuple)
+        """
+        # do not
         missing = None
         bitarray = bitstring.BitArray(bin='0' * len(self.TorrentData.piece_hashes))
         if self.torrent_path in map(lambda x: x[0], db_utils.get_ongoing_torrents()) or db_utils.CompletedTorrentsDB().find_info_hash(self.TorrentData.info_hash):

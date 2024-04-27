@@ -9,10 +9,17 @@ import time
 
 
 class TitForTat(object):
+    """
+    a chocking mechanism based on a tit-for-tat algorithm: reward sharing peers, punish egoistic peers.
+    """
     _MAX_UNCHOCKED_PEERS = db_utils.get_configuration('max_unchocked_peers')
     _MAX_OPTIMISTIC_PEERS = db_utils.get_configuration('max_optimistic_unchock')
 
-    def __init__(self, piece_picker):
+    def __init__(self, piece_picker: PiecePicker) -> None:
+        """
+        :param piece_picker: PiecePicker instance for some stats
+        :return: None
+        """
         self.piece_picker: PiecePicker = piece_picker
         Peer.peer_instances[piece_picker.TorrentData.info_hash] = []  # this init happens before any peer is connected
         self.peers: List[Peer] = Peer.peer_instances[piece_picker.TorrentData.info_hash]  # all connected peers
@@ -20,7 +27,12 @@ class TitForTat(object):
         self.good_uninterested_peers: List[Peer] = []  # not interested peers and upload better than downloaders
         self.optimistic_unchock_peers: List[Peer] = []  # not interested peers randomly chosen
 
-    async def loop(self):
+    async def loop(self) -> None:
+        """
+        performs a tit-for-tat chocking algorithm every 10 seconds
+        and optimistic unchocking every 30 seconds
+        :return: None
+        """
         three_iteration_counter = 0
         while True:
             # am I being snubbed?
@@ -74,7 +86,13 @@ class TitForTat(object):
 
             await asyncio.sleep(10)
 
-    async def report_interested(self, peer: Peer):
+    async def report_interested(self, peer: Peer) -> None:
+        """
+        what to do when a peer sends an interesting message?
+        decides whatever to unchock it or not
+        :param peer: Peer instance of the requesting peer
+        :return: None
+        """
         peer.am_interested = True
         if len(self.downloaders) < TitForTat._MAX_UNCHOCKED_PEERS:
             self.downloaders.append(peer)
@@ -97,7 +115,12 @@ class TitForTat(object):
         else:  # don't let worse peers to be unchocked instead of better ones
             await self.piece_picker.send_chock(peer)
 
-    async def report_uninterested(self, peer: Peer):
+    async def report_uninterested(self, peer: Peer) -> None:
+        """
+        what to do when a peer sends an uninteresting message?
+        :param peer: Peer instance of the requesting peer
+        :return: None
+        """
         peer.am_interested = False
         if peer in self.downloaders:
             self.downloaders.remove(peer)

@@ -1,6 +1,6 @@
 from src.peer.message_types import BLOCK_SIZE
 
-from typing import List, Tuple, Any, Set
+from typing import List, Tuple, Any, Set, Union
 from dataclasses import dataclass
 from random import random
 
@@ -10,16 +10,12 @@ REQUESTED = 1
 FINISHED = 2
 
 
-# TODO add failed_block class for smart banning
-
 @dataclass(slots=True)
 class Block(object):
     """
-    NOTE:
-    one Block object is passed many times between functions and a lot of references of it are created,
-    but they all point to the same instance
+    a representation of a block - the smallest unit that is requested with a 'Request' message
+    a several blocks make up a piece.
     """
-
     # block attributes
     index: int
     begin: int
@@ -32,11 +28,17 @@ class Block(object):
     downloaded_from: str = None  # address is stored for smart banning
 
     def reset(self):
+        """
+        flushes the block
+        """
         self.data = None
         self.state = OPEN
         self.downloaded_from = None
 
     def add_data(self, data: bytes, address: Tuple[str, int]):
+        """
+        adds data to the block when it arrives
+        """
         if self.data is None:
             self.data = data
             self.state = FINISHED
@@ -56,11 +58,24 @@ class Block(object):
 
     @property
     def data_hash(self):
+        """
+        hash value of the block's data, NOT the block's instance hash.
+        """
         return hash(self.data)
 
 
 class DownloadingPiece(object):
-    def __init__(self, index, piece_length: int, block_size: int = BLOCK_SIZE):
+    """
+    a downloading piece instance.
+    creates a list of Block instances and keeps track of them
+    """
+    def __init__(self, index, piece_length: int, block_size: int = BLOCK_SIZE) -> None:
+        """
+        :param index: index of the piece
+        :param piece_length: length of the piece
+        :param block_size: size of each 'full' block the piece should have
+        :return: None
+        """
         self.index = index
         self.piece_length = piece_length
         self.block_size = block_size
@@ -83,12 +98,19 @@ class DownloadingPiece(object):
         self.previous_tries: List[FailedPiece] = []
 
     def reset(self):
+        """
+        flushes the piece
+        """
         self.all_requested = False
         self.current_block = 0
         for block in self.blocks:
             block.reset()
 
-    def get_next_request(self):
+    def get_next_request(self) -> Union[Block, None]:
+        """
+        returns the nest unpicked block, if there are any
+        :return: Block | None if all blocks have been already picked
+        """
         if self.all_requested:
             return None
 
@@ -101,6 +123,9 @@ class DownloadingPiece(object):
         return None
 
     def deselect_block(self, block: Block):
+        """
+        makes a block available for picking again
+        """
         for blk in self.blocks:
             if blk is block:
                 if blk.state == REQUESTED:
@@ -122,6 +147,10 @@ class DownloadingPiece(object):
         return (not self.urgent), self.all_requested, (1 - self.current_block / self.blocks_length), random()
 
     def get_bad_peers(self) -> Set[str]:
+        """
+        if the piece has failed hash checks before, the malicious peers can be identified and banned.
+        :return: set of ip addresses
+        """
         # runs at successful hash check
         bad_peers = set()
         while self.previous_tries:
@@ -132,13 +161,17 @@ class DownloadingPiece(object):
 
 class FailedPiece(object):
     """
-    an instance will be created for each piece failure
+    instance containing hashes of blocks that failed a hash check.
+    an instance will be created for each piece failure.
     """
     def __init__(self, failed_piece: DownloadingPiece):
         self.piece_index = failed_piece.index
         self.failed_blocks: List[Tuple[int, str]] = [(block.data_hash, block.downloaded_from) for block in failed_piece.blocks]
 
     def get_bad_peers(self, verified_piece: DownloadingPiece) -> Set[str]:
+        """
+        compares the hashes of individual blocks to identify malicious peers
+        """
         verified_blocks: List[Tuple[int, str]] = [(block.data_hash, block.downloaded_from) for block in verified_piece.blocks]
 
         bad_peers = set()

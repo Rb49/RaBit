@@ -1,13 +1,8 @@
-import copy
-import os
-import threading
-from typing import List
-
-from .utils import *
 from src.peer.message_types import *
 from src.seeding.leecher_object import Leecher
 from src.seeding.handshake import handshake, validate_peer_ip
 from src.file.file_object import PickableFile
+from .utils import *
 from .announce_loop import announce_loop
 
 import asyncio
@@ -15,7 +10,8 @@ import upnpclient
 from math import ceil
 import bitstring
 from random import sample
-
+import copy
+from typing import List, Any
 
 _BUFFER_SIZE = 4096
 _MAX_REQUESTS = 500
@@ -36,7 +32,11 @@ class Stream(object):
     def __aiter__(self):
         return self
 
-    async def __anext__(self):
+    async def __anext__(self) -> Any:
+        """
+        reads and formats requests and other messages from an incoming peer
+        :return: msg instance corresponding to the type
+        """
         while True:
             if self.buffer:
                 length = struct.unpack('>I', self.buffer[0:4])[0] + 4
@@ -81,7 +81,13 @@ class Stream(object):
                 raise AssertionError
 
 
-async def handle_leecher(reader, writer):
+async def handle_leecher(reader, writer) -> None:
+    """
+    main function for incoming connection handling
+    :param reader: asyncio reader instance
+    :param writer: asyncio writer instance
+    :return: None
+    """
     leecher = None
     try:
         # make sure peer is not dirty
@@ -183,7 +189,11 @@ async def handle_leecher(reader, writer):
         return
 
 
-async def start_seeding_server():
+async def start_seeding_server() -> None:
+    """
+    starts the seeding server, preferably using an existing port mapping
+    :return: None
+    """
     global SEEDING_SERVER_IS_UP
     try:
         internal_ipv4 = get_internal_ip()
@@ -254,7 +264,11 @@ async def start_seeding_server():
         return
 
 
-def init_completed_torrents():
+def init_completed_torrents() -> None:
+    """
+    loads torrents from the completed torrents db and starts announce loops for their trackers
+    :return: None
+    """
     all_torrents: List[PickableFile] = db_utils.CompletedTorrentsDB().get_all_torrents()
     for file in all_torrents:
         try:
@@ -267,7 +281,11 @@ def init_completed_torrents():
             db_utils.CompletedTorrentsDB().delete_torrent(file.info_hash)
 
 
-async def add_newly_completed_torrent(info_hash: bytes):
+async def add_newly_completed_torrent(info_hash: bytes) -> None:
+    """
+    adds a newly downloaded torrent available for seeding
+    :return: None
+    """
     file: PickableFile = db_utils.CompletedTorrentsDB().get_torrent(info_hash)
     if file:
         async with asyncio.Lock():
@@ -281,7 +299,16 @@ async def add_newly_completed_torrent(info_hash: bytes):
                 db_utils.CompletedTorrentsDB().delete_torrent(info_hash)
 
 
-async def update_mapping(internal_port: int, external_port: int, internal_ip: str, last_forward: float, version: str):
+async def update_mapping(internal_port: int, external_port: int, internal_ip: str, last_forward: float, version: str) -> None:
+    """
+    coroutine to re-lease the port mapping when the lease ends
+    :param internal_port: internal port the seeding server is listening to
+    :param external_port: external port on the router's external nic
+    :param internal_ip: nat ip of the machine
+    :param last_forward: time of the last forwarding
+    :param version: 'v4' for ipv4 | 'v6' for ipv6
+    :return: None
+    """
     while True:
         await asyncio.sleep(_LEASE_DURATION - (time.time() - last_forward))
 

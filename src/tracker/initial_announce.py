@@ -1,7 +1,7 @@
+from src.torrent.torrent_object import Torrent
 from .tracker_object import Tracker, ANNOUNCING, WORKING, UNREACHABLE
 from .udp_tracker import udp_tracker_announce
 from .http_tracker import http_tracker_announce
-from src.torrent.torrent_object import Torrent
 
 import asyncio
 from typing import List, Tuple

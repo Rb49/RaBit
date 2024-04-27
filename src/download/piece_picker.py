@@ -9,12 +9,14 @@ from dataclasses import dataclass
 import time
 import threading
 import asyncio
-import queue
 from collections import defaultdict
-from random import shuffle, choice
+from random import shuffle
 
 
 class BetterQueue(asyncio.Queue):
+    """
+    an async queue with extra functionality
+    """
     def __init__(self, maxsize: int = 0):
         super().__init__(maxsize)
         self.size = 0
@@ -31,15 +33,26 @@ class BetterQueue(asyncio.Queue):
 
 @dataclass
 class PiecePos(object):
+    """
+    a small dataclass to represent a piece index and its availability for picking calculations
+    """
     piece_index: int  # piece index
     peer_count: int = 0  # availability, position in priority bucket
 
 
 class PriorityBucket(object):
+    """
+    a priority bucket containing a list of PiecePos sharing the same availability.
+    the lower the priority (key) the rarer the piece is
+    """
     keys: List[int] = []
     buckets: List = []
 
-    def __init__(self, pieces_list: List[PiecePos] = None):
+    def __init__(self, pieces_list: List[PiecePos] = None) -> None:
+        """
+        :param pieces_list: a number of PiecePos with the same availability
+        :return: None
+        """
         PriorityBucket.buckets.append(self)
         if pieces_list:
             self.pieces_list: List[PiecePos] = pieces_list  # pieces "stack"
@@ -75,9 +88,23 @@ class PriorityBucket(object):
 
 
 class PiecePicker(object):
+    """
+    monitors the state of the download.
+    picks blocks for peers based on their pieces, availability, completion and urgency.
+    builds completed pieces together and reports them to the disk IO manager.
+    adds control messages (choke, unchoke, have) to the peers' control queues.
+    and more.
+    """
     FILE_STATUS: Dict[bytes, bitstring.BitArray] = dict()
 
     def __init__(self, TorrentData: Torrent, session, bitarray: bitstring.bitarray, index_range: List[int] = None) -> None:
+        """
+        :param TorrentData: torrent data instance
+        :param session: DownloadingSession instance with some stats
+        :param bitarray: the initial position of the downloaded files
+        :param index_range: the range of missing pieces for a faster partial download
+        :return: None
+        """
         self.TorrentData = TorrentData
         self.results_queue = BetterQueue()
 
@@ -107,10 +134,19 @@ class PiecePicker(object):
         self.last_data_received = time.time()
 
     def sort_downloading(self):
+        """
+        sorts the self.downloading dict by priority
+        """
         # prioritize pieces that are closest to completion
         self.downloading = dict(sorted(self.downloading.items(), key=lambda x: x[1].priority))
 
     async def get_block(self, have_mask: bitstring.bitarray) -> Block:
+        """
+        request a block from the remaining blocks
+        a block is chosen using rarest-first strategy with priority to failed pieces
+        :param have_mask: which pieces the peer can share
+        :return: a Block instance | None if all blocks have been requested
+        """
         if self.is_in_endgame:
             return None
         async with asyncio.Lock():
@@ -156,7 +192,14 @@ class PiecePicker(object):
                 self.endgame()
             return None
 
-    async def report_block(self, block: Block, add_data_args: Tuple[bytes, Tuple[str, int]]):
+    async def report_block(self, block: Block, add_data_args: Tuple[bytes, Tuple[str, int]]) -> None:
+        """
+        report about receiving a block of data
+        if the piece is complete send it to disk IO manager
+        :param block: Block instance whose data has arrived
+        :param add_data_args: data received + ip of sender (tuple)
+        :return: None
+        """
         async with asyncio.Lock():
             # the stream already verified the block and made sure we requested it
             self.last_data_received = time.time()
@@ -182,7 +225,12 @@ class PiecePicker(object):
                     # pass to disk IO thread
                     await self.results_queue.put(piece)
 
-    async def add_failed_piece(self, piece: DownloadingPiece):
+    async def add_failed_piece(self, piece: DownloadingPiece) -> None:
+        """
+        adds a piece that failed hash check to the downloading dict with an urgency flag
+        :param piece: instance of a piece to be retested
+        :return None
+        """
         # TODO record failed piece block hashes and store them
         # re-add failed pieces directly to the download dict with a toggled urgent flag
         # to download it successfully and ban the responsible peers as soon as possible
@@ -200,8 +248,14 @@ class PiecePicker(object):
                 for block in piece.blocks:
                     self.add_endgame_block(block)
 
-    def change_availability(self, piece_index: int, difference: int):
-        # this function is called from within an asyncio.Lock()
+    def change_availability(self, piece_index: int, difference: int) -> None:
+        """
+        changes the availability of a piece
+        note: this function should be called from within an asyncio.Lock()
+        :param piece_index: piece index in the torrent
+        :param difference: with what value to increase the availability (can be negative)
+        :return: None
+        """
         if self.is_in_endgame:
             return
 
@@ -216,20 +270,27 @@ class PiecePicker(object):
             piece.peer_count += difference
             self.buckets_dict[piece.peer_count].add_piece(piece)
 
-    def deselect_block(self, block: Block):
+    def deselect_block(self, block: Block) -> None:
+        """
+        deselects a block and pass it to be requested again
+        """
         if not self.is_in_endgame:
             self.pending_blocks.pop(block)
         else:
             self.add_endgame_block(block)
         self.downloading[block.index].deselect_block(block)
 
-    def endgame(self):
+    def endgame(self) -> None:
+        """
+        toggles endgame mode.
+        calculates the remaining blocks and toggles endgame mode in all peers
+        """
         unfiltered_blocks = list(self.pending_blocks.keys())
         for piece in self.downloading.values():
             while isinstance((block := piece.get_next_request()), Block):
                 unfiltered_blocks.append(block)
 
-        print('ENDGAME !!!')
+        # print('ENDGAME !!!')
         self.is_in_endgame = True
 
         for peer in Peer.peer_instances[self.TorrentData.info_hash]:
@@ -237,11 +298,17 @@ class PiecePicker(object):
             peer.endgame_blocks = set(filter(lambda x: peer.have_pieces[x.index], unfiltered_blocks))
 
     def add_endgame_block(self, block: Block):
+        """
+        adds a deselected block to the endgame blocks set
+        """
         for peer in Peer.peer_instances[self.TorrentData.info_hash]:
             if peer.have_pieces[block.index]:
                 peer.endgame_blocks.add(block)
 
     async def send_have(self, piece_index: int):
+        """
+        adds 'have' message to the queues of all peers that don't already have this piece
+        """
         async with asyncio.Lock():
             for peer in Peer.peer_instances[self.TorrentData.info_hash]:
                 if not peer.have_pieces[piece_index]:
@@ -250,6 +317,9 @@ class PiecePicker(object):
 
     @staticmethod
     async def send_chock(peer: Peer):
+        """
+        adds 'chock' message to the queue of a peer
+        """
         async with asyncio.Lock():
             peer.am_chocked = True
             chock_msg: bytes = Chock.encode()
@@ -259,6 +329,9 @@ class PiecePicker(object):
 
     @staticmethod
     async def send_unchock(peer: Peer):
+        """
+        adds 'unchock' message to the queue of a peer
+        """
         async with asyncio.Lock():
             peer.am_chocked = False
             unchock_msg: bytes = Unchock.encode()
@@ -268,4 +341,7 @@ class PiecePicker(object):
 
     @property
     def get_health(self):
+        """
+        health of a torrent: what percentage of all pieces is available to download for me
+        """
         return round((1 - self.buckets_dict[0].length / len(self.TorrentData.piece_hashes)) * 100, 2)

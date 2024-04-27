@@ -1,5 +1,6 @@
-import bencodepy
 from .torrent_object import Torrent
+
+import bencodepy
 from hashlib import sha1
 import random
 import string
@@ -7,9 +8,9 @@ import string
 
 def read_torrent(path: str) -> Torrent:
     """
-    function to read a TorrentData file into a TorrentData file object
+    function to read a .torrent file into a TorrentData file object
     :param path: path of TorrentData file
-    :return: TorrentObject
+    :return: Torrent instance with the file's data
     """
 
     # open and decode the data

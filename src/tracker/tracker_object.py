@@ -1,9 +1,9 @@
-import math
-import time
-
+import src.app_data.db_utils as db_utils
 from .http_tracker import http_tracker_announce
 from .udp_tracker import udp_tracker_announce
-import src.app_data.db_utils as db_utils
+
+import math
+import time
 
 
 UNREACHABLE = 0
@@ -13,7 +13,17 @@ NONE = None
 
 
 class Tracker(object):
-    def __init__(self, url: str, info_hash: bytes, peer_id: bytes, interval: int = 0):
+    """
+    an instance of a single tracker that posses data about a single info hash
+    """
+    def __init__(self, url: str, info_hash: bytes, peer_id: bytes, interval: int = 0) -> None:
+        """
+        :param url: url of the tracker
+        :param info_hash: info hash the tracker posses data on
+        :param peer_id: the peer id for the info hash (for identification)
+        :param interval: interval from a previous response
+        :return: None
+        """
         self.url = url
         self.type = 'http' if 'http' in url else 'udp'
         self.info_hash = info_hash
@@ -23,6 +33,13 @@ class Tracker(object):
         self.state = NONE
 
     async def re_announce(self, download: int, uploaded: int, left: int, event: int = 0):
+        """
+        announces the tracker with given stats and an event
+        :param download: in bytes
+        :param uploaded: in bytes
+        :param left: in bytes
+        :param event: 0: none; 1: completed; 2: started; 3: stopped
+        """
         self.state = ANNOUNCING
         port = db_utils.get_configuration('v4_forward')['external_port']
         try:

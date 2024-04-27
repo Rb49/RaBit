@@ -1,7 +1,6 @@
 import src.app_data.db_utils as db_utils
 from src.file.file_object import PickableFile
 
-import upnpclient
 import socket
 from typing import Union, Tuple, Dict
 import time
@@ -11,7 +10,14 @@ import crc32c
 FileObjects: Dict[bytes, PickableFile] = dict()
 
 
-async def save_forward(internal_port: int, external_port: int, version: str):
+async def save_forward(internal_port: int, external_port: int, version: str) -> None:
+    """
+    saving a mapping configuration to thr config file
+    :param internal_port: internal port on the machine
+    :param external_port: external port on the rounter's external nic
+    :param version: 'v4' for ipv4 | 'v6' for ipv6
+    :return: None
+    """
     if version == 'v4':
         await db_utils.set_configuration(
             'v4_forward', {
@@ -29,6 +35,11 @@ async def save_forward(internal_port: int, external_port: int, version: str):
 
 
 def load_forwarding(version: str) -> Tuple[int, int, float]:
+    """
+    loads a previous port mapping configuration
+    :param version: 'v4' for ipv4 | 'v6' for ipv6
+    :return: internal port, external port, last forward time
+    """
     if version == 'v4':
         values = db_utils.get_configuration('v4_forward')
         values = values['internal_port'], values['external_port'], values['last_forward']
@@ -40,6 +51,10 @@ def load_forwarding(version: str) -> Tuple[int, int, float]:
 
 
 def get_internal_ip() -> Union[str, None]:
+    """
+    gets the internal nat ip of the machine
+    :return: ip address | None if operation failed
+    """
     try:
         s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
         s.connect(('8.8.8.8', 8888))  # some address
@@ -86,7 +101,12 @@ async def forward_port_upnp(devices, external_port: int, internal_port: int, pro
     return success
 
 
-def crc32c_sort_v4(peer_ip: str):
+def crc32c_sort_v4(peer_ip: str) -> int:
+    """
+    performs the crc32c sort operation for ipv4 as specified in BEP 40
+    :param peer_ip: external ip address of the peer
+    :return: priority of the peer's address
+    """
     external_ip = db_utils.get_configuration('external_ip')
     octets = peer_ip.split('.')
     peer_ip = ''.join([bin(int(octet))[2:].zfill(8) for octet in octets])

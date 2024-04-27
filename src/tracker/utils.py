@@ -1,8 +1,9 @@
 import src.app_data.db_utils as db_utils
 from src.geoip.utils import calc_distance, get_info
+
 import struct
 import socket
-from typing import Tuple, List, Any, Union
+from typing import Tuple, List
 from math import inf as INF
 
 
@@ -14,7 +15,6 @@ def format_peers_list(peers: List[Tuple[str, int]], my_ip: str) -> List[Tuple[Tu
     :param my_ip: my public ip for geolocation calculations
     :return: formatted peer list: [0]: address [1]: geolocation info [2]: distance from me
     """
-
     # some formatting
     for i in range(len(peers)):
         peers[i] = peers[i], (get_info(peers[i][0])), calc_distance(peers[i][0], my_ip)

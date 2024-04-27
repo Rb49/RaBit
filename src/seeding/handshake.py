@@ -1,17 +1,19 @@
-import asyncio
-import copy
-
 import src.app_data.db_utils as db_utils
 from src.file.file_object import PickableFile
 from src.seeding.server import FileObjects
 from src.geoip.utils import get_info
-from .utils import *
+
 from typing import Tuple, Union
 import struct
 import os
 
 
 def validate_peer_ip(peer_ip: str) -> Union[Tuple[str, str, float, float], None]:
+    """
+    validates the ip address of the peer is not banned or from a banned country
+    :param peer_ip: id address of the peer
+    :return: geodata of the peer: country iso code, city, geo coordination
+    """
     if db_utils.BannedPeersDB().find_ip(peer_ip):  # refuse dirty peers
         return None
     geodata = get_info(peer_ip)
@@ -25,6 +27,12 @@ def validate_peer_ip(peer_ip: str) -> Union[Tuple[str, str, float, float], None]
 
 
 def __build__handshake_packet(info_hash: bytes, peer_id: bytes) -> bytes:
+    """
+    builds the handshake packet
+    :param info_hash: info hash of the requested torrent
+    :param peer_id: peer id of the client for this torrent
+    :return: packet data in raw bytes
+    """
     string_format = '>B19sQ20s20s'
 
     data = struct.pack(string_format,
@@ -38,6 +46,11 @@ def __build__handshake_packet(info_hash: bytes, peer_id: bytes) -> bytes:
 
 
 def __get_handshake_data(data: bytes) -> Union[Tuple[bytes, bytes], Tuple[None, None]]:
+    """
+    gets info hash and peer id from the incoming handshake packet
+    :param data: raw packet bytes
+    :return: info hash, peer id | None, None if packet is invalid
+    """
     string_format = '>20sQ20s20s'
     len_n_protocol, extensions, info_hash, peer_id = struct.unpack(string_format, data)
     if len_n_protocol == b'\x13BitTorrent protocol':
@@ -46,7 +59,14 @@ def __get_handshake_data(data: bytes) -> Union[Tuple[bytes, bytes], Tuple[None, 
         return None, None
 
 
-async def handshake(reader, writer) -> Union[Tuple[PickableFile, bytes], Tuple[None, None]]:
+async def handshake(reader, writer) -> Union[Tuple[bytes, bytes], Tuple[None, None]]:
+    """
+    performs the exchange of handshakes
+    if the requested info hash is in the completed torrents' db, accept the connection and send handshake
+    :param reader: asyncio reader instance
+    :param writer: asyncio writer instance
+    :return: info hash, peer id | None, None
+    """
     data = await reader.read(68)  # len of handshake
     info_hash, peer_id = __get_handshake_data(data)
     # validate the protocol

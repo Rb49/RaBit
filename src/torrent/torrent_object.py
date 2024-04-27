@@ -6,7 +6,7 @@ from typing import Optional, List, Union
 @dataclass(slots=True)
 class Torrent(object):
     """
-    object to store attributes from the TorrentData file
+    object to store attributes from the .torrent file
     """
 
     info: OrderedDict  # metadate dict

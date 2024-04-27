@@ -13,6 +13,7 @@ __database_path = 'GeoLite2-City.mmdb'
 def abs_db_path(file_name: str) -> Path:
     """
     computes the absolute path of the file (based on this root dir)
+    :param file_name: relative path
     :return: absolute path
     """
     hpath_parent = Path(__file__).parent
@@ -24,6 +25,7 @@ def abs_db_path(file_name: str) -> Path:
 def __calc_haversine(lat1: float, long1: float, lat2: float, long2: float) -> float:
     """
     calculate the haversine function for two coords
+    :param: longitude and latitude values for 2 points
     :return: distances in km
     """
     R = 6371  # earths radius

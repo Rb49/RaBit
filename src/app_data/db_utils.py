@@ -11,6 +11,11 @@ import threading
 
 
 def get_configuration(config_to_get: str) -> Any:
+    """
+    gets a configuration from config.json file
+    :param config_to_get: what setting to get
+    :return: Any
+    """
     with open(abs_db_path('config.json'), 'r') as json_file:
         configs: Dict[str, Any] = json.load(json_file)
         if config_to_get in configs:
@@ -19,6 +24,12 @@ def get_configuration(config_to_get: str) -> Any:
 
 
 async def set_configuration(config_to_set: str, new_value: Any) -> bool:
+    """
+    sets a configuration to config.json file
+    :param config_to_set: what setting to get
+    :param new_value: value to set
+    :return: whatever the operation was successful
+    """
     with threading.Lock():
         async with asyncio.Lock():
             with open(abs_db_path('config.json'), 'r+') as json_file:
@@ -39,6 +50,12 @@ def get_banned_countries() -> List[str]:
 
 
 def get_client(peer_id: bytes) -> str:
+    """
+    partial fingerprinting of the client software used by the peer
+    only identifies azureus style encodings (they are the most popular ones)
+    :param peer_id: peer id
+    :return: software and its version
+    """
     pattern = re.compile(b"^-[a-zA-Z~]{2}[0-9a-zA-Z]{4}-")
     match = re.match(pattern, peer_id)
     if match:
@@ -59,6 +76,9 @@ def get_client(peer_id: bytes) -> str:
 
 
 def get_ongoing_torrents() -> List[Tuple[str]]:
+    """
+    get a list of torrents that were not finished gracefully
+    """
     with open(abs_db_path('ongoing_torrents.json'), 'r') as json_file:
         torrents: List[Tuple[str]] = json.load(json_file)
         return torrents
@@ -86,6 +106,9 @@ def remove_ongoing_torrent(torrent_file_path: str):
 
 
 class Singleton(object):
+    """
+    singleton pattern instance for sqlite databases instances
+    """
     _instances = {}
 
     def __new__(cls, *args, **kwargs):
@@ -95,6 +118,9 @@ class Singleton(object):
 
 
 class BannedPeersDB(Singleton):
+    """
+    sqlite database api for accessing or inserting into the database of banned ip addresses that must be avoided.
+    """
     def __init__(self):
         conn = sqlite3.connect(abs_db_path('banned_peers.db'))
         conn.cursor().execute('CREATE TABLE IF NOT EXISTS ip_addresses (ip_address TEXT PRIMARY KEY)')
@@ -122,7 +148,9 @@ class BannedPeersDB(Singleton):
 
 
 class CompletedTorrentsDB(Singleton):
-    # TODO close and reopen file descriptors when needed, raising exception if the files don't exist
+    """
+    sqlite database api for accessing or inserting into the database of completed torrents (PickableFile) for seeding.
+    """
     def __init__(self):
         conn = sqlite3.connect(abs_db_path('completed_torrents.db'))
         # info hash, pickled file object

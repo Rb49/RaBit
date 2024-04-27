@@ -1,12 +1,18 @@
-from typing import List, Any, Dict
+from src.file.file_object import PickableFile
+from src.tracker.tracker_object import Tracker, WORKING
+
+from typing import List
 import time
 import asyncio
 
-from src.file.file_object import PickableFile
-from src.tracker.tracker_object import Tracker, WORKING, ANNOUNCING
 
-
-async def announce_loop(trackers: List[Tracker], session):
+async def announce_loop(trackers: List[Tracker], session) -> None:
+    """
+    a loop for an info hash: re-announces for each tracker interval with relevant stats
+    :param trackers: a list of Tracker instances
+    :param session: DownloadingSession or PickableFile instance with stats
+    :return: None
+    """
     while True:
         new_trackers = list(filter(lambda x: x.state == WORKING, trackers))
         new_trackers.sort(key=lambda x: x.last_announce + x.interval, reverse=False)

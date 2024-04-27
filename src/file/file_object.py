@@ -13,6 +13,11 @@ import re
 
 
 def format_file_name(file_name: str) -> str:
+    """
+    formats a file name from illegal chars and names
+    :param file_name: name of the file (not path!)
+    :return: formatted file name
+    """
     # remove illegal name chars
     file_name = re.sub(r'[<>:"/\\|?*]', '', file_name)
     file_name = ''.join([char for char in file_name if ord(char) > 31])
@@ -26,7 +31,22 @@ def format_file_name(file_name: str) -> str:
 
 
 class File(object):
-    def __init__(self, TorrentData: Torrent, session, piece_picker: PiecePicker, results_queue: BetterQueue, torrent_path: str, path: str, skip_hash_check: bool = False):
+    """
+    disk IO manager to read/write pieces and validate them.
+    an instance is created for each download
+    """
+    def __init__(self, TorrentData: Torrent, session, piece_picker: PiecePicker, results_queue: BetterQueue, torrent_path: str, path: str, skip_hash_check: bool = False) -> None:
+        """
+        :param TorrentData: torrent data instance
+        :param session: DownloadingSession instance with session stats
+        :param piece_picker: PiecePicker instance for requesting and reporting blocks
+        :param results_queue: asyncio queue where completed pieces are stored
+        :param torrent_path: path to .torrent file
+        :param path: path to where downloaded files will be saved
+        :param skip_hash_check: whatever to skip the hash check
+        (not recommended to turn off)
+        :return: None
+        """
         self.TorrentData = TorrentData
         self.results_queue = results_queue
         self.skip_hash_check = skip_hash_check
@@ -59,19 +79,30 @@ class File(object):
 
         self.fds = [os.open(file_name, os.O_RDWR | os.O_CREAT | os.O_BINARY) for file_name in self.file_names]
 
-    def reopen_files(self):
+    def reopen_files(self) -> None:
         """
         reopens completed files in read-only mode
         :return: None
         """
         self.fds = [os.open(file_name, os.O_RDONLY | os.O_BINARY) for file_name in self.file_names]
 
-    def close_files(self):
+    def close_files(self) -> None:
+        """
+        closes the file descriptors
+        :return: None
+        """
         for fd in self.fds:
             os.close(fd)
         self.fds = []
 
     def get_piece(self, piece_index: int, begin: int, length: int) -> Tuple[int, int, bytes]:
+        """
+        reads a block of data from the right file or files
+        :param piece_index: torrent piece index
+        :param begin: starting index inside a piece
+        :param length: length of the requested block
+        :return: piece, begin, data (comfortable to paste in the Piece.encode() function)
+        """
         reading_begin_index = self.TorrentData.info[b'piece length'] * piece_index + begin
         remaining_length = length
         current_piece_abs_index = reading_begin_index
@@ -99,7 +130,10 @@ class File(object):
 
         return piece_index, begin, data
 
-    async def save_pieces_loop(self):
+    async def save_pieces_loop(self) -> None:
+        """
+        a loop to read completed pieces from the result_queue and save them to disk
+        """
         while True:
             if self.piece_picker.num_of_pieces_left == 0:
                 # TODO a more elegant exit, let all interested disconnect and then switch to seeding in seeding server
@@ -183,7 +217,14 @@ class File(object):
 
 
 class PickableFile(object):
-    def __init__(self, file_object: File):
+    """
+    stores all data needed to seed a torrent in a pickable format
+    """
+    def __init__(self, file_object: File) -> None:
+        """
+        :param file_object: File instance to make pickleable
+        :return: None
+        """
         self.info_hash = file_object.TorrentData.info_hash
         self.peer_id = file_object.TorrentData.peer_id
         self.length = file_object.TorrentData.length
@@ -202,19 +243,30 @@ class PickableFile(object):
 
         del file_object
 
-    def reopen_files(self):
+    def reopen_files(self) -> None:
         """
         reopens completed files in read-only mode
         :return: None
         """
         self.fds = [os.open(file_name, os.O_RDONLY | os.O_BINARY) for file_name in self.file_names]
 
-    def close_files(self):
+    def close_files(self) -> None:
+        """
+        closes the file descriptors
+        :return: None
+        """
         for fd in self.fds:
             os.close(fd)
         self.fds = []
 
     def get_piece(self, piece_index: int, begin: int, length: int) -> Tuple[int, int, bytes]:
+        """
+        reads a block of data from the right file or files
+        :param piece_index: torrent piece index
+        :param begin: starting index inside a piece
+        :param length: length of the requested block
+        :return: piece, begin, data (comfortable to paste in the Piece.encode() function)
+        """
         reading_begin_index = self.piece_length * piece_index + begin
 
         remaining_length = length

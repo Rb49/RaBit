@@ -8,6 +8,12 @@ import time
 
 
 def main(*torrents, **kwargs):
+    """
+    temp main function.
+    gets a list of torrents to download and pauses the download of unfinished other torrents.
+    starts seeding server qas well.
+    """
+
     seeding_thread = threading.Thread(target=lambda: asyncio.run(start_seeding_server()), daemon=True)
     seeding_thread.start()
 

@@ -4,14 +4,34 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="f9fdccf0-d0c7-4e07-872b-f2b1497a2201" name="Changes" comment="updating seeding db with upload statistics">
+    <list default="true" id="f9fdccf0-d0c7-4e07-872b-f2b1497a2201" name="Changes" comment="bug fix: uploaded stat kept being overwritten">
+      <change beforePath="$PROJECT_DIR$/.idea/inspectionProfiles/profiles_settings.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/inspectionProfiles/profiles_settings.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/misc.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/misc.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/README.md" beforeDir="false" afterPath="$PROJECT_DIR$/README.md" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/app_data/config.json" beforeDir="false" afterPath="$PROJECT_DIR$/src/app_data/config.json" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/app_data/db_utils.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/app_data/db_utils.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/client/main.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/client/main.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/download/data_structures.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/download/data_structures.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/download/download_session_object.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/download/download_session_object.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/download/piece_picker.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/download/piece_picker.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/download/upload_in_download.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/download/upload_in_download.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/file/file_object.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/file/file_object.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/geoip/utils.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/geoip/utils.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/peer/handshake.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/peer/handshake.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/peer/peer_communication.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/peer/peer_communication.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/peer/peer_object.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/peer/peer_object.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/seeding/announce_loop.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/seeding/announce_loop.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/seeding/handshake.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/seeding/handshake.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/seeding/leecher_object.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/seeding/leecher_object.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/seeding/server.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/seeding/server.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/seeding/utils.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/seeding/utils.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/torrent/torrent.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/torrent/torrent.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/torrent/torrent_object.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/torrent/torrent_object.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/tracker/http_tracker.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/tracker/http_tracker.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/tracker/initial_announce.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/tracker/initial_announce.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/tracker/tracker_object.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/tracker/tracker_object.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/tracker/udp_tracker.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/tracker/udp_tracker.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/tracker/utils.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/tracker/utils.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -35,12 +55,12 @@
     <option name="RESET_MODE" value="HARD" />
     <option name="UPDATE_TYPE" value="REBASE" />
   </component>
-  <component name="GitHubPullRequestSearchHistory"><![CDATA[{
-  "lastFilter": {
-    "state": "OPEN",
-    "assignee": "Rb49"
+  <component name="GitHubPullRequestSearchHistory">{
+  &quot;lastFilter&quot;: {
+    &quot;state&quot;: &quot;OPEN&quot;,
+    &quot;assignee&quot;: &quot;Rb49&quot;
   }
-}]]></component>
+}</component>
   <component name="GithubPullRequestsUISettings">
     <option name="selectedUrlAndAccountId">
       <UrlAndAccount>
@@ -75,7 +95,8 @@
     "RunOnceActivity.ShowReadmeOnStart": "true",
     "dart.analysis.tool.window.visible": "false",
     "git-widget-placeholder": "master",
-    "last_opened_file_path": "C:/Users/roeyb/OneDrive/Documents/GitHub/RaBit/RaBit/data"
+    "last_opened_file_path": "C:/Users/roeyb/OneDrive/Documents/GitHub/RaBit/RaBit/data",
+    "settings.editor.selected.configurable": "com.jetbrains.python.black.configuration.BlackFormatterConfigurable"
   }
 }]]></component>
   <component name="RecentsManager">
@@ -386,7 +407,15 @@
       <option name="project" value="LOCAL" />
       <updated>1714208420270</updated>
     </task>
-    <option name="localTasksCounter" value="34" />
+    <task id="LOCAL-00034" summary="bug fix: uploaded stat kept being overwritten">
+      <option name="closed" value="true" />
+      <created>1714210206688</created>
+      <option name="number" value="00034" />
+      <option name="presentableId" value="LOCAL-00034" />
+      <option name="project" value="LOCAL" />
+      <updated>1714210206688</updated>
+    </task>
+    <option name="localTasksCounter" value="35" />
     <servers />
   </component>
   <component name="Vcs.Log.Tabs.Properties">
@@ -413,7 +442,6 @@
     </option>
   </component>
   <component name="VcsManagerConfiguration">
-    <MESSAGE value="writing control messages directly without a queue" />
     <MESSAGE value="partial fingerprinting of azureus-style clients software" />
     <MESSAGE value="added tracker object and process interval value" />
     <MESSAGE value="fixed multi file handling" />
@@ -438,6 +466,7 @@
     <MESSAGE value="taking care of a special case where the entire file is already present" />
     <MESSAGE value="safer cleanup" />
     <MESSAGE value="updating seeding db with upload statistics" />
-    <option name="LAST_COMMIT_MESSAGE" value="updating seeding db with upload statistics" />
+    <MESSAGE value="bug fix: uploaded stat kept being overwritten" />
+    <option name="LAST_COMMIT_MESSAGE" value="bug fix: uploaded stat kept being overwritten" />
   </component>
 </project>

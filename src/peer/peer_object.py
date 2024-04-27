@@ -13,7 +13,14 @@ class Peer(object):
     peer_instances: Dict[bytes, List] = dict()
     MAX_ENDGAME_REQUESTS = 5
 
-    def __init__(self, writer, TorrentData: Torrent, address: Tuple[str, int], geodata: Tuple[str, str, float, float]):
+    def __init__(self, writer, TorrentData: Torrent, address: Tuple[str, int], geodata: Tuple[str, str, float, float]) -> None:
+        """
+        :param writer: asyncio writer instance
+        :param TorrentData: torrent metadate instance
+        :param address: (ip, port) of the peer
+        :param geodata: geodata of the peer
+        :return: None
+        """
         self.writer = writer
 
         self.TorrentData = TorrentData
@@ -48,12 +55,22 @@ class Peer(object):
         self.client = None
         self.found_dirty = False
 
-    def add_peer_id(self, peer_id: bytes):
+    def add_peer_id(self, peer_id: bytes) -> None:
+        """
+        adds stats tht are given only after handshake
+        :param peer_id: peer id the peer has chosen for this download
+        :return: None
+        """
         self.peer_id = peer_id
         self.client = db_utils.get_client(peer_id)
         Peer.peer_instances[self.TorrentData.info_hash].append(self)
 
-    def update_upload_rate(self, len_bytes_sent: int):
+    def update_upload_rate(self, len_bytes_sent: int) -> None:
+        """
+        calculate upload rate and adjust pipeline size
+        :param len_bytes_sent: size of data received
+        :return: None
+        """
         # TODO make real upload rate using a counter
         # idk how but this function generates ridiculously incredible downloading on account of cpu usage
         # and breaks when working with real download rate (not len)
