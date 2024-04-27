@@ -4,12 +4,11 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="f9fdccf0-d0c7-4e07-872b-f2b1497a2201" name="Changes" comment="announcing in given tracker intervals">
+    <list default="true" id="f9fdccf0-d0c7-4e07-872b-f2b1497a2201" name="Changes" comment="taking care of a special case where the entire file is already present">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/app_data/config.json" beforeDir="false" afterPath="$PROJECT_DIR$/src/app_data/config.json" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/app_data/db_utils.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/app_data/db_utils.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/client/main.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/client/main.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/download/download_session_object.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/download/download_session_object.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/seeding/server.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/seeding/server.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -32,6 +31,20 @@
     <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
     <option name="RESET_MODE" value="HARD" />
     <option name="UPDATE_TYPE" value="REBASE" />
+  </component>
+  <component name="GitHubPullRequestSearchHistory"><![CDATA[{
+  "lastFilter": {
+    "state": "OPEN",
+    "assignee": "Rb49"
+  }
+}]]></component>
+  <component name="GithubPullRequestsUISettings">
+    <option name="selectedUrlAndAccountId">
+      <UrlAndAccount>
+        <option name="accountId" value="c3750159-c82a-4f32-aef8-7fc64095e273" />
+        <option name="url" value="https://github.com/Rb49/RaBit.git" />
+      </UrlAndAccount>
+    </option>
   </component>
   <component name="HighlightingSettingsPerFile">
     <setting file="file://$PROJECT_DIR$/src/download/download_session_object.py" root0="FORCE_HIGHLIGHTING" />
@@ -330,7 +343,31 @@
       <option name="project" value="LOCAL" />
       <updated>1714155141066</updated>
     </task>
-    <option name="localTasksCounter" value="29" />
+    <task id="LOCAL-00029" summary="automatically resumes unfinished torrents after shutdown">
+      <option name="closed" value="true" />
+      <created>1714168678913</created>
+      <option name="number" value="00029" />
+      <option name="presentableId" value="LOCAL-00029" />
+      <option name="project" value="LOCAL" />
+      <updated>1714168678913</updated>
+    </task>
+    <task id="LOCAL-00030" summary="automatically resumes unfinished torrents after shutdown">
+      <option name="closed" value="true" />
+      <created>1714168720901</created>
+      <option name="number" value="00030" />
+      <option name="presentableId" value="LOCAL-00030" />
+      <option name="project" value="LOCAL" />
+      <updated>1714168720901</updated>
+    </task>
+    <task id="LOCAL-00031" summary="taking care of a special case where the entire file is already present">
+      <option name="closed" value="true" />
+      <created>1714207592601</created>
+      <option name="number" value="00031" />
+      <option name="presentableId" value="LOCAL-00031" />
+      <option name="project" value="LOCAL" />
+      <updated>1714207592601</updated>
+    </task>
+    <option name="localTasksCounter" value="32" />
     <servers />
   </component>
   <component name="Vcs.Log.Tabs.Properties">
@@ -379,6 +416,8 @@
     <MESSAGE value="re-wrote handling of torrents at seeding, and support for multiple torrents" />
     <MESSAGE value="small fix" />
     <MESSAGE value="announcing in given tracker intervals" />
-    <option name="LAST_COMMIT_MESSAGE" value="announcing in given tracker intervals" />
+    <MESSAGE value="automatically resumes unfinished torrents after shutdown" />
+    <MESSAGE value="taking care of a special case where the entire file is already present" />
+    <option name="LAST_COMMIT_MESSAGE" value="taking care of a special case where the entire file is already present" />
   </component>
 </project>

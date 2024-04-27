@@ -136,6 +136,10 @@ class CompletedTorrentsDB(Singleton):
         cursor.execute("INSERT OR IGNORE INTO completed_torrents (info_hash, file_object) VALUES (?, ?)", params)
         self.conn.commit()
 
+    def update_torrent(self, new_file_object: PickableFile):
+        self.delete_torrent(new_file_object.info_hash)
+        self.insert_torrent(new_file_object)
+
     def get_torrent(self, info_hash: bytes) -> Union[PickableFile, None]:
         cursor = self.conn.cursor()
         cursor.execute("SELECT file_object FROM completed_torrents WHERE info_hash=?", (info_hash,))

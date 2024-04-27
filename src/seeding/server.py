@@ -166,16 +166,20 @@ async def handle_leecher(reader, writer):
     except Exception as e:
         print(f'An error occurred: {e}')
     finally:
-        if writer is not None:
+        try:
             writer.close()
             await writer.wait_closed()
+        except:
+            pass
 
         if leecher in Leecher.leecher_instances:
-            FileObjects[info_hash].close_files()
             Leecher.leecher_instances.remove(leecher)
             file_object.close_files()
-            del file_object
             del leecher
+            # update db statistics
+            print(FileObjects[file_object.info_hash].uploaded)
+            db_utils.CompletedTorrentsDB().update_torrent(FileObjects[file_object.info_hash])
+            del file_object
 
         return
 
