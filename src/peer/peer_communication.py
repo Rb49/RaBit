@@ -295,9 +295,11 @@ async def tcp_wire_communication(peerData: Tuple, TorrentData: Torrent, session,
         finally:
             print("\033[91m{}\033[00m".format(f'failed {repr(thisPeer)}'))
             # print("Closing the connection.")
-            if writer is not None:
+            try:
                 writer.close()
                 await writer.wait_closed()
+            except:
+                pass
 
             if thisPeer in Peer.peer_instances[session.TorrentData.info_hash]:
                 Peer.peer_instances[session.TorrentData.info_hash].remove(thisPeer)
