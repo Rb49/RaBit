@@ -91,7 +91,6 @@ async def add_ongoing_torrent(torrent_file_path: str, download_dir_path: str):
                 torrents: List[List[str]] = json.load(json_file)
                 if torrent_file_path not in map(lambda x: x[0], torrents):
                     torrents.append([torrent_file_path, download_dir_path])
-                    print(torrents)
                     json_file.seek(0)
                     json_file.truncate()
                     json.dump(torrents, json_file)

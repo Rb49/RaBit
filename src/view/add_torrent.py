@@ -57,7 +57,7 @@ class App(customtkinter.CTk):
         self.grid_columnconfigure(0, weight=1)
 
         self.title("RaBit v0.1")
-        # self.iconbitmap(App.ICON_PATH)
+        self.iconbitmap(App.ICON_PATH)
         self.minsize(App.WIDTH, App.HEIGHT)
 
         self.frame = Frame(self, start_path, fg_color=self.background)
