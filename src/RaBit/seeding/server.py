@@ -1,7 +1,6 @@
 from ..peer.message_types import *
 from ..seeding.leecher_object import Leecher
 from ..seeding.handshake import handshake, validate_peer_ip
-from ..file.file_object import PickableFile
 from ..tracker import WORKING
 from .utils import *
 from .announce_loop import announce_loop

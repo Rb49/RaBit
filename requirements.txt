@@ -7,3 +7,5 @@ requests~=2.31.0
 geoip2~=4.7.0
 upnpclient==1.0.3
 crc32c~=2.4
+customtkinter~=5.2.2
+pillow~=10.2.0

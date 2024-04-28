@@ -1,4 +1,4 @@
-import RaBit
+from src import RaBit
 
 import threading
 import asyncio
@@ -16,8 +16,7 @@ def main(*torrents, **kwargs):
 
     # TODO wait for the seeding server before starting download
     while True:
-        from RaBit import SEEDING_SERVER_IS_UP
-        if SEEDING_SERVER_IS_UP:
+        if RaBit.SEEDING_SERVER_IS_UP:
             break
         time.sleep(0.5)
 
