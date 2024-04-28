@@ -1,2 +1,0 @@
-class Client(object):
-    pass
