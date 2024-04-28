@@ -18,8 +18,6 @@ _MAX_REQUESTS = 500
 _LEASE_DURATION = 600  # 10 minutes
 _MAX_LEECHER_PEERS = db_utils.get_configuration('max_leecher_peers')
 
-SEEDING_SERVER_IS_UP = False
-
 
 class Stream(object):
     def __init__(self, reader):
@@ -194,7 +192,6 @@ async def start_seeding_server() -> None:
     starts the seeding server, preferably using an existing port mapping
     :return: None
     """
-    global SEEDING_SERVER_IS_UP
     try:
         internal_ipv4 = get_internal_ip()
         assert internal_ipv4
@@ -243,7 +240,7 @@ async def start_seeding_server() -> None:
             internal_port_v4 = -1
 
         server_v4, last_forward_v4 = await forward_port(internal_ipv4, internal_port_v4, external_port_v4, last_forward_v4, 'v4')
-        SEEDING_SERVER_IS_UP = True
+        await db_utils.set_configuration('seeding_server_is_up', True)
 
         # load all completed torrents
         init_completed_torrents()
@@ -260,7 +257,7 @@ async def start_seeding_server() -> None:
     except Exception as e:
         print(e)
     finally:
-        SEEDING_SERVER_IS_UP = False
+        await db_utils.set_configuration('seeding_server_is_up', False)
         return
 
 

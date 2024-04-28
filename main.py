@@ -11,12 +11,13 @@ def main(*torrents, **kwargs):
     gets a list of torrents to download and pauses the download of unfinished other torrents.
     starts seeding server qas well.
     """
+    asyncio.run(RaBit.set_configuration('seeding_server_is_up', False))
     seeding_thread = threading.Thread(target=lambda: asyncio.run(RaBit.start_seeding_server()), daemon=True)
     seeding_thread.start()
 
     # TODO wait for the seeding server before starting download
     while True:
-        if RaBit.SEEDING_SERVER_IS_UP:
+        if RaBit.get_configuration('seeding_server_is_up'):
             break
         time.sleep(0.5)
 
@@ -31,6 +32,7 @@ def main(*torrents, **kwargs):
         session = RaBit.DownloadSession(torrent, path)
         download_thread = threading.Thread(target=lambda: asyncio.run(session.download()), daemon=True)
         threads.append(download_thread)
+        time.sleep(0.05)
         download_thread.start()
 
     torrents = set(torrents) - set(map(lambda x: x[0], ongoing_torrents))
@@ -38,6 +40,7 @@ def main(*torrents, **kwargs):
         session = RaBit.DownloadSession(torrent_path, download_dir)
         download_thread = threading.Thread(target=lambda: asyncio.run(session.download()), daemon=True)
         threads.append(download_thread)
+        time.sleep(0.05)
         download_thread.start()
 
     for thread in threads:

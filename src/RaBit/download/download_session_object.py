@@ -76,7 +76,7 @@ class DownloadSession(object):
             self.downloaded = self.TorrentData.length - self.left
 
         # add the TorrentData file path for fail safety
-        db_utils.add_ongoing_torrent(self.torrent_path, self.result_dir)
+        await db_utils.add_ongoing_torrent(self.torrent_path, self.result_dir)
 
         # add self to dict
         DownloadSession.Sessions[self.TorrentData.info_hash] = self
