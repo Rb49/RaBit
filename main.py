@@ -1,7 +1,4 @@
-import RaBit.app_data.db_utils
-import RaBit.app_data.db_utils as db_utils
-from RaBit.seeding.server import start_seeding_server
-from RaBit.download.download_session_object import DownloadSession
+import RaBit
 
 import threading
 import asyncio
@@ -14,33 +11,32 @@ def main(*torrents, **kwargs):
     gets a list of torrents to download and pauses the download of unfinished other torrents.
     starts seeding server qas well.
     """
-    seeding_thread = threading.Thread(target=lambda: asyncio.run(start_seeding_server()), daemon=True)
+    seeding_thread = threading.Thread(target=lambda: asyncio.run(RaBit.start_seeding_server()), daemon=True)
     seeding_thread.start()
 
     # TODO wait for the seeding server before starting download
     while True:
-        from RaBit.seeding.server import SEEDING_SERVER_IS_UP
+        from RaBit import SEEDING_SERVER_IS_UP
         if SEEDING_SERVER_IS_UP:
             break
         time.sleep(0.5)
 
     download_dir = kwargs.get('download_dir')
     if not download_dir:
-        download_dir = db_utils.get_configuration('download_dir')
+        download_dir = RaBit.get_configuration('download_dir')
 
     threads = []
 
-    ongoing_torrents = db_utils.get_ongoing_torrents()
-    for data in ongoing_torrents:
-        torrent, path = data
-        session = DownloadSession(torrent, path)
+    ongoing_torrents = RaBit.get_ongoing_torrents()
+    for torrent, path in ongoing_torrents:
+        session = RaBit.DownloadSession(torrent, path)
         download_thread = threading.Thread(target=lambda: asyncio.run(session.download()), daemon=True)
         threads.append(download_thread)
         download_thread.start()
 
     torrents = set(torrents) - set(map(lambda x: x[0], ongoing_torrents))
     for torrent_path in torrents:
-        session = DownloadSession(torrent_path, download_dir)
+        session = RaBit.DownloadSession(torrent_path, download_dir)
         download_thread = threading.Thread(target=lambda: asyncio.run(session.download()), daemon=True)
         threads.append(download_thread)
         download_thread.start()
@@ -68,7 +64,7 @@ if __name__ == '__main__':
     main(
         r"C:\Users\roeyb\OneDrive\Documents\GitHub\RaBit\RaBit\data\The Best American Short Stories, 2011–2023 (13 books).torrent",
         r"C:\Users\roeyb\OneDrive\Documents\GitHub\RaBit\RaBit\data\The Complete Art of War_ Sun Tzu-Sun Pin [blackatk].torrent",
-        download_dir=r"/results"
+        download_dir=r"C:\Users\roeyb\OneDrive\Documents\GitHub\RaBit\RaBit\results"
     )
 
     exit(0)

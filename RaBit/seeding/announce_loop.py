@@ -1,3 +1,4 @@
+from ..app_data import db_utils
 from ..file.file_object import PickableFile
 from ..tracker.tracker_object import Tracker, WORKING
 
@@ -28,4 +29,6 @@ async def announce_loop(trackers: List[Tracker], session) -> None:
                 print('announced! ', tracker)
             else:
                 break
+        if isinstance(session, PickableFile):
+            db_utils.CompletedTorrentsDB().update_torrent(session)
         await asyncio.sleep(5)

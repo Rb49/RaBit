@@ -2,6 +2,7 @@ from ..peer.message_types import *
 from ..seeding.leecher_object import Leecher
 from ..seeding.handshake import handshake, validate_peer_ip
 from ..file.file_object import PickableFile
+from ..tracker import WORKING
 from .utils import *
 from .announce_loop import announce_loop
 
@@ -275,6 +276,8 @@ def init_completed_torrents() -> None:
             file.reopen_files()
             file.close_files()
             FileObjects[file.info_hash] = file
+            for tracker in file.trackers:
+                tracker.state = WORKING
             asyncio.create_task(announce_loop(file.trackers, file))
             print('ready to seed ', file)
         except OSError:
@@ -293,6 +296,8 @@ async def add_newly_completed_torrent(info_hash: bytes) -> None:
                 file.reopen_files()
                 file.close_files()
                 FileObjects[info_hash] = file
+                for tracker in file.trackers:
+                    tracker.state = WORKING
                 asyncio.create_task(announce_loop(file.trackers, file))
                 print('ready to seed ', file)
             except OSError:

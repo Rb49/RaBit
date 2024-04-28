@@ -79,13 +79,6 @@ class File(object):
 
         self.fds = [os.open(file_name, os.O_RDWR | os.O_CREAT | os.O_BINARY) for file_name in self.file_names]
 
-    def reopen_files(self) -> None:
-        """
-        reopens completed files in read-only mode
-        :return: None
-        """
-        self.fds = [os.open(file_name, os.O_RDONLY | os.O_BINARY) for file_name in self.file_names]
-
     def close_files(self) -> None:
         """
         closes the file descriptors
