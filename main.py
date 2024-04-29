@@ -15,7 +15,6 @@ def main():
                        r"C:\Users\roeyb\OneDrive\Documents\GitHub\RaBit\RaBit\results",
                        False)
 
-
     while True:
         print(client.torrents)
         time.sleep(1)

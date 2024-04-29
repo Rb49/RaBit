@@ -158,7 +158,8 @@ class File(object):
 
                     continue
 
-            print("\033[90m{}\033[00m".format(f'got piece. {round((1 - (self.piece_picker.num_of_pieces_left - 1) / len(self.piece_picker.pieces_map)) * 100, 2)}%. have index: {piece.index}. from {len(Peer.peer_instances[self.piece_picker.TorrentData.info_hash])} peers.'))
+            self.session.progress = round((1 - (self.piece_picker.num_of_pieces_left - 1) / len(self.piece_picker.pieces_map)) * 100, 2)
+            print("\033[90m{}\033[00m".format(f'got piece. {self.session.progress}%. have index: {piece.index}. from {len(Peer.peer_instances[self.piece_picker.TorrentData.info_hash])} peers.'))
 
             # ban bad peers if any
             bad_peers = piece.get_bad_peers()

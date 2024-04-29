@@ -45,6 +45,7 @@ class DownloadSession(object):
         self.wasted = 0
         self.state = None
         self.trackers = []
+        self.progress = 0
 
         self.__seed = random.getrandbits(64)
 

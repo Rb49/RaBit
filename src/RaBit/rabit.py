@@ -87,6 +87,9 @@ class Client(Singleton):
 
             await asyncio.sleep(1)
 
+    @staticmethod
+    def get_download_dir() -> str:
+        return get_configuration("download_dir")
 
 
 
