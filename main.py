@@ -1,56 +1,28 @@
-from src import RaBit
-
-import threading
-import asyncio
 import time
 
+from src.RaBit import Client
 
-def main(*torrents, **kwargs):
-    """
-    temp main function.
-    gets a list of torrents to download and pauses the download of unfinished other torrents.
-    starts seeding server qas well.
-    """
-    asyncio.run(RaBit.set_configuration('seeding_server_is_up', False))
-    seeding_thread = threading.Thread(target=lambda: asyncio.run(RaBit.start_seeding_server()), daemon=True)
-    seeding_thread.start()
 
-    # TODO wait for the seeding server before starting download
+def main():
+
+    client = Client()
+
+    client.add_torrent(r"C:\Users\roeyb\OneDrive\Documents\GitHub\RaBit\RaBit\data\The Best American Short Stories, 2011–2023 (13 books).torrent",
+                       r"C:\Users\roeyb\OneDrive\Documents\GitHub\RaBit\RaBit\results",
+                       False)
+
+    client.add_torrent(r"C:\Users\roeyb\OneDrive\Documents\GitHub\RaBit\RaBit\data\The Complete Art of War_ Sun Tzu-Sun Pin [blackatk].torrent",
+                       r"C:\Users\roeyb\OneDrive\Documents\GitHub\RaBit\RaBit\results",
+                       False)
+
+
     while True:
-        if RaBit.get_configuration('seeding_server_is_up'):
-            break
-        time.sleep(0.5)
+        print(client.torrents)
+        time.sleep(1)
 
-    download_dir = kwargs.get('download_dir')
-    if not download_dir:
-        download_dir = RaBit.get_configuration('download_dir')
-
-    threads = []
-
-    ongoing_torrents = RaBit.get_ongoing_torrents()
-    for torrent, path in ongoing_torrents:
-        session = RaBit.DownloadSession(torrent, path)
-        download_thread = threading.Thread(target=lambda: asyncio.run(session.download()), daemon=True)
-        threads.append(download_thread)
-        time.sleep(0.05)
-        download_thread.start()
-
-    torrents = set(torrents) - set(map(lambda x: x[0], ongoing_torrents))
-    for torrent_path in torrents:
-        session = RaBit.DownloadSession(torrent_path, download_dir)
-        download_thread = threading.Thread(target=lambda: asyncio.run(session.download()), daemon=True)
-        threads.append(download_thread)
-        time.sleep(0.05)
-        download_thread.start()
-
-    for thread in threads:
-        thread.join()
-        print('download complete!')
-
-    seeding_thread.join()
+    exit(0)
 
 
-# TODO organize all files, add error messages with exceptions, documentation, type hints, ...
 if __name__ == '__main__':
     import tracemalloc
     tracemalloc.start()
@@ -59,14 +31,4 @@ if __name__ == '__main__':
     if sys.version_info[0:2] != (3, 10):
         raise Exception("Wrong Python version! Use version 3.10 only.")
 
-    # torrent_path = r"C:\Users\roeyb\OneDrive\Documents\GitHub\RaBit\RaBit\data\ubuntu-23.10-live-server-amd64.iso.torrent"
-    # torrent_path = r"C:\Users\roeyb\OneDrive\Documents\GitHub\RaBit\RaBit\data\debian-edu-12.4.0-amd64-netinst.iso.torrent"
-    # torrent_path = r"C:\Users\roeyb\OneDrive\Documents\GitHub\RaBit\RaBit\data\The.Rock.1996.1080p.BluRay.x265-RARBG.torrent"
-
-    main(
-        r"C:\Users\roeyb\OneDrive\Documents\GitHub\RaBit\RaBit\data\The Best American Short Stories, 2011–2023 (13 books).torrent",
-        r"C:\Users\roeyb\OneDrive\Documents\GitHub\RaBit\RaBit\data\The Complete Art of War_ Sun Tzu-Sun Pin [blackatk].torrent",
-        download_dir=r"C:\Users\roeyb\OneDrive\Documents\GitHub\RaBit\RaBit\results"
-    )
-
-    exit(0)
+    main()

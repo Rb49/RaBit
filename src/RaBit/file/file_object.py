@@ -291,6 +291,9 @@ class PickableFile(object):
     def __repr__(self):
         return f"uploaded: {self.uploaded}, name: {self.file_names[0]}, info hash: {self.info_hash}"
 
+    def __hash__(self):
+        return hash(f"name: {self.file_names[0]}, info hash: {self.info_hash}")
+
     def __del__(self):
         try:
             self.close_files()

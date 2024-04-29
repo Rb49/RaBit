@@ -1,3 +1,5 @@
+import random
+
 from ..app_data import db_utils
 from ..peer.peer_object import Peer
 from ..seeding.server import add_newly_completed_torrent
@@ -25,14 +27,16 @@ class DownloadSession(object):
     """
     Sessions: Dict[bytes, Any] = dict()
 
-    def __init__(self, torrent_path: str, result_dir: str) -> None:
+    def __init__(self, torrent_path: str, result_dir: str, skip_hash_check: bool) -> None:
         """
         :param torrent_path: path of the .torrent file
         :param result_dir: path to where downloaded files will be saved
         :return: None
         """
         self.torrent_path = torrent_path
+        self.skip_hash_check = skip_hash_check
         self.TorrentData = None
+        self.info_hash = None
         self.result_dir = result_dir
         self.downloaded = 0
         self.uploaded = 0
@@ -41,6 +45,8 @@ class DownloadSession(object):
         self.wasted = 0
         self.state = None
         self.trackers = []
+
+        self.__seed = random.getrandbits(64)
 
     @staticmethod
     async def work_wrapper(disk_loop, tit_for_tat_loop, *work):
@@ -59,9 +65,10 @@ class DownloadSession(object):
         # read torrent file
         self.state = 'Reading TorrentData'
         self.TorrentData = read_torrent(self.torrent_path)
+        self.info_hash = self.TorrentData.info_hash
 
         # is it already being downloaded?
-        if self.TorrentData.info_hash in DownloadSession.Sessions:
+        if self.info_hash in DownloadSession.Sessions:
             print('already downloading!')
             return False
 
@@ -79,7 +86,7 @@ class DownloadSession(object):
         await db_utils.add_ongoing_torrent(self.torrent_path, self.result_dir)
 
         # add self to dict
-        DownloadSession.Sessions[self.TorrentData.info_hash] = self
+        DownloadSession.Sessions[self.info_hash] = self
 
         # initial announce
         self.state = 'Announcing'
@@ -90,18 +97,19 @@ class DownloadSession(object):
 
         # verify torrent
         if all(bitarray):
+            self.state = 'Completed'
             print('got all!')
             db_utils.CompletedTorrentsDB().insert_torrent(PickableFile(File(self.TorrentData, self, None, None, self.torrent_path, self.result_dir)))
             db_utils.remove_ongoing_torrent(self.torrent_path)
             return True
 
         # TODO keep track of uploaded stats (?)
-        db_utils.CompletedTorrentsDB().delete_torrent(self.TorrentData.info_hash)
+        db_utils.CompletedTorrentsDB().delete_torrent(self.info_hash)
 
         if not peers_list:
             self.state = 'Failed'
             print("couldn't find any peers!")
-            DownloadSession.Sessions.pop(self.TorrentData.info_hash)
+            DownloadSession.Sessions.pop(self.info_hash)
             return False
 
         # --------
@@ -114,7 +122,7 @@ class DownloadSession(object):
 
         # start disk IO thread
         await db_utils.set_configuration('download_dir', self.result_dir)
-        file = File(self.TorrentData, self, piece_picker, piece_picker.results_queue, self.torrent_path, self.result_dir, False)
+        file = File(self.TorrentData, self, piece_picker, piece_picker.results_queue, self.torrent_path, self.result_dir, self.skip_hash_check)
 
         work = [tcp_wire_communication(peer, self.TorrentData, self, file, piece_picker, tit_for_tat_manager) for peer in peers_list]
         try:
@@ -124,7 +132,7 @@ class DownloadSession(object):
         except RuntimeError:
             pass
 
-        if db_utils.CompletedTorrentsDB().find_info_hash(self.TorrentData.info_hash):
+        if db_utils.CompletedTorrentsDB().find_info_hash(self.info_hash):
             # announce completion
             total_download, total_upload = self.downloaded + self.corrupted + self.wasted, self.uploaded
             # TODO use the tracker update thread to announce complete
@@ -137,13 +145,13 @@ class DownloadSession(object):
                         pass
 
             work = [final_announce(tracker) for tracker in self.trackers]
-            await add_newly_completed_torrent(self.TorrentData.info_hash)
+            await add_newly_completed_torrent(self.info_hash)
             await asyncio.gather(*work)
 
             self.state = 'Completed'
             # cleanup
-            DownloadSession.Sessions.pop(self.TorrentData.info_hash)
-            Peer.peer_instances.pop(self.TorrentData.info_hash)
+            DownloadSession.Sessions.pop(self.info_hash)
+            Peer.peer_instances.pop(self.info_hash)
             announce_loop_task.cancel()
             return True
 
@@ -161,7 +169,7 @@ class DownloadSession(object):
         # do not
         missing = None
         bitarray = bitstring.BitArray(bin='0' * len(self.TorrentData.piece_hashes))
-        if self.torrent_path in map(lambda x: x[0], db_utils.get_ongoing_torrents()) or db_utils.CompletedTorrentsDB().find_info_hash(self.TorrentData.info_hash):
+        if self.torrent_path in map(lambda x: x[0], db_utils.get_ongoing_torrents()) or db_utils.CompletedTorrentsDB().find_info_hash(self.info_hash):
             temp_file = None
             try:
                 bitarray = bitstring.BitArray(bin='1' * len(self.TorrentData.piece_hashes))
@@ -185,6 +193,10 @@ class DownloadSession(object):
                 del temp_file
         return bitarray, missing
 
+    def __repr__(self):
+        return f"{self.state}, {self.info_hash}"
 
+    def __hash__(self):
+        return hash(self.__seed)
 
 
