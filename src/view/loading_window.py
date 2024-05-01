@@ -5,7 +5,7 @@ from PIL import Image
 class Frame(customtkinter.CTkFrame):
     def __init__(self, master, **kwargs):
         super().__init__(master, **kwargs)
-        icon = customtkinter.CTkImage(Image.open(App.ICON_PATH),
+        icon = customtkinter.CTkImage(Image.open(LoadingWindow.ICON_PATH),
                                       size=(master.winfo_screenwidth() // 12, master.winfo_screenwidth() // 12))
 
         image_label = customtkinter.CTkLabel(self, image=icon, text="", fg_color=master.background)
@@ -25,7 +25,7 @@ class Frame(customtkinter.CTkFrame):
         progressbar.grid(row=4, padx=20, pady=0)
 
 
-class App(customtkinter.CTk):
+class LoadingWindow(customtkinter.CTk):
     ICON_PATH = r"assets\RaBit_icon.ico"
     WIDTH = 640
     HEIGHT = 360
@@ -41,12 +41,12 @@ class App(customtkinter.CTk):
         self.grid_columnconfigure(0, weight=1)
 
         self.title("RaBit v0.1")
-        self.iconbitmap(App.ICON_PATH)
-        self.minsize(App.WIDTH, App.HEIGHT)
+        self.iconbitmap(LoadingWindow.ICON_PATH)
+        self.minsize(LoadingWindow.WIDTH, LoadingWindow.HEIGHT)
 
         self.frame = Frame(self, fg_color=self.background)
         self.frame.grid(row=0, padx=10, pady=(10, 0))
 
 
-app = App()
-app.mainloop()
+def get_LoadingWindow():
+    return LoadingWindow

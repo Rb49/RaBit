@@ -64,12 +64,13 @@ class DownloadSession(object):
         # should be called from protected code
 
         # read torrent file
-        self.state = 'Reading TorrentData'
+        self.state = 'Reading torrent'
         self.TorrentData = read_torrent(self.torrent_path)
         self.info_hash = self.TorrentData.info_hash
 
         # is it already being downloaded?
         if self.info_hash in DownloadSession.Sessions:
+            self.state = 'Failed'
             print('already downloading!')
             return False
 

@@ -30,6 +30,9 @@ class Client(Singleton):
 
     def __init__(self):
         asyncio.run(set_configuration('seeding_server_is_up', False))
+        self.torrents: Set[Union[DownloadSession, PickableFile]] = set()
+
+    def start(self):
         seeding_thread = threading.Thread(target=lambda: asyncio.run(start_seeding_server()), daemon=True)
         seeding_thread.start()
 
