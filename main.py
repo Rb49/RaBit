@@ -1,7 +1,6 @@
 import time
 
 from src.RaBit import Client
-from src.view.main_window import get_MainWindow
 
 
 def main():
@@ -24,10 +23,6 @@ def main():
 
 
 if __name__ == '__main__':
-
-    app = get_MainWindow()()
-    app.mainloop()
-
     import tracemalloc
     tracemalloc.start()
 

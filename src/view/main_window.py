@@ -84,8 +84,11 @@ class SingleTorrent(customtkinter.CTkFrame):
 
 
 class PeersInfo(customtkinter.CTkFrame):
-    def __init__(self, master, **kwargs):
+    def __init__(self, master, addresses, **kwargs):
         super().__init__(master, **kwargs)
+
+        self.map = get_ZoomableMapFrame()(self, addresses, width=1000, height=500)
+        self.map.pack(expand=True, anchor="ne")
 
 
 class MainWindow(customtkinter.CTk):
@@ -117,11 +120,21 @@ class MainWindow(customtkinter.CTk):
         self.torrents_info_frame = TorrentsInfo(self, orientation="vertical")
         self.torrents_info_frame.grid(row=1, column=0, rowspan=3, columnspan=2, padx=10, pady=(5, 3), sticky="news")
 
-        self.peers_info_frame = PeersInfo(self)
-        self.peers_info_frame.grid(row=4, column=0, rowspan=10, columnspan=2, padx=10, pady=(3, 20), sticky="news")
+        addresses = [('Dhaka', 'BD', 23.746, 90.382),
+                     ('Adelaide', 'AU', -34.9517, 138.607),
+                     ('Athens', 'GR', 37.9842, 23.7353),
+                     ('Auckland', 'NZ', -36.8506, 174.7679),
+                     ('Cuenca', 'EC', -2.8976, -79.0045),
+                     ('Montes Claros', 'BR', -16.5879, -43.9),
+                     ('Dieppe', 'CA', 46.097, -64.7049),
+                     ('Cape Town', 'ZA', -33.91, 18.4304),
+                     ('Dublin', 'IE', 53.3798, -6.4136),
+                     ('Zurich', 'CH', 47.3614, 8.4899),
+                     ('Barcelona', 'ES', 41.4357, 2.1339),
+                     (None, None, 52.3759, 4.8975)]
 
-        self.map = get_ZoomableMapFrame()(self.peers_info_frame, width=1000, height=500)
-        self.map.pack(expand=True, anchor="ne")
+        self.peers_info_frame = PeersInfo(self, addresses)
+        self.peers_info_frame.grid(row=4, column=0, rowspan=10, columnspan=2, padx=10, pady=(3, 20), sticky="news")
 
     def open_toplevel(self):
         if self.toplevel_window is None or not self.toplevel_window.winfo_exists():
