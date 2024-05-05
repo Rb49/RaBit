@@ -18,7 +18,7 @@ class _Singleton:
     _instance = None
 
     def __new__(cls, *args, **kwargs):
-        if not cls._instance:
+        if cls._instance is None:
             cls._instance = super().__new__(cls, *args, **kwargs)
         return cls._instance
 
@@ -29,10 +29,16 @@ class Client(_Singleton):
     """
 
     def __init__(self):
+        if hasattr(self, 'started'):
+            return
         asyncio.run(set_configuration('seeding_server_is_up', False))
         self.torrents: Set[Union[DownloadSession, PickleableFile]] = set()
+        self.started = False
 
-    def start(self):
+    def start(self) -> bool:
+        if self.started:
+            return False
+
         seeding_thread = threading.Thread(target=lambda: asyncio.run(start_seeding_server()), daemon=True)
         seeding_thread.start()
 
@@ -59,14 +65,23 @@ class Client(_Singleton):
         # run update loop
         threading.Thread(target=lambda: asyncio.run(self._torrents_state_update_loop()), daemon=True).start()
 
-    def add_torrent(self, torrent_path: str, download_dir: str, skip_hash_check: bool) -> None:
+        self.started = True
+        return True
+
+    def add_torrent(self, torrent_path: str, download_dir: str, skip_hash_check: bool) -> bool:
+        if not self.started:
+            return False
         session = DownloadSession(torrent_path, download_dir, skip_hash_check)
         self.torrents.add(session)
         download_thread = threading.Thread(target=lambda: asyncio.run(session.download()), daemon=True)
         time.sleep(0.05)
         download_thread.start()
+        return True
 
-    def remove_torrent(self, info_hash: bytes):
+    def remove_torrent(self, info_hash: bytes) -> bool:
+        if not self.started:
+            return False
+        success = False
         for torrent in self.torrents.copy():
             if torrent.info_hash == info_hash:
                 if isinstance(torrent, DownloadSession):
@@ -76,6 +91,8 @@ class Client(_Singleton):
                     CompletedTorrentsDB().delete_torrent(torrent.info_hash)
                     FileObjects.pop(torrent.info_hash)
                 self.torrents.remove(torrent)
+                success = True
+        return success
 
     async def _torrents_state_update_loop(self):
         while True:
@@ -93,7 +110,3 @@ class Client(_Singleton):
     @staticmethod
     def get_download_dir() -> str:
         return get_configuration("download_dir")
-
-
-
-

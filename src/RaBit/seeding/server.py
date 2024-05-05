@@ -12,6 +12,8 @@ import bitstring
 from random import sample
 import copy
 from typing import List, Any
+import time
+
 
 _BUFFER_SIZE = 4096
 _MAX_REQUESTS = 500
@@ -36,7 +38,14 @@ class Stream:
         :return: msg instance corresponding to the type
         """
         while True:
-            if self.buffer:
+            data = b''
+
+            async def get_data():
+                nonlocal data
+                data = await self.reader.read(_BUFFER_SIZE)
+
+            insufficient = False
+            if len(self.buffer) >= 4:
                 length = struct.unpack('>I', self.buffer[0:4])[0] + 4
                 if length == 4:  # keepalive
                     self.__consume(4)
@@ -47,19 +56,24 @@ class Stream:
                     raise AssertionError
 
                 if len(self.buffer) < length:
-                    continue
+                    insufficient = True
 
-                msg = self.buffer[:length]
-                msg_id = msg[4]
+                else:
+                    msg = self.buffer[:length]
+                    msg_id = msg[4]
 
-                self.__consume(length)
+            if insufficient or len(self.buffer) < 4:
+                try:
+                    await asyncio.wait_for(get_data(), 0.5)
+                except asyncio.TimeoutError:
+                    return None
 
-            else:
-                data = await asyncio.wait_for(self.reader.read(_BUFFER_SIZE), 60)
                 self.buffer += data
                 if not self.buffer:
                     raise StopAsyncIteration
                 continue
+
+            self.__consume(length)
 
             if msg_id == INTERESTED:
                 return Interested()
@@ -125,7 +139,10 @@ async def handle_leecher(reader, writer) -> None:
         leecher = Leecher(writer, peer_address, geodata, peer_id, ip_priority)
         print(leecher)
         normalize = lambda value, max_value, new_min, new_max: (value / max_value) * (new_max - new_min) + new_min
+        last_seen = time.time()
         async for msg in Stream(reader):
+            received = True
+
             if isinstance(msg, Interested):
                 leecher.am_interested = True
                 leecher.am_chocked = False
@@ -151,18 +168,28 @@ async def handle_leecher(reader, writer) -> None:
                 else:
                     pass
 
+            else:
+                received = False
+            if received:
+                last_seen = time.time()
+
             # fulfill 50% of request
             for _ in range(0, len(leecher.pipelined_requests), 2):
                 piece_params = file_object.get_piece(*leecher.pipelined_requests.pop(0))
                 writer.write(Piece.encode(*piece_params))
                 await writer.drain()
                 # update statistics
+                last_seen = time.time()
                 FileObjects[file_object.info_hash].uploaded += len(piece_params[2])
                 leecher.downloaded += len(piece_params[2])
                 leecher.update_download_rate(len(piece_params[2]))
 
                 # introduce more delay as peer is more and more demanding
                 await asyncio.sleep(normalize(len(leecher.pipelined_requests), _MAX_REQUESTS, 0.01, 0.20))
+
+            # if leecher didn't send or requested anything (keep-alive s don't count) disconnect
+            if time.time() - last_seen >= 60:
+                raise TimeoutError
 
     except AssertionError as e:
         ...

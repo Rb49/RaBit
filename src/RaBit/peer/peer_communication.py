@@ -71,7 +71,11 @@ class Stream:
                     msg_id = msg[4]
 
             if insufficient or len(self.buffer) < 4:
-                await get_data()
+                try:
+                    await asyncio.wait_for(get_data(), 0.5)
+                except asyncio.TimeoutError:
+                    return None
+
                 self.buffer += data
                 if not self.buffer:
                     raise StopAsyncIteration
@@ -121,7 +125,6 @@ async def tcp_wire_communication(peerData: Tuple, TorrentData: Torrent, session,
 
         thisPeer = Peer(writer, TorrentData, address, city)
         request_queue: List[Tuple[int, int, int]] = []
-        balance_counter = 0
         try:
             # start with a handshake
             peer_id = await asyncio.wait_for(handshake(TorrentData, reader, writer), timeout=10)
@@ -183,7 +186,7 @@ async def tcp_wire_communication(peerData: Tuple, TorrentData: Torrent, session,
 
                 elif isinstance(msg, Request):
                     if not thisPeer.am_chocked:
-                        if piece_picker.FILE_STATUS[msg.piece_index]:
+                        if piece_picker.FILE_STATUS[TorrentData.info_hash][msg.piece_index]:
                             request_queue.append((msg.piece_index, msg.begin, msg.length))
                             if len(request_queue) > _MAX_REQUESTS:
                                 # attempted dos detected
@@ -206,7 +209,6 @@ async def tcp_wire_communication(peerData: Tuple, TorrentData: Torrent, session,
                     # update statistics
                     session.downloaded += len(msg.data)
                     thisPeer.uploaded += len(msg.data)
-                    balance_counter += 1
 
                     # check if I requested this block?
                     for block in thisPeer.pipelined_requests:
@@ -277,13 +279,12 @@ async def tcp_wire_communication(peerData: Tuple, TorrentData: Torrent, session,
                     Peer.MAX_ENDGAME_REQUESTS += len(need_to_cancel)
                     thisPeer.MAX_PIPELINE_SIZE += len(need_to_cancel)
 
-                # fulfill requests
-                while request_queue and balance_counter:
+                # fulfill 50% of requests
+                for _ in range(0, len(request_queue), 2):
                     # don't contribute more than the peer's contribution
                     params = file_manager.get_piece(*request_queue.pop())
                     writer.write(Piece.encode(*params))
                     await writer.drain()
-                    balance_counter -= 1
                     # update statistics
                     session.uploaded += len(params[2])
                     thisPeer.downloaded += len(params[2])

@@ -200,7 +200,7 @@ class File:
                     break
 
             self.piece_picker.num_of_pieces_left -= 1
-            self.piece_picker.FILE_STATUS[piece.index] = True  # update primary bitfield
+            self.piece_picker.FILE_STATUS[self.TorrentData.info_hash][piece.index] = True  # update primary bitfield
             await self.piece_picker.send_have(piece.index)
             piece.reset()
 
