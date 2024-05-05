@@ -32,7 +32,7 @@ class BetterQueue(asyncio.Queue):
 
 
 @dataclass
-class PiecePos(object):
+class PiecePos:
     """
     a small dataclass to represent a piece index and its availability for picking calculations
     """
@@ -40,7 +40,7 @@ class PiecePos(object):
     peer_count: int = 0  # availability, position in priority bucket
 
 
-class PriorityBucket(object):
+class PriorityBucket:
     """
     a priority bucket containing a list of PiecePos sharing the same availability.
     the lower the priority (key) the rarer the piece is
@@ -87,7 +87,7 @@ class PriorityBucket(object):
             self.add_piece(piece)
 
 
-class PiecePicker(object):
+class PiecePicker:
     """
     monitors the state of the download.
     picks blocks for peers based on their pieces, availability, completion and urgency.

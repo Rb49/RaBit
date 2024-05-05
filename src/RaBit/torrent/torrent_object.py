@@ -4,7 +4,7 @@ from typing import Optional, List, Union
 
 
 @dataclass(slots=True)
-class Torrent(object):
+class Torrent:
     """
     object to store attributes from the .torrent file
     """

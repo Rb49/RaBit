@@ -9,7 +9,7 @@ from ..tracker.utils import format_peers_list
 from ..geoip.utils import get_my_public_ip
 from ..download.piece_picker import PiecePicker
 from ..peer.peer_communication import tcp_wire_communication
-from ..file.file_object import File, PickableFile
+from ..file.file_object import File, PickleableFile
 from ..download.upload_in_download import TitForTat
 from ..tracker.tracker_object import Tracker, ANNOUNCING, WORKING
 from ..seeding.announce_loop import announce_loop
@@ -21,7 +21,7 @@ import bitstring
 from typing import List, Tuple, Dict, Any
 
 
-class DownloadSession(object):
+class DownloadSession:
     """
     download session instance. monitors the download and starts everything related to it.
     """
@@ -101,7 +101,7 @@ class DownloadSession(object):
         if all(bitarray):
             self.state = 'Completed'
             print('got all!')
-            db_utils.CompletedTorrentsDB().insert_torrent(PickableFile(File(self.TorrentData, self, None, None, self.torrent_path, self.result_dir)))
+            db_utils.CompletedTorrentsDB().insert_torrent(PickleableFile(File(self.TorrentData, self, None, None, self.torrent_path, self.result_dir)))
             db_utils.remove_ongoing_torrent(self.torrent_path)
             return True
 

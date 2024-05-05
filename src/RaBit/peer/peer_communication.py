@@ -16,7 +16,7 @@ _BUFFER_SIZE = 4096
 _MAX_REQUESTS = 500
 
 
-class Stream(object):
+class Stream:
     def __init__(self, reader, thisPeer, TorrentData: Torrent):
         self.reader = reader
         self.thisPeer = thisPeer

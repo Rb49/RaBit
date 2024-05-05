@@ -1,4 +1,4 @@
-from ..file.file_object import PickableFile
+from ..file.file_object import PickleableFile
 
 import asyncio
 import re
@@ -106,7 +106,7 @@ def remove_ongoing_torrent(torrent_file_path: str):
             json.dump(torrents, json_file)
 
 
-class Singleton(object):
+class Singleton:
     """
     singleton pattern instance for sqlite databases instances
     """
@@ -153,7 +153,7 @@ class BannedPeersDB(Singleton):
 
 class CompletedTorrentsDB(Singleton):
     """
-    sqlite database api for accessing or inserting into the database of completed torrents (PickableFile) for seeding.
+    sqlite database api for accessing or inserting into the database of completed torrents (PickleableFile) for seeding.
     """
     def __init__(self):
         conn = sqlite3.connect(abs_db_path('completed_torrents.db'))
@@ -162,17 +162,17 @@ class CompletedTorrentsDB(Singleton):
         conn.commit()
         self.conn = conn
 
-    def insert_torrent(self, file_object: PickableFile):
+    def insert_torrent(self, file_object: PickleableFile):
         params = (file_object.info_hash, pickle.dumps(file_object))
         cursor = self.conn.cursor()
         cursor.execute("INSERT OR IGNORE INTO completed_torrents (info_hash, file_object) VALUES (?, ?)", params)
         self.conn.commit()
 
-    def update_torrent(self, new_file_object: PickableFile):
+    def update_torrent(self, new_file_object: PickleableFile):
         self.delete_torrent(new_file_object.info_hash)
         self.insert_torrent(new_file_object)
 
-    def get_torrent(self, info_hash: bytes) -> Union[PickableFile, None]:
+    def get_torrent(self, info_hash: bytes) -> Union[PickleableFile, None]:
         cursor = self.conn.cursor()
         cursor.execute("SELECT file_object FROM completed_torrents WHERE info_hash=?", (info_hash,))
         file_object = cursor.fetchone()
@@ -192,7 +192,7 @@ class CompletedTorrentsDB(Singleton):
         cursor.execute("DELETE FROM completed_torrents WHERE info_hash=?", (info_hash,))
         self.conn.commit()
 
-    def get_all_torrents(self) -> List[PickableFile]:
+    def get_all_torrents(self) -> List[PickleableFile]:
         cursor = self.conn.cursor()
         cursor.execute("SELECT * FROM completed_torrents")
         torrents = []

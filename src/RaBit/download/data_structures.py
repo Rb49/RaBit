@@ -11,7 +11,7 @@ FINISHED = 2
 
 
 @dataclass(slots=True)
-class Block(object):
+class Block:
     """
     a representation of a block - the smallest unit that is requested with a 'Request' message
     a several blocks make up a piece.
@@ -64,7 +64,7 @@ class Block(object):
         return hash(self.data)
 
 
-class DownloadingPiece(object):
+class DownloadingPiece:
     """
     a downloading piece instance.
     creates a list of Block instances and keeps track of them
@@ -159,7 +159,7 @@ class DownloadingPiece(object):
         return bad_peers
 
 
-class FailedPiece(object):
+class FailedPiece:
     """
     instance containing hashes of blocks that failed a hash check.
     an instance will be created for each piece failure.

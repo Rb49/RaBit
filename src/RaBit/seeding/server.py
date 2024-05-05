@@ -19,7 +19,7 @@ _LEASE_DURATION = 600  # 10 minutes
 _MAX_LEECHER_PEERS = db_utils.get_configuration('max_leecher_peers')
 
 
-class Stream(object):
+class Stream:
     def __init__(self, reader):
         self.reader = reader
         self.buffer = b''
@@ -266,7 +266,7 @@ def init_completed_torrents() -> None:
     loads torrents from the completed torrents db and starts announce loops for their trackers
     :return: None
     """
-    all_torrents: List[PickableFile] = db_utils.CompletedTorrentsDB().get_all_torrents()
+    all_torrents: List[PickleableFile] = db_utils.CompletedTorrentsDB().get_all_torrents()
     for file in all_torrents:
         try:
             file.reopen_files()
@@ -285,7 +285,7 @@ async def add_newly_completed_torrent(info_hash: bytes) -> None:
     adds a newly downloaded torrent available for seeding
     :return: None
     """
-    file: PickableFile = db_utils.CompletedTorrentsDB().get_torrent(info_hash)
+    file: PickleableFile = db_utils.CompletedTorrentsDB().get_torrent(info_hash)
     if file:
         async with asyncio.Lock():
             try:

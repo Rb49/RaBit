@@ -8,10 +8,10 @@ from .app_data.db_utils import (get_configuration, set_configuration, get_ongoin
 from .seeding.server import start_seeding_server
 from .seeding.utils import FileObjects
 from .download.download_session_object import DownloadSession
-from .file.file_object import PickableFile
+from .file.file_object import PickleableFile
 
 
-class Singleton(object):
+class _Singleton:
     """
     singleton pattern instance for Client instance
     """
@@ -23,14 +23,14 @@ class Singleton(object):
         return cls._instance
 
 
-class Client(Singleton):
+class Client(_Singleton):
     """
     RaBit module main class
     """
 
     def __init__(self):
         asyncio.run(set_configuration('seeding_server_is_up', False))
-        self.torrents: Set[Union[DownloadSession, PickableFile]] = set()
+        self.torrents: Set[Union[DownloadSession, PickleableFile]] = set()
 
     def start(self):
         seeding_thread = threading.Thread(target=lambda: asyncio.run(start_seeding_server()), daemon=True)
@@ -44,7 +44,7 @@ class Client(Singleton):
 
         # start unfinished torrents
         ongoing_torrents = get_ongoing_torrents()
-        self.torrents: Set[Union[DownloadSession, PickableFile]] = set()
+        self.torrents: Set[Union[DownloadSession, PickleableFile]] = set()
         for torrent, path in ongoing_torrents:
             session = DownloadSession(torrent, path, False)
             self.torrents.add(session)
@@ -57,7 +57,7 @@ class Client(Singleton):
         self.torrents.update(seeding_torrents)
 
         # run update loop
-        threading.Thread(target=lambda: asyncio.run(self.torrents_state_update_loop()), daemon=True).start()
+        threading.Thread(target=lambda: asyncio.run(self._torrents_state_update_loop()), daemon=True).start()
 
     def add_torrent(self, torrent_path: str, download_dir: str, skip_hash_check: bool) -> None:
         session = DownloadSession(torrent_path, download_dir, skip_hash_check)
@@ -77,7 +77,7 @@ class Client(Singleton):
                     FileObjects.pop(torrent.info_hash)
                 self.torrents.remove(torrent)
 
-    async def torrents_state_update_loop(self):
+    async def _torrents_state_update_loop(self):
         while True:
             for torrent in self.torrents.copy():
                 if isinstance(torrent, DownloadSession):

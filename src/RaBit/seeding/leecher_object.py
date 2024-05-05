@@ -4,7 +4,7 @@ import time
 from typing import Tuple, List
 
 
-class Leecher(object):
+class Leecher:
     """
     object to store attributes of a leecher peer and some stats
     """

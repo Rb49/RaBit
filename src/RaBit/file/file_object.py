@@ -31,7 +31,7 @@ def format_file_name(file_name: str) -> str:
     return file_name
 
 
-class File(object):
+class File:
     """
     disk IO manager to read/write pieces and validate them.
     an instance is created for each download
@@ -133,7 +133,7 @@ class File(object):
                 # TODO a more elegant exit, let all interested disconnect and then switch to seeding in seeding server
                 self.close_files()
                 # add to completed torrents db
-                db_utils.CompletedTorrentsDB().insert_torrent(PickableFile(self))
+                db_utils.CompletedTorrentsDB().insert_torrent(PickleableFile(self))
                 db_utils.remove_ongoing_torrent(self.torrent_path)
                 loop = asyncio.get_event_loop()
                 loop.stop()
@@ -211,9 +211,9 @@ class File(object):
             pass
 
 
-class PickableFile(object):
+class PickleableFile:
     """
-    stores all data needed to seed a torrent in a pickable format
+    stores all data needed to seed a torrent in a pickleable format
     """
     def __init__(self, file_object: File) -> None:
         """

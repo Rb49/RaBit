@@ -6,7 +6,7 @@ from typing import Tuple, List, Set, Dict
 import bitstring
 
 
-class Peer(object):
+class Peer:
     """
     object to store attributes of a peer and some stats
     """

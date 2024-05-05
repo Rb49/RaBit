@@ -8,7 +8,7 @@ from random import sample
 import time
 
 
-class TitForTat(object):
+class TitForTat:
     """
     a chocking mechanism based on a tit-for-tat algorithm: reward sharing peers, punish egoistic peers.
     """

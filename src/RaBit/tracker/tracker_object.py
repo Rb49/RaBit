@@ -12,7 +12,7 @@ WORKING = 2
 NONE = None
 
 
-class Tracker(object):
+class Tracker:
     """
     an instance of a single tracker that posses data about a single info hash
     """

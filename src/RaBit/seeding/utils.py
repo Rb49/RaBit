@@ -1,5 +1,5 @@
 from ..app_data import db_utils
-from ..file.file_object import PickableFile
+from ..file.file_object import PickleableFile
 
 import socket
 from typing import Union, Tuple, Dict
@@ -7,7 +7,7 @@ import time
 import crc32c
 
 
-FileObjects: Dict[bytes, PickableFile] = dict()
+FileObjects: Dict[bytes, PickleableFile] = dict()
 
 
 async def save_forward(internal_port: int, external_port: int, version: str) -> None:

@@ -1,5 +1,5 @@
 from ..app_data import db_utils
-from ..file.file_object import PickableFile
+from ..file.file_object import PickleableFile
 from ..seeding.utils import FileObjects
 from ..geoip.utils import get_info
 
@@ -74,7 +74,7 @@ async def handshake(reader, writer) -> Union[Tuple[bytes, bytes], Tuple[None, No
         return None, None
 
     # check if I have this torrent
-    file_object: PickableFile = db_utils.CompletedTorrentsDB().get_torrent(info_hash)
+    file_object: PickleableFile = db_utils.CompletedTorrentsDB().get_torrent(info_hash)
     if not file_object:
         return None, None
 

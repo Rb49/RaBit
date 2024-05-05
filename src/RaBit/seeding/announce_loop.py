@@ -1,5 +1,5 @@
 from ..app_data import db_utils
-from ..file.file_object import PickableFile
+from ..file.file_object import PickleableFile
 from ..tracker.tracker_object import Tracker, WORKING
 
 from typing import List
@@ -11,7 +11,7 @@ async def announce_loop(trackers: List[Tracker], session) -> None:
     """
     a loop for an info hash: re-announces for each tracker interval with relevant stats
     :param trackers: a list of Tracker instances
-    :param session: DownloadingSession or PickableFile instance with stats
+    :param session: DownloadingSession or PickleableFile instance with stats
     :return: None
     """
     while True:
@@ -21,7 +21,7 @@ async def announce_loop(trackers: List[Tracker], session) -> None:
             if tracker.last_announce + tracker.interval <= time.time():
                 download = session.corrupted + session.wasted + session.downloaded
                 upload = session.uploaded
-                if isinstance(session, PickableFile):
+                if isinstance(session, PickleableFile):
                     left = 0
                 else:
                     left = session.left
@@ -29,6 +29,6 @@ async def announce_loop(trackers: List[Tracker], session) -> None:
                 print('announced! ', tracker)
             else:
                 break
-        if isinstance(session, PickableFile):
+        if isinstance(session, PickleableFile):
             db_utils.CompletedTorrentsDB().update_torrent(session)
         await asyncio.sleep(5)
