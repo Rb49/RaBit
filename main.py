@@ -4,16 +4,13 @@ from src.RaBit import Client
 
 
 def main():
-
     client = Client()
+    client.start()
 
-    client.add_torrent(r"C:\Users\roeyb\OneDrive\Documents\GitHub\RaBit\RaBit\data\The Best American Short Stories, 2011–2023 (13 books).torrent",
-                       r"C:\Users\roeyb\OneDrive\Documents\GitHub\RaBit\RaBit\results",
-                       False)
-
-    client.add_torrent(r"C:\Users\roeyb\OneDrive\Documents\GitHub\RaBit\RaBit\data\The Complete Art of War_ Sun Tzu-Sun Pin [blackatk].torrent",
-                       r"C:\Users\roeyb\OneDrive\Documents\GitHub\RaBit\RaBit\results",
-                       False)
+    client.add_torrent(
+        r"C:\Users\roeyb\OneDrive\Documents\GitHub\RaBit\RaBit\data\debian-edu-12.4.0-amd64-netinst.iso.torrent",
+        r"C:\Users\roeyb\OneDrive\Documents\GitHub\RaBit\RaBit\results",
+        False)
 
     while True:
         print(client.torrents)

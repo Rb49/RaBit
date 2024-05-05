@@ -110,12 +110,15 @@ class Singleton(object):
     """
     singleton pattern instance for sqlite databases instances
     """
-    _instances = {}
+    _instances: Dict[int, Dict[Any, Any]] = dict()
 
     def __new__(cls, *args, **kwargs):
-        if cls not in cls._instances:
-            cls._instances[cls] = super().__new__(cls, *args, **kwargs)
-        return cls._instances[cls]
+        thread_id = threading.get_ident()
+        if thread_id not in cls._instances:
+            cls._instances[thread_id]: Dict[cls, cls] = dict()
+        if cls not in cls._instances[thread_id]:
+            cls._instances[thread_id][cls] = super().__new__(cls, *args, **kwargs)
+        return cls._instances[thread_id][cls]
 
 
 class BannedPeersDB(Singleton):

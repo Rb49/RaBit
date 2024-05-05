@@ -10,6 +10,7 @@ from typing import Tuple
 import threading
 import os
 import re
+import random
 
 
 def format_file_name(file_name: str) -> str:
@@ -235,6 +236,8 @@ class PickableFile(object):
         self.fds = []
         self.file_indices = file_object.file_indices
 
+        self.__seed = random.getrandbits(64)
+
         del file_object
 
     def reopen_files(self) -> None:
@@ -293,7 +296,7 @@ class PickableFile(object):
         return f"uploaded: {self.uploaded}, name: {self.file_names[0]}, info hash: {self.info_hash}"
 
     def __hash__(self):
-        return hash(f"name: {self.file_names[0]}, info hash: {self.info_hash}")
+        return hash(self.__seed)
 
     def __del__(self):
         try:
