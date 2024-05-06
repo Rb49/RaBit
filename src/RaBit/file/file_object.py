@@ -133,6 +133,8 @@ class File:
                 # TODO a more elegant exit, let all interested disconnect and then switch to seeding in seeding server
                 self.close_files()
                 # add to completed torrents db
+                self.session.state = 'Seeding'
+                self.session.peers = []
                 db_utils.CompletedTorrentsDB().insert_torrent(PickleableFile(self))
                 db_utils.remove_ongoing_torrent(self.torrent_path)
                 loop = asyncio.get_event_loop()
@@ -200,6 +202,7 @@ class File:
                     break
 
             self.piece_picker.num_of_pieces_left -= 1
+            self.session.left -= len(data)
             self.piece_picker.FILE_STATUS[self.TorrentData.info_hash][piece.index] = True  # update primary bitfield
             await self.piece_picker.send_have(piece.index)
             piece.reset()
@@ -220,13 +223,17 @@ class PickleableFile:
         :param file_object: File instance to make pickleable
         :return: None
         """
+        self.name = file_object.session.name
+        self.state = file_object.session.state
         self.info_hash = file_object.TorrentData.info_hash
         self.peer_id = file_object.TorrentData.peer_id
         self.length = file_object.TorrentData.length
         self.trackers = file_object.session.trackers
+        self.peers = []
         self.piece_length = file_object.TorrentData.info[b'piece length']
         self.num_pieces = len(file_object.TorrentData.piece_hashes)
         # statistics
+        self.progress = file_object.session.progress
         self.downloaded = file_object.session.downloaded
         self.corrupted = file_object.session.corrupted
         self.wasted = file_object.session.wasted
@@ -292,8 +299,15 @@ class PickleableFile:
 
         return piece_index, begin, data
 
+    @property
+    def ETA(self) -> float:
+        """
+        :return: estimated time of arrival, in seconds
+        """
+        return 3184622406  # a very long time (100.9y) because download is already complete
+
     def __repr__(self):
-        return f"uploaded: {self.uploaded}, name: {self.file_names[0]}, info hash: {self.info_hash}"
+        return f"uploaded: {self.uploaded}, name: {self.name}, info hash: {self.info_hash}"
 
     def __hash__(self):
         return hash(self.__seed)

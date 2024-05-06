@@ -208,6 +208,8 @@ class PiecePicker:
                 print('got duplicate')
                 return
 
+            self.session.downloaded += len(add_data_args[0])
+
             if self.is_in_endgame:
                 self.endgame_received_blocks.add(block)
             else:

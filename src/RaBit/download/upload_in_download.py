@@ -22,6 +22,7 @@ class TitForTat:
         """
         self.piece_picker: PiecePicker = piece_picker
         Peer.peer_instances[piece_picker.TorrentData.info_hash] = []  # this init happens before any peer is connected
+        self.piece_picker.session.peers = Peer.peer_instances[piece_picker.TorrentData.info_hash]
         self.peers: List[Peer] = Peer.peer_instances[piece_picker.TorrentData.info_hash]  # all connected peers
         self.downloaders: List[Peer] = []  # downloaders interested in what I offer
         self.good_uninterested_peers: List[Peer] = []  # not interested peers and upload better than downloaders
@@ -40,7 +41,7 @@ class TitForTat:
                 for peer in self.peers:
                     if not peer.am_chocked:
                         await self.piece_picker.send_chock(peer)
-                await asyncio.sleep(10)
+                await asyncio.sleep(1)
                 continue
 
             sorted_peers = sorted(list(filter(lambda x: x.am_interested, self.peers)), key=lambda x: x.upload_rate, reverse=True)

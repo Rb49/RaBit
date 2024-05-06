@@ -207,7 +207,6 @@ async def tcp_wire_communication(peerData: Tuple, TorrentData: Torrent, session,
                 elif isinstance(msg, Piece):
                     msg: Piece
                     # update statistics
-                    session.downloaded += len(msg.data)
                     thisPeer.uploaded += len(msg.data)
 
                     # check if I requested this block?

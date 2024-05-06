@@ -1,14 +1,14 @@
+from .app_data.db_utils import (get_configuration, set_configuration, get_ongoing_torrents,
+                                CompletedTorrentsDB, remove_ongoing_torrent)
+from .seeding.server import start_seeding_server, add_completed_torrent
+from .seeding.utils import FileObjects
+from .download.download_session_object import DownloadSession
+from .file.file_object import PickleableFile
+
 import asyncio
 import threading
 import time
 from typing import Set, Union
-
-from .app_data.db_utils import (get_configuration, set_configuration, get_ongoing_torrents,
-                                CompletedTorrentsDB, remove_ongoing_torrent)
-from .seeding.server import start_seeding_server
-from .seeding.utils import FileObjects
-from .download.download_session_object import DownloadSession
-from .file.file_object import PickleableFile
 
 
 class _Singleton:
@@ -42,11 +42,17 @@ class Client(_Singleton):
         seeding_thread = threading.Thread(target=lambda: asyncio.run(start_seeding_server()), daemon=True)
         seeding_thread.start()
 
-        # TODO wait for the seeding server before starting download
+        # wait for the seeding server before starting download
         while True:
             if get_configuration('seeding_server_is_up'):
                 break
-            time.sleep(0.5)
+            time.sleep(0.25)
+
+        # add torrents for seeding
+        completed_torrents = CompletedTorrentsDB().get_all_torrents()
+        for torrent in completed_torrents:
+            self.torrents.add(torrent)
+            add_completed_torrent(torrent)
 
         # start unfinished torrents
         ongoing_torrents = get_ongoing_torrents()
@@ -98,10 +104,14 @@ class Client(_Singleton):
         while True:
             for torrent in self.torrents.copy():
                 if isinstance(torrent, DownloadSession):
-                    if torrent.state in ('Completed', 'Failed'):
+                    if torrent.state in ('Completed', 'Failed', 'Seeding'):
                         self.torrents.remove(torrent)
-                        self.torrents.add(CompletedTorrentsDB().get_torrent(torrent.info_hash))
-                else:
+                        torrent_from_db = CompletedTorrentsDB().get_torrent(torrent.info_hash)
+                        if torrent_from_db:
+                            if torrent_from_db.info_hash not in map(lambda x: x.info_hash, self.torrents):
+                                self.torrents.add(torrent_from_db)
+                                await add_completed_torrent(torrent_from_db)
+                else:  # isinstance(torrent, PickleableFile)
                     if not CompletedTorrentsDB().find_info_hash(torrent.info_hash):
                         self.torrents.remove(torrent)
 
