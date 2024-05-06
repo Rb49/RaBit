@@ -1,11 +1,9 @@
-import threading
-import time
-
-import customtkinter
-
 from src.RaBit import Client
 from src.view.loading_window import get_LoadingWindow
 from src.view.main_window import get_MainWindow
+
+import threading
+import time
 
 
 def wait_for_loading(client: Client, window: get_LoadingWindow()):
@@ -23,7 +21,7 @@ def gui_updates(client: Client, main_window: get_MainWindow()):
                 first[torrent] = True
             main_window.torrents_info_frame.add_torrent(first[torrent], torrent.name, torrent.length, torrent.progress, torrent.state, len(torrent.peers), torrent.ETA)
             first[torrent] = False
-        time.sleep(1)
+        time.sleep(0.5)
 
 
 # start the client and display the loading window

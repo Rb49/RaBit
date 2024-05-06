@@ -1,6 +1,3 @@
-import random
-import time
-
 from ..app_data import db_utils
 from ..peer.peer_object import Peer
 from ..torrent.torrent import read_torrent
@@ -20,6 +17,9 @@ from hashlib import sha1
 import bitstring
 from typing import List, Tuple, Dict, Any
 import os
+import random
+import time
+from math import ceil
 
 
 class DownloadSession:
@@ -209,13 +209,13 @@ class DownloadSession:
         """
         Total = self.downloaded + self.wasted + self.corrupted
         Time = time.time()
-        if Time - self.last_Time < 1:
-            return 3184622406  # a very long time (100.9y)
+        if Time - self.last_Time < 1.5:
+            return self.last_ETA  # a very long time (100.9y)
         speed = (Total - self.last_Total) / (Time - self.last_Time)
         if speed == 0:
             return 3184622406
-        ETA = self.left / speed
-        if round(self.last_ETA) == 1:
+        ETA = ceil(self.left / speed)
+        if self.last_ETA == 1:
             ETA = 1
         self.last_Total = Total
         self.last_Time = Time
