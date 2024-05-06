@@ -1,5 +1,6 @@
 import customtkinter
 from PIL import Image
+from pathlib import Path
 
 
 class Frame(customtkinter.CTkFrame):
@@ -26,7 +27,7 @@ class Frame(customtkinter.CTkFrame):
 
 
 class LoadingWindow(customtkinter.CTk):
-    ICON_PATH = r"assets\RaBit_icon.ico"
+    ICON_PATH = Path().resolve() / "view" / "assets" / "RaBit_icon.ico"
     WIDTH = 640
     HEIGHT = 360
 

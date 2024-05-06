@@ -4,6 +4,8 @@ import os
 from PIL import Image
 from pathlib import Path
 
+from src.RaBit import Client
+
 
 class FileDialogs(customtkinter.CTkFrame):
     def __init__(self, master, start_path: str, **kwargs):
@@ -59,11 +61,15 @@ class FileDialogs(customtkinter.CTkFrame):
 
         # confirm button
         self.confirm_button = customtkinter.CTkButton(self, text="Confirm", state="disabled",
-                                                      command=lambda: master.added_torrents.append((self.file_path, self.download_dir, bool(self.skip_hash_checkbox.get()))))
+                                                      command=lambda: self.add_torrent(master))
         self.confirm_button.grid(row=5, column=0, padx=50, pady=30, columnspan=3, sticky="ew")
 
         # start params could be valid
         self.on_key_release(None, True)
+
+    def add_torrent(self, master):
+        Client().add_torrent(self.file_path, self.download_dir, bool(self.skip_hash_checkbox.get()))
+        master.destroy()
 
     def on_key_release(self, event, is_dir: bool):
         path_input = self.download_dir_input if is_dir else self.torrent_path_input
@@ -128,13 +134,11 @@ class FileDialogs(customtkinter.CTkFrame):
 
 
 class AddTorrentWindow(customtkinter.CTkToplevel):
-    POSITIVE_PATH = r"assets\positive_mark.png"
-    NEGATIVE_PATH = r"assets\negative_mark.png"
+    POSITIVE_PATH = Path().resolve() / "view" / "assets" / "positive_mark.png"
+    NEGATIVE_PATH = Path().resolve() / "view" / "assets" / "negative_mark.png"
 
     WIDTH = 600
     HEIGHT = 450
-
-    added_torrents = []
 
     def __init__(self, master, start_path: str, **kwargs):
         super().__init__(master, **kwargs)
@@ -144,7 +148,7 @@ class AddTorrentWindow(customtkinter.CTkToplevel):
 
         self.columnconfigure(0, weight=1)
 
-        self.title("Add a Torrent")
+        self.title("")
         self.minsize(AddTorrentWindow.WIDTH, AddTorrentWindow.HEIGHT)
 
         self.title = customtkinter.CTkLabel(self, text="Add a Torrent", font=("", 35))

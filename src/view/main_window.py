@@ -1,10 +1,12 @@
+import tkinter
+from pathlib import Path
 from typing import List, Dict
-import tkinter as tk
-
 import customtkinter
 from PIL import Image
-from src.view.add_torrent import get_TopWindow
-from src.view.zoomable_map import get_ZoomableMapFrame
+
+from .add_torrent import get_TopWindow
+from .zoomable_canvas import get_ZoomableMapCanvas
+from .utils import *
 
 
 class ToolbarFrame(customtkinter.CTkFrame):
@@ -33,26 +35,108 @@ class ToolbarFrame(customtkinter.CTkFrame):
 
 
 class TorrentsInfo(customtkinter.CTkScrollableFrame):
-    torrent_labels: Dict[bytes, List] = dict()
+    torrent_labels: List[List] = []
 
     def __init__(self, master, **kwargs):
         super().__init__(master, **kwargs)
+        self.master = master
+        columns_titles = [('Select', 0), ('Name', 5), ('Size', 2), ('Progress', 6), ('Status', 2), ('Peers', 1), ('ETA', 2)]
+        for i, data in enumerate(columns_titles):
+            title, weight = data
+            label = customtkinter.CTkLabel(self, text=title, font=("", 13))
+            self.columnconfigure(i, weight=weight)
+            label.grid(row=0, rowspan=1, column=i, pady=(0, 2), sticky="ew")
+
+    def add_torrent(self, first_add: bool, name: str, size: int, progress: float, status: str, peers: int, ETA: float):
+        if first_add:
+            labels = [0] * 7
+            row = len(TorrentsInfo.torrent_labels) + 1
+            for i, param in enumerate([None, name, size, progress, status, peers, ETA]):
+                if i == 0:  # radio button select
+                    labels[i] = customtkinter.CTkRadioButton(self, text=f"No. {row}",
+                                                             variable=self.master.selected_row, value=row,
+                                                             command=self.master.open_torrent_info_tab)
+                elif i == 1:  # name
+                    labels[i] = customtkinter.CTkTextbox(self, fg_color="transparent", activate_scrollbars=True, wrap="none", font=("", 13), height=15)
+                    labels[i].insert("0.0", name)
+                    labels[i].configure(state="disabled")
+                elif i == 2:  # size
+                    labels[i] = customtkinter.CTkLabel(self, text=convert_size(param), font=("", 13), justify="left")
+                elif i == 3:  # progress
+                    labels[i] = customtkinter.CTkProgressBar(self, orientation="horizontal", mode="determinate",
+                                                             width=50, height=15, corner_radius=0, progress_color="green")
+                    labels[i].set(progress / 100)
+                elif i == 6:  # ETA
+                    labels[i] = customtkinter.CTkLabel(self, text=convert_seconds(param), font=("", 13), justify="left")
+                else:  # status, peers
+                    labels[i] = customtkinter.CTkLabel(self, text=str(param), font=("", 13), justify="left")
+
+                labels[i].grid(row=row, rowspan=1, column=i, pady=(0, 2), padx=4, sticky="ew")
+
+            TorrentsInfo.torrent_labels.append(labels)
+            labels[0].invoke()  # display current torrent stats
+        else:  # update
+            for row in range(1, len(TorrentsInfo.torrent_labels) + 1):
+                if self.grid_slaves(row=row, column=1)[0].get("0.0", "end").strip('\n') == name:
+                    # progress
+                    self.grid_slaves(row=row, column=3)[0].set(progress / 100)
+                    # else
+                    self.grid_slaves(row=row, column=4)[0].configure(text=str(status))
+                    self.grid_slaves(row=row, column=5)[0].configure(text=str(peers))
+                    self.grid_slaves(row=row, column=6)[0].configure(text=convert_seconds(ETA))
+                    return
+
+
+
+class GeneralTorrentInfo(customtkinter.CTkFrame):
+    def __init__(self, master, **kwargs):
+        super().__init__(master, **kwargs)
+        master.columnconfigure(0, weight=1)
+        master.rowconfigure(0, weight=1)
+        torrent_info = [
+            "Downloaded: ", "Uploaded: ", "Corrupted: ", "Wasted: ",
+            "Progress: ", "Ratio: ", "Pieces: ", "Piece length: ",
+            "Multi file: ", "Comment: ", "Created By: ", "Creation Date: "
+        ]
+        self.columnconfigure(0, weight=1)
+        self.columnconfigure(1, weight=1)
+        self.columnconfigure(2, weight=1)
+        for i, info in enumerate(torrent_info):
+            row = i % 4
+            column = i // 4
+            label = customtkinter.CTkLabel(self, text=info, font=("", 13), anchor="w")
+            label.grid(row=row, column=column, sticky="ew")
+
+
+class MapFrame(customtkinter.CTkFrame):
+    def __init__(self, master, addresses, **kwargs):
+        super().__init__(master, **kwargs)
+        self.map = get_ZoomableMapCanvas()(self, addresses, width=1000, height=500)
+        self.map.pack(expand=True, anchor="ne")
+
+
+class PeersInfoFrame(customtkinter.CTkScrollableFrame):
+    peers = []
+
+    def __init__(self, master, **kwargs):
+        super().__init__(master, **kwargs)
+
         self.current_row = 0
-        columns_titles = [('Name', 5), ('Size', 2), ('Progress', 4), ('Status', 2), ('Peers', 1), ('Availability', 1)]
+        columns_titles = [('IP', 10), ('Port', 1), ('City', 10), ('Client', 10)]
         for i, data in enumerate(columns_titles):
             title, weight = data
             label = customtkinter.CTkLabel(self, text=title, font=("", 13))
             self.columnconfigure(i, weight=weight)
             label.grid(row=self.current_row, rowspan=1, column=i, pady=(0, 2), sticky="ew")
 
-    def add_torrent(self, name: str, size: int, progress: float, status: str, peers: int, availability: float, info_hash: bytes):
+    def new_peers_info(self, info_hash: bytes, peers):
         self.current_row += 1
         labels = [0] * 6
         for i, param in enumerate([name, size, progress, status, peers, availability]):
             if i not in (0, 1, 2):  # not progress and name
                 labels[i] = customtkinter.CTkLabel(self, text=str(param), font=("", 13), justify="left")
             elif i == 1:  # size
-                labels[i] = customtkinter.CTkLabel(self, text=TorrentsInfo.convert_size(param), font=("", 13), justify="left")
+                labels[i] = customtkinter.CTkLabel(self, text=convert_size(param), font=("", 13), justify="left")
             elif i == 2:  # progress
                 labels[i] = customtkinter.CTkProgressBar(self, orientation="horizontal", mode="determinate",
                                                          width=50, corner_radius=0, progress_color="green")
@@ -66,36 +150,15 @@ class TorrentsInfo(customtkinter.CTkScrollableFrame):
 
         TorrentsInfo.torrent_labels[info_hash] = labels
 
-    @staticmethod
-    def convert_size(size: int) -> str:
-        bytes_in_gib = 0.000000000931322574615478515625
-        bytes_in_mib = 0.00000095367431640625
-        bytes_in_kib = 0.0009765625
-        if size * bytes_in_gib < 1:
-            if size * bytes_in_mib < 1:
-                return f"{round(size * bytes_in_kib, 2)} KiB"
-            return f"{round(size * bytes_in_mib, 2)} MiB"
-        return f"{round(size * bytes_in_gib, 2)} GiB"
-
-
-class SingleTorrent(customtkinter.CTkFrame):
-    def __init__(self, master, **kwargs):
-        super().__init__(master, **kwargs)
-
-
-class PeersInfo(customtkinter.CTkFrame):
-    def __init__(self, master, addresses, **kwargs):
-        super().__init__(master, **kwargs)
-
-        self.map = get_ZoomableMapFrame()(self, addresses, width=1000, height=500)
-        self.map.pack(expand=True, anchor="ne")
+    def remove_torrent(self, info_hash: bytes):
+        ...
 
 
 class MainWindow(customtkinter.CTk):
-    ICON_PATH = r"assets\RaBit_icon.ico"
-    SETTINGS_PATH = r"assets\settings.png"
-    ADD_PATH = r"assets\add.png"
-    REMOVE_PATH = r"assets\remove.png"
+    ICON_PATH = Path().resolve() / "view" / "assets" / "RaBit_icon.ico"
+    SETTINGS_PATH = Path().resolve() / "view" / "assets" / "settings.png"
+    ADD_PATH = Path().resolve() / "view" / "assets" / "add.png"
+    REMOVE_PATH = Path().resolve() / "view" / "assets" / "remove.png"
 
     WIDTH = 720
     HEIGHT = 360
@@ -109,32 +172,27 @@ class MainWindow(customtkinter.CTk):
         self.title("RaBit Client")
         self.iconbitmap(MainWindow.ICON_PATH)
         self.minsize(MainWindow.WIDTH, MainWindow.HEIGHT)
-
-        self.columnconfigure(0, weight=0)
-        self.columnconfigure(1, weight=1)
-
+        self.columnconfigure(0, weight=1)
+        self.rowconfigure(0, weight=0)
+        self.rowconfigure(1, weight=2)
+        self.rowconfigure(2, weight=1)
+        # toolbar
         self.toolbar_frame = ToolbarFrame(self)
-        self.toolbar_frame.grid(row=0, column=0, padx=10, pady=(3, 0), columnspan=1, rowspan=1)
+        self.toolbar_frame.grid(row=0, column=0, padx=10, pady=(3, 0), columnspan=1, rowspan=1, sticky="w")
         self.toplevel_window = None
 
+        self.selected_row = customtkinter.IntVar(value=0)
+
+        # torrent info holder
         self.torrents_info_frame = TorrentsInfo(self, orientation="vertical")
-        self.torrents_info_frame.grid(row=1, column=0, rowspan=3, columnspan=2, padx=10, pady=(5, 3), sticky="news")
+        self.torrents_info_frame.grid(row=1, column=0, rowspan=3, columnspan=2, padx=10, pady=(5, 0), sticky="news")
 
-        addresses = [('Dhaka', 'BD', 23.746, 90.382),
-                     ('Adelaide', 'AU', -34.9517, 138.607),
-                     ('Athens', 'GR', 37.9842, 23.7353),
-                     ('Auckland', 'NZ', -36.8506, 174.7679),
-                     ('Cuenca', 'EC', -2.8976, -79.0045),
-                     ('Montes Claros', 'BR', -16.5879, -43.9),
-                     ('Dieppe', 'CA', 46.097, -64.7049),
-                     ('Cape Town', 'ZA', -33.91, 18.4304),
-                     ('Dublin', 'IE', 53.3798, -6.4136),
-                     ('Zurich', 'CH', 47.3614, 8.4899),
-                     ('Barcelona', 'ES', 41.4357, 2.1339),
-                     (None, None, 52.3759, 4.8975)]
+        self.addresses = []
 
-        self.peers_info_frame = PeersInfo(self, addresses)
-        self.peers_info_frame.grid(row=4, column=0, rowspan=10, columnspan=2, padx=10, pady=(3, 20), sticky="news")
+        self.info_tabs = dict()
+        self.current_tab = None
+
+
 
     def open_toplevel(self):
         if self.toplevel_window is None or not self.toplevel_window.winfo_exists():
@@ -142,10 +200,35 @@ class MainWindow(customtkinter.CTk):
         else:
             self.toplevel_window.focus()
 
+    def open_torrent_info_tab(self):
+        row = self.selected_row.get()
+        # get name
+        name = self.torrents_info_frame.grid_slaves(row=row, column=1)[0].get("0.0", "end").strip('\n')
+        if name not in self.info_tabs:
+            self.info_tabs[name] = customtkinter.CTkTabview(master=self)
+
+            self.info_tabs[name].add("General")
+            self.info_tabs[name].add("Peers")
+            self.info_tabs[name].set("General")
+            self.info_tabs[name].tab("Peers").columnconfigure(0, weight=10)
+            self.info_tabs[name].tab("Peers").columnconfigure(1, weight=1)
+
+            # peer info and map holder
+            map_frame = MapFrame(self.info_tabs[name].tab("Peers"), self.addresses, fg_color="transparent")
+            map_frame.grid(row=0, column=1, columnspan=1, padx=(5, 0), pady=0, sticky="e")
+            peers_info_frame = PeersInfoFrame(self.info_tabs[name].tab("Peers"))
+            peers_info_frame.grid(row=0, column=0, columnspan=1, padx=(0, 5), pady=0, sticky="we")
+
+            # general info
+            general_info_tab = GeneralTorrentInfo(self.info_tabs[name].tab("General"), fg_color="transparent")
+            general_info_tab.grid(row=0, column=0, padx=5, pady=5, sticky="new")
+
+        if self.current_tab:
+            self.current_tab.grid_forget()
+
+        self.info_tabs[name].grid(row=4, column=0, rowspan=10, columnspan=2, padx=10, pady=(0, 5), sticky="news")
+        self.current_tab = self.info_tabs[name]
+
 
 def get_MainWindow():
     return MainWindow
-
-
-app = MainWindow()
-app.mainloop()
