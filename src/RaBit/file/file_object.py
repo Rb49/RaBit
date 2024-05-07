@@ -150,7 +150,6 @@ class File:
 
             if not self.skip_hash_check:
                 if piece_hash != torrent_piece_hash:
-                    # TODO create corrupt pieces and blocks instances and remember the addresses of senders
                     print('received corrupted piece ', piece.index)
 
                     self.session.corrupted += len(data)
@@ -232,6 +231,10 @@ class PickleableFile:
         self.peers = []
         self.piece_length = file_object.TorrentData.info[b'piece length']
         self.num_pieces = len(file_object.TorrentData.piece_hashes)
+        # additional torrent data
+        self.comment = file_object.TorrentData.comment
+        self.created_by = file_object.TorrentData.created_by
+        self.date_created = file_object.TorrentData.date_created
         # statistics
         self.progress = file_object.session.progress
         self.downloaded = file_object.session.downloaded

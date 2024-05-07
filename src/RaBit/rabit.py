@@ -68,9 +68,6 @@ class Client(_Singleton):
         seeding_torrents = set(CompletedTorrentsDB().get_all_torrents())
         self.torrents.update(seeding_torrents)
 
-        # run update loop
-        threading.Thread(target=lambda: asyncio.run(self._torrents_state_update_loop()), daemon=True).start()
-
         self.started = True
         return True
 
@@ -100,22 +97,20 @@ class Client(_Singleton):
                 success = True
         return success
 
-    async def _torrents_state_update_loop(self):
-        while True:
-            for torrent in self.torrents.copy():
-                if isinstance(torrent, DownloadSession):
-                    if torrent.state in ('Completed', 'Failed', 'Seeding'):
-                        self.torrents.remove(torrent)
-                        torrent_from_db = CompletedTorrentsDB().get_torrent(torrent.info_hash)
-                        if torrent_from_db:
-                            if torrent_from_db.info_hash not in map(lambda x: x.info_hash, self.torrents):
-                                self.torrents.add(torrent_from_db)
-                                await add_completed_torrent(torrent_from_db)
-                else:  # isinstance(torrent, PickleableFile)
-                    if not CompletedTorrentsDB().find_info_hash(torrent.info_hash):
-                        self.torrents.remove(torrent)
+    async def torrents_state_update_loop(self):
+        for torrent in self.torrents.copy():
+            if isinstance(torrent, DownloadSession):
+                if torrent.state in ('Completed', 'Failed', 'Seeding'):
+                    self.torrents.remove(torrent)
+                    torrent_from_db = CompletedTorrentsDB().get_torrent(torrent.info_hash)
+                    if torrent_from_db:
+                        if torrent_from_db.info_hash not in map(lambda x: x.info_hash, self.torrents):
+                            self.torrents.add(torrent_from_db)
+                            await add_completed_torrent(torrent_from_db)
+            else:  # isinstance(torrent, PickleableFile)
+                if not CompletedTorrentsDB().find_info_hash(torrent.info_hash):
+                    self.torrents.remove(torrent)
 
-            await asyncio.sleep(1)
 
     @staticmethod
     def get_download_dir() -> str:

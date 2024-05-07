@@ -109,12 +109,12 @@ class DownloadSession:
         # verify torrent
         if all(bitarray):
             self.state = 'Completed'
+            self.progress = 100
             print('got all!')
             db_utils.CompletedTorrentsDB().insert_torrent(PickleableFile(File(self.TorrentData, self, None, None, self.torrent_path, self.result_dir)))
             db_utils.remove_ongoing_torrent(self.torrent_path)
             return True
 
-        # TODO keep track of uploaded stats (?)
         db_utils.CompletedTorrentsDB().delete_torrent(self.info_hash)
 
         if not peers_list:
@@ -146,7 +146,6 @@ class DownloadSession:
         if db_utils.CompletedTorrentsDB().find_info_hash(self.info_hash):
             # announce completion
             total_download, total_upload = self.downloaded + self.corrupted + self.wasted, self.uploaded
-            # TODO use the tracker update thread to announce complete
 
             async def final_announce(tracker: Tracker):
                 if tracker.state in (ANNOUNCING, WORKING):
@@ -209,7 +208,8 @@ class DownloadSession:
         """
         Total = self.downloaded + self.wasted + self.corrupted
         Time = time.time()
-        if Time - self.last_Time < 1.5:
+        delay = 1.5 if self.progress < 95 else 0.5
+        if Time - self.last_Time < delay:
             return self.last_ETA  # a very long time (100.9y)
         speed = (Total - self.last_Total) / (Time - self.last_Time)
         if speed == 0:

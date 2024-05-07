@@ -187,7 +187,6 @@ class PiecePicker:
                         self.pending_blocks[block] = (block, time.time())
                         return block
 
-            # TODO add endgame mode
             if endgame_time and not self.is_in_endgame:
                 self.endgame()
             return None
@@ -233,7 +232,6 @@ class PiecePicker:
         :param piece: instance of a piece to be retested
         :return None
         """
-        # TODO record failed piece block hashes and store them
         # re-add failed pieces directly to the download dict with a toggled urgent flag
         # to download it successfully and ban the responsible peers as soon as possible
         piece.urgent = True

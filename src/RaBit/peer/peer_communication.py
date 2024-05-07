@@ -133,7 +133,6 @@ async def tcp_wire_communication(peerData: Tuple, TorrentData: Torrent, session,
 
             thisPeer.add_peer_id(peer_id)
 
-            # TODO now send bitfield / have all/none and fast allowed after fast extension support
             writer.write(Bitfield.encode(piece_picker.FILE_STATUS[session.TorrentData.info_hash]))
             await writer.drain()
 
@@ -294,7 +293,7 @@ async def tcp_wire_communication(peerData: Tuple, TorrentData: Torrent, session,
                 await writer.drain()
                 '''
 
-        except (AssertionError, struct.error) as e:  # protocol error, TODO reduce reputation this peer
+        except (AssertionError, struct.error) as e:  # protocol error
             print('bad peer! ', e)
             ...
 
