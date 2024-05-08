@@ -1,22 +1,9 @@
-import time
-
-from src.RaBit import Client
+from src.app import Application
 
 
 def main():
-    client = Client()
-    client.start()
-
-    client.add_torrent(
-        r"C:\Users\roeyb\OneDrive\Documents\GitHub\RaBit\RaBit\data\debian-edu-12.4.0-amd64-netinst.iso.torrent",
-        r"C:\Users\roeyb\OneDrive\Documents\GitHub\RaBit\RaBit\results",
-        False)
-
-    while True:
-        print(client.torrents)
-        time.sleep(1)
-
-    exit(0)
+    # run application
+    Application()
 
 
 if __name__ == '__main__':
@@ -28,3 +15,4 @@ if __name__ == '__main__':
         raise Exception("Wrong Python version! Use version 3.10 only.")
 
     main()
+    exit(0)

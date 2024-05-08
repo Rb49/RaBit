@@ -1,6 +1,7 @@
 from ..app_data import db_utils
 from ..file.file_object import PickleableFile
 from ..tracker.tracker_object import Tracker, WORKING
+from .utils import FileObjects
 
 from typing import List
 import time
@@ -15,6 +16,8 @@ async def announce_loop(trackers: List[Tracker], session) -> None:
     :return: None
     """
     while True:
+        if session.info_hash not in FileObjects:
+            return
         new_trackers = list(filter(lambda x: x.state == WORKING, trackers))
         new_trackers.sort(key=lambda x: x.last_announce + x.interval, reverse=False)
         for tracker in new_trackers:

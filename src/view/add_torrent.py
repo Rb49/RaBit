@@ -46,7 +46,8 @@ class FileDialogs(customtkinter.CTkFrame):
 
         # download dir
         self.download_dir_input = customtkinter.CTkEntry(self, font=("", 13), width=375, placeholder_text="Type here...")
-        self.download_dir_input.insert(0, start_path)
+        if start_path:
+            self.download_dir_input.insert(0, start_path)
         self.download_dir_input.grid(row=3, column=0, padx=(10, 0), pady=(20, 2), rowspan=1, columnspan=1, sticky="ew")
 
         # check mark image
@@ -142,8 +143,8 @@ class FileDialogs(customtkinter.CTkFrame):
 
 
 class AddTorrentWindow(customtkinter.CTkToplevel):
-    POSITIVE_PATH = Path().resolve() / "view" / "assets" / "positive_mark.png"
-    NEGATIVE_PATH = Path().resolve() / "view" / "assets" / "negative_mark.png"
+    POSITIVE_PATH = Path().resolve() / "src" / "view" / "assets" / "positive_mark.png"
+    NEGATIVE_PATH = Path().resolve() / "src" / "view" / "assets" / "negative_mark.png"
 
     WIDTH = 600
     HEIGHT = 450

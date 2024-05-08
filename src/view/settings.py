@@ -161,9 +161,9 @@ class DataFrame(customtkinter.CTkFrame):
 
 
 class SettingsWindow(customtkinter.CTkToplevel):
-    COUNTRY_LIST_PATH = Path().resolve() / "view" / "assets" / "countries.txt"
-    POSITIVE_PATH = Path().resolve() / "view" / "assets" / "positive_mark.png"
-    NEGATIVE_PATH = Path().resolve() / "view" / "assets" / "negative_mark.png"
+    COUNTRY_LIST_PATH = Path().resolve() / "src" / "view" / "assets" / "countries.txt"
+    POSITIVE_PATH = Path().resolve() / "src" / "view" / "assets" / "positive_mark.png"
+    NEGATIVE_PATH = Path().resolve() / "src" / "view" / "assets" / "negative_mark.png"
 
     WIDTH = 600
     HEIGHT = 450

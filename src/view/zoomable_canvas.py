@@ -8,8 +8,8 @@ from pathlib import Path
 
 
 class ZoomableMapCanvas(customtkinter.CTkCanvas):
-    MAP_PATH = Path().resolve() / "view" / "assets" / "full_size_map.png"
-    PINS_PATH = Path().resolve() / "view" / "assets" / "country_pins"
+    MAP_PATH = Path().resolve() / "src" / "view" / "assets" / "full_size_map.png"
+    PINS_PATH = Path().resolve() / "src" / "view" / "assets" / "country_pins"
     initial_zoom = 0.35
 
     def __init__(self, master, addresses, **kwargs):

@@ -48,6 +48,7 @@ class DownloadSession:
         self.wasted = 0
         self.state = 'Started'
         self.trackers = []
+        self.announce_task = None
         self.peers = []
         self.progress = 0
         # ETA
@@ -127,6 +128,7 @@ class DownloadSession:
         # peer wire protocol
         self.state = 'Downloading'
         announce_loop_task = asyncio.create_task(announce_loop(self.trackers, self))
+        self.announce_task = announce_loop_task
 
         piece_picker = PiecePicker(self.TorrentData, self, bitarray, missing)
         tit_for_tat_manager = TitForTat(piece_picker)

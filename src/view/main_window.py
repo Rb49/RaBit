@@ -36,7 +36,7 @@ class ToolbarFrame(customtkinter.CTkFrame):
         self.settings_button.grid(row=0, column=2, rowspan=1, columnspan=1, padx=(2, 5), pady=5, sticky="w")
 
     def remove_torrent_dialog(self, master):
-        if not self.master.current_tab:
+        if not (ct := self.master.current_tab):
             return
         test_num = randint(10, 99)
         dialog = customtkinter.CTkInputDialog(text=f"Confirm with typing: {test_num}", title="")
@@ -45,7 +45,7 @@ class ToolbarFrame(customtkinter.CTkFrame):
             if entry_data.strip('\n').isdigit():
                 if int(entry_data) == test_num:
                     good_input = True
-        if not good_input:
+        if not good_input or ct != self.master.current_tab:
             return
 
         selected_hash = master.current_obj_hash
@@ -56,7 +56,7 @@ class ToolbarFrame(customtkinter.CTkFrame):
                 break
         else:  # the remove button has been pressed between gui updates intervals
             return
-        client.remove_torrent(torrent.info_hash)
+        client.remove_torrent_session(torrent.info_hash, selected_hash)
 
 
 class TorrentsInfo(customtkinter.CTkScrollableFrame):
@@ -206,10 +206,10 @@ class PeersInfoFrame(customtkinter.CTkScrollableFrame):
 
 
 class MainWindow(customtkinter.CTk):
-    ICON_PATH = Path().resolve() / "view" / "assets" / "RaBit_icon.ico"
-    SETTINGS_PATH = Path().resolve() / "view" / "assets" / "settings.png"
-    ADD_PATH = Path().resolve() / "view" / "assets" / "add.png"
-    REMOVE_PATH = Path().resolve() / "view" / "assets" / "remove.png"
+    ICON_PATH = Path().resolve() / "src" / "view" / "assets" / "RaBit_icon.ico"
+    SETTINGS_PATH = Path().resolve() / "src" / "view" / "assets" / "settings.png"
+    ADD_PATH = Path().resolve() / "src" / "view" / "assets" / "add.png"
+    REMOVE_PATH = Path().resolve() / "src" / "view" / "assets" / "remove.png"
 
     WIDTH = 720
     HEIGHT = 360

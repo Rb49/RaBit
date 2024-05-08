@@ -246,6 +246,8 @@ class PickleableFile:
         self.fds = []
         self.file_indices = file_object.file_indices
 
+        self.announce_task = None
+
         self.__seed = random.getrandbits(64)
 
         del file_object

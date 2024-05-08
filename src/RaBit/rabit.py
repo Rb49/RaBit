@@ -80,21 +80,39 @@ class Client(_Singleton):
         download_thread.start()
         return True
 
-    def remove_torrent(self, info_hash: bytes) -> bool:
+    def remove_torrent_session(self, info_hash: bytes, obj_hash: int) -> bool:
         if not self.started:
             return False
-        success = False
         for torrent in self.torrents.copy():
-            if torrent.info_hash == info_hash:
+            if torrent.info_hash == info_hash and hash(torrent) == obj_hash:
                 if isinstance(torrent, DownloadSession):
+                    # close all connections
+                    for peer in torrent.peers:
+                        try:
+                            peer.found_dirty = True  # not really, just to terminate the connection
+                            peer.writer.close()
+                        except:
+                            pass
                     DownloadSession.Sessions.pop(torrent.info_hash)
                     remove_ongoing_torrent(torrent.torrent_path)
+
                 else:
+                    # close all connections
+                    for peer in torrent.peers:
+                        try:
+                            peer.writer.close()
+                        except:
+                            pass
                     CompletedTorrentsDB().delete_torrent(torrent.info_hash)
                     FileObjects.pop(torrent.info_hash)
+
+                # stop the announce task
+                if (task := torrent.announce_task) is not None:
+                    if not task.done():
+                        task.cancel()
                 self.torrents.remove(torrent)
-                success = True
-        return success
+                return True
+        return False
 
     async def torrents_state_update_loop(self):
         for torrent in self.torrents.copy():
