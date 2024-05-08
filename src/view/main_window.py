@@ -8,7 +8,7 @@ from pathlib import Path
 from typing import List, Any, Tuple
 import customtkinter
 from PIL import Image
-from random import choice
+from random import choice, randint
 
 
 class ToolbarFrame(customtkinter.CTkFrame):
@@ -32,8 +32,31 @@ class ToolbarFrame(customtkinter.CTkFrame):
         image = customtkinter.CTkImage(Image.open(MainWindow.REMOVE_PATH), size=(20, 20))
         self.settings_button = customtkinter.CTkButton(self, image=image, fg_color="transparent", text="",
                                                        width=20, height=20,
-                                                       command=lambda: print(AddTorrent().added_torrents))
+                                                       command=lambda: self.remove_torrent_dialog(master))
         self.settings_button.grid(row=0, column=2, rowspan=1, columnspan=1, padx=(2, 5), pady=5, sticky="w")
+
+    def remove_torrent_dialog(self, master):
+        if not self.master.current_tab:
+            return
+        test_num = randint(10, 99)
+        dialog = customtkinter.CTkInputDialog(text=f"Confirm with typing: {test_num}", title="")
+        good_input = False
+        if entry_data := dialog.get_input():
+            if entry_data.strip('\n').isdigit():
+                if int(entry_data) == test_num:
+                    good_input = True
+        if not good_input:
+            return
+
+        selected_hash = master.current_obj_hash
+        master.remove_torrents([selected_hash])
+        client = Client()
+        for torrent in client.torrents:
+            if hash(torrent) == selected_hash:
+                break
+        else:  # the remove button has been pressed between gui updates intervals
+            return
+        client.remove_torrent(torrent.info_hash)
 
 
 class TorrentsInfo(customtkinter.CTkScrollableFrame):

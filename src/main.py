@@ -5,7 +5,6 @@ from src.view.utils import *
 
 import threading
 import asyncio
-import time
 
 
 def wait_for_loading(client: Client, window: get_LoadingWindow()):
