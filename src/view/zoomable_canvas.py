@@ -1,10 +1,10 @@
+from .utils import *
+
 from typing import Tuple, List
 import customtkinter
 from PIL import Image, ImageTk
 import os
 from pathlib import Path
-
-from .utils import *
 
 
 class ZoomableMapCanvas(customtkinter.CTkCanvas):

@@ -1,11 +1,9 @@
+from src.RaBit import Client
+
 import asyncio
 from pathlib import Path
-import re
 from PIL import Image
-
 import customtkinter
-
-from src.RaBit import Client
 
 
 class DataFrame(customtkinter.CTkFrame):

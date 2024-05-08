@@ -12,14 +12,14 @@ class TitForTat:
     """
     a chocking mechanism based on a tit-for-tat algorithm: reward sharing peers, punish egoistic peers.
     """
-    _MAX_UNCHOCKED_PEERS = db_utils.get_configuration('max_unchocked_peers')
-    _MAX_OPTIMISTIC_PEERS = db_utils.get_configuration('max_optimistic_unchock')
-
     def __init__(self, piece_picker: PiecePicker) -> None:
         """
         :param piece_picker: PiecePicker instance for some stats
         :return: None
         """
+        self.MAX_UNCHOCKED_PEERS = db_utils.get_configuration('max_unchocked_peers')
+        self.MAX_OPTIMISTIC_PEERS = db_utils.get_configuration('max_optimistic_unchock')
+
         self.piece_picker: PiecePicker = piece_picker
         Peer.peer_instances[piece_picker.TorrentData.info_hash] = []  # this init happens before any peer is connected
         self.piece_picker.session.peers = Peer.peer_instances[piece_picker.TorrentData.info_hash]
@@ -45,17 +45,17 @@ class TitForTat:
                 continue
 
             sorted_peers = sorted(list(filter(lambda x: x.am_interested, self.peers)), key=lambda x: x.upload_rate, reverse=True)
-            self.downloaders = sorted_peers[:TitForTat._MAX_UNCHOCKED_PEERS]
+            self.downloaders = sorted_peers[:self.MAX_UNCHOCKED_PEERS]
             if self.downloaders:
                 self.good_uninterested_peers = list(filter(lambda x: not x.am_interested and x.upload_rate > self.downloaders[-1].upload_rate, self.peers))
             else:
-                self.good_uninterested_peers = sorted(list(filter(lambda x: not x.am_interested, self.peers)), key=lambda x: x.upload_rate, reverse=True)[:TitForTat._MAX_UNCHOCKED_PEERS]
+                self.good_uninterested_peers = sorted(list(filter(lambda x: not x.am_interested, self.peers)), key=lambda x: x.upload_rate, reverse=True)[:self.MAX_UNCHOCKED_PEERS]
 
             three_iteration_counter += 1
             # optimistic unchocking
             if three_iteration_counter == 3:
                 candidates = list(filter(lambda x: not x.am_interested and x not in self.good_uninterested_peers and x not in self.optimistic_unchock_peers, self.peers))
-                new_peers = sample(candidates, min(TitForTat._MAX_OPTIMISTIC_PEERS, len(candidates)))
+                new_peers = sample(candidates, min(self.MAX_OPTIMISTIC_PEERS, len(candidates)))
                 if new_peers:
                     self.optimistic_unchock_peers = new_peers
                 else:
@@ -95,7 +95,7 @@ class TitForTat:
         :return: None
         """
         peer.am_interested = True
-        if len(self.downloaders) < TitForTat._MAX_UNCHOCKED_PEERS:
+        if len(self.downloaders) < self.MAX_UNCHOCKED_PEERS:
             self.downloaders.append(peer)
             self.downloaders.sort(key=lambda x: x.upload_rate, reverse=True)
 
@@ -128,7 +128,7 @@ class TitForTat:
             await self.piece_picker.send_chock(peer)
 
             sorted_peers = sorted(list(filter(lambda x: x.am_interested, self.peers)), key=lambda x: x.upload_rate, reverse=False)
-            while sorted_peers and len(self.downloaders) < TitForTat._MAX_UNCHOCKED_PEERS:
+            while sorted_peers and len(self.downloaders) < self.MAX_UNCHOCKED_PEERS:
                 new_peer = sorted_peers.pop()
                 self.downloaders.append(new_peer)
                 await self.piece_picker.send_unchock(peer)

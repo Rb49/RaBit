@@ -1,14 +1,14 @@
-from pathlib import Path
-from typing import List, Any, Tuple
-import customtkinter
-from PIL import Image
-from random import choice
-
 from src.RaBit import Client
 from .add_torrent import get_TopWindow as AddTorrent
 from .settings import get_TopWindow as Settings
 from .zoomable_canvas import get_ZoomableMapCanvas
 from .utils import *
+
+from pathlib import Path
+from typing import List, Any, Tuple
+import customtkinter
+from PIL import Image
+from random import choice
 
 
 class ToolbarFrame(customtkinter.CTkFrame):

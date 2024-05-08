@@ -1,11 +1,11 @@
+from src.RaBit import Client
+
 import concurrent.futures
 import customtkinter
 from PyQt5.QtWidgets import QApplication, QFileDialog
 import os
 from PIL import Image
 from pathlib import Path
-
-from src.RaBit import Client
 
 
 class FileDialogs(customtkinter.CTkFrame):
