@@ -16,12 +16,16 @@ class FileDialogs(customtkinter.CTkFrame):
         self.valid_dir = False
         self.download_dir = ""
 
+        self.columnconfigure(0, weight=1)
+        self.columnconfigure(1, weight=3)
+        self.columnconfigure(2, weight=1)
+
         # path of file label
         self.torrent_path_label = customtkinter.CTkLabel(self, text="Torrent path:")
         self.torrent_path_label.grid(row=0, column=0, padx=(20, 0), pady=(20, 0), sticky="w")
 
         # torrent file
-        self.torrent_path_input = customtkinter.CTkTextbox(self, activate_scrollbars=False, wrap="none", font=("", 12), width=375, height=15)
+        self.torrent_path_input = customtkinter.CTkEntry(self, font=("", 13), width=375, placeholder_text="Type here...")
         self.torrent_path_input.grid(row=1, column=0, padx=(10, 0), pady=(20, 0), rowspan=1, columnspan=1, sticky="ew")
 
         # check mark image
@@ -41,8 +45,8 @@ class FileDialogs(customtkinter.CTkFrame):
         self.download_dir_label.grid(row=2, column=0, padx=(20, 0), pady=(20, 0), sticky="w")
 
         # download dir
-        self.download_dir_input = customtkinter.CTkTextbox(self, activate_scrollbars=False, wrap="none", font=("", 12), width=375, height=15)
-        self.download_dir_input.insert("0.0", start_path)
+        self.download_dir_input = customtkinter.CTkEntry(self, font=("", 13), width=375, placeholder_text="Type here...")
+        self.download_dir_input.insert(0, start_path)
         self.download_dir_input.grid(row=3, column=0, padx=(10, 0), pady=(20, 2), rowspan=1, columnspan=1, sticky="ew")
 
         # check mark image
@@ -75,7 +79,7 @@ class FileDialogs(customtkinter.CTkFrame):
     def on_key_release(self, event, is_dir: bool):
         path_input = self.download_dir_input if is_dir else self.torrent_path_input
         image_label = self.download_dir_image_label if is_dir else self.torrent_path_image_label
-        path = path_input.get("0.0", "end")
+        path = path_input.get()
         image = customtkinter.CTkImage(self.get_validation_mark(path, is_dir), size=(25, 25))
         image_label.configure(image=image)
 
@@ -131,8 +135,8 @@ class FileDialogs(customtkinter.CTkFrame):
             future = executor.submit(FileDialogs.open_file_dialog, is_folder, start_directory)
             path = future.result()
         if path:
-            instance.delete("0.0", "end")
-            instance.insert("0.0", path)
+            instance.delete(0, "end")
+            instance.insert(0, path)
             self.on_key_release(None, is_folder)
         master.attributes("-topmost", True)
 

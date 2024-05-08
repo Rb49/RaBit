@@ -5,7 +5,8 @@ from PIL import Image
 from random import choice
 
 from src.RaBit import Client
-from .add_torrent import get_TopWindow
+from .add_torrent import get_TopWindow as AddTorrent
+from .settings import get_TopWindow as Settings
 from .zoomable_canvas import get_ZoomableMapCanvas
 from .utils import *
 
@@ -17,21 +18,21 @@ class ToolbarFrame(customtkinter.CTkFrame):
         image = customtkinter.CTkImage(Image.open(MainWindow.SETTINGS_PATH), size=(20, 20))
         self.settings_button = customtkinter.CTkButton(self, image=image, fg_color="transparent", text="",
                                                        width=20, height=20,
-                                                       command=lambda: ...)
+                                                       command=master.open_settings_toplevel)
         self.settings_button.grid(row=0, column=0, rowspan=1, columnspan=1, padx=(5, 2), pady=5, sticky="w")
 
         # add button
         image = customtkinter.CTkImage(Image.open(MainWindow.ADD_PATH), size=(20, 20))
         self.settings_button = customtkinter.CTkButton(self, image=image, fg_color="transparent", text="",
                                                        width=20, height=20,
-                                                       command=master.open_toplevel)
+                                                       command=master.open_addition_toplevel)
         self.settings_button.grid(row=0, column=1, rowspan=1, columnspan=1, padx=2, pady=5, sticky="w")
 
         # remove button
         image = customtkinter.CTkImage(Image.open(MainWindow.REMOVE_PATH), size=(20, 20))
         self.settings_button = customtkinter.CTkButton(self, image=image, fg_color="transparent", text="",
                                                        width=20, height=20,
-                                                       command=lambda: print(get_TopWindow().added_torrents))
+                                                       command=lambda: print(AddTorrent().added_torrents))
         self.settings_button.grid(row=0, column=2, rowspan=1, columnspan=1, padx=(2, 5), pady=5, sticky="w")
 
 
@@ -45,7 +46,7 @@ class TorrentsInfo(customtkinter.CTkScrollableFrame):
         columns_titles = [('Select', 0), ('Name', 5), ('Size', 2), ('Progress', 6), ('Status', 2), ('Peers', 1), ('ETA', 2)]
         for i, data in enumerate(columns_titles):
             title, weight = data
-            label = customtkinter.CTkLabel(self, text=title, font=("", 13))
+            label = customtkinter.CTkLabel(self, text=title, font=("", 13, "bold"))
             self.columnconfigure(i, weight=weight)
             label.grid(row=0, rowspan=1, column=i, pady=(0, 2), sticky="ew")
 
@@ -96,6 +97,7 @@ class TorrentsInfo(customtkinter.CTkScrollableFrame):
             if row[7] in obj_hashes:
                 for item in row[:7]:
                     item.destroy()
+                # cleanup
                 TorrentsInfo.torrent_labels.pop(rowno)
                 tab = self.master.info_tabs.pop(row[7])
                 self.master.current_tab = None
@@ -151,7 +153,7 @@ class PeersInfoFrame(customtkinter.CTkScrollableFrame):
         columns_titles = [('IP', 10), ('Port', 3), ('City', 10), ('Client', 10)]
         for i, data in enumerate(columns_titles):
             title, weight = data
-            label = customtkinter.CTkLabel(self, text=title, font=("", 13))
+            label = customtkinter.CTkLabel(self, text=title, font=("", 13, "bold"))
             self.columnconfigure(i, weight=weight)
             label.grid(row=self.current_row, rowspan=1, column=i, pady=(0, 2), sticky="ew")
 
@@ -205,7 +207,9 @@ class MainWindow(customtkinter.CTk):
         # toolbar
         self.toolbar_frame = ToolbarFrame(self)
         self.toolbar_frame.grid(row=0, column=0, padx=10, pady=(3, 0), columnspan=1, rowspan=1, sticky="w")
-        self.toplevel_window = None
+
+        self.addition_toplevel_window = None
+        self.settings_toplevel_window = None
 
         self.selected_hash = customtkinter.IntVar(value=0)
 
@@ -218,11 +222,17 @@ class MainWindow(customtkinter.CTk):
         self.current_tab = None
         self.current_obj_hash = None
 
-    def open_toplevel(self):
-        if self.toplevel_window is None or not self.toplevel_window.winfo_exists():
-            self.toplevel_window = get_TopWindow()(self, Client().get_download_dir())
+    def open_addition_toplevel(self):
+        if self.addition_toplevel_window is None or not self.addition_toplevel_window.winfo_exists():
+            self.addition_toplevel_window = AddTorrent()(self, Client().get_download_dir())
         else:
-            self.toplevel_window.focus()
+            self.addition_toplevel_window.focus()
+
+    def open_settings_toplevel(self):
+        if self.settings_toplevel_window is None or not self.settings_toplevel_window.winfo_exists():
+            self.settings_toplevel_window = Settings()(self)
+        else:
+            self.settings_toplevel_window.focus()
 
     def add_torrent(self, *params):
         self.torrents_info_frame.add_torrent(*params)

@@ -1,5 +1,4 @@
-from .app_data.db_utils import (get_configuration, set_configuration, get_ongoing_torrents,
-                                CompletedTorrentsDB, remove_ongoing_torrent)
+from .app_data.db_utils import *
 from .seeding.server import start_seeding_server, add_completed_torrent
 from .seeding.utils import FileObjects
 from .download.download_session_object import DownloadSession
@@ -8,7 +7,7 @@ from .file.file_object import PickleableFile
 import asyncio
 import threading
 import time
-from typing import Set, Union
+from typing import Set, Union, Any
 
 
 class _Singleton:
@@ -111,7 +110,22 @@ class Client(_Singleton):
                 if not CompletedTorrentsDB().find_info_hash(torrent.info_hash):
                     self.torrents.remove(torrent)
 
-
     @staticmethod
     def get_download_dir() -> str:
         return get_configuration("download_dir")
+
+    @staticmethod
+    def get_configuration(config: str) -> Any:
+        return get_configuration(config)
+
+    @staticmethod
+    async def set_configuration(config: str, new_value: Any):
+        await set_configuration(config, new_value)
+
+    @staticmethod
+    def get_banned_countries() -> List[str]:
+        return get_banned_countries()
+
+    @staticmethod
+    async def set_banned_countries(countries: List[str]):
+        await set_banned_countries(countries)

@@ -68,7 +68,7 @@ class File:
             for name in TorrentData.info[b'files']:
                 total += name[b'length']
                 self.file_indices.append(total)
-                tree = name[b'path'][::-1]
+                tree = list(reversed(name[b'path']))
                 file_name = path
                 while True:
                     level = tree.pop()
