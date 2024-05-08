@@ -1,10 +1,14 @@
-from typing import List, Dict
-import tkinter as tk
+from src.RaBit import Client
+from .add_torrent import get_TopWindow as AddTorrent
+from .settings import get_TopWindow as Settings
+from .zoomable_canvas import get_ZoomableMapCanvas
+from .utils import *
 
+from pathlib import Path
+from typing import List, Any, Tuple
 import customtkinter
 from PIL import Image
-from src.view.add_torrent import get_TopWindow
-from src.view.zoomable_map import get_ZoomableMapFrame
+from random import choice, randint
 
 
 class ToolbarFrame(customtkinter.CTkFrame):
@@ -14,88 +18,198 @@ class ToolbarFrame(customtkinter.CTkFrame):
         image = customtkinter.CTkImage(Image.open(MainWindow.SETTINGS_PATH), size=(20, 20))
         self.settings_button = customtkinter.CTkButton(self, image=image, fg_color="transparent", text="",
                                                        width=20, height=20,
-                                                       command=lambda: ...)
+                                                       command=master.open_settings_toplevel)
         self.settings_button.grid(row=0, column=0, rowspan=1, columnspan=1, padx=(5, 2), pady=5, sticky="w")
 
         # add button
         image = customtkinter.CTkImage(Image.open(MainWindow.ADD_PATH), size=(20, 20))
         self.settings_button = customtkinter.CTkButton(self, image=image, fg_color="transparent", text="",
                                                        width=20, height=20,
-                                                       command=master.open_toplevel)
+                                                       command=master.open_addition_toplevel)
         self.settings_button.grid(row=0, column=1, rowspan=1, columnspan=1, padx=2, pady=5, sticky="w")
 
         # remove button
         image = customtkinter.CTkImage(Image.open(MainWindow.REMOVE_PATH), size=(20, 20))
         self.settings_button = customtkinter.CTkButton(self, image=image, fg_color="transparent", text="",
                                                        width=20, height=20,
-                                                       command=lambda: print(get_TopWindow().added_torrents))
+                                                       command=lambda: self.remove_torrent_dialog(master))
         self.settings_button.grid(row=0, column=2, rowspan=1, columnspan=1, padx=(2, 5), pady=5, sticky="w")
+
+    def remove_torrent_dialog(self, master):
+        if not (ct := self.master.current_tab):
+            return
+        test_num = randint(10, 99)
+        dialog = customtkinter.CTkInputDialog(text=f"Confirm with typing: {test_num}", title="")
+        good_input = False
+        if entry_data := dialog.get_input():
+            if entry_data.strip('\n').isdigit():
+                if int(entry_data) == test_num:
+                    good_input = True
+        if not good_input or ct != self.master.current_tab:
+            return
+
+        selected_hash = master.current_obj_hash
+        master.remove_torrents([selected_hash])
+        client = Client()
+        for torrent in client.torrents:
+            if hash(torrent) == selected_hash:
+                break
+        else:  # the remove button has been pressed between gui updates intervals
+            return
+        client.remove_torrent_session(torrent.info_hash, selected_hash)
 
 
 class TorrentsInfo(customtkinter.CTkScrollableFrame):
-    torrent_labels: Dict[bytes, List] = dict()
+    torrent_labels: List[List[Any]] = []  # [Any * 7- widgets, int- obj_hash, int- row]
 
     def __init__(self, master, **kwargs):
         super().__init__(master, **kwargs)
+        self.master = master
         self.current_row = 0
-        columns_titles = [('Name', 5), ('Size', 2), ('Progress', 4), ('Status', 2), ('Peers', 1), ('Availability', 1)]
+        columns_titles = [('Select', 0), ('Name', 5), ('Size', 2), ('Progress', 6), ('Status', 2), ('Peers', 1), ('ETA', 2)]
         for i, data in enumerate(columns_titles):
             title, weight = data
-            label = customtkinter.CTkLabel(self, text=title, font=("", 13))
+            label = customtkinter.CTkLabel(self, text=title, font=("", 13, "bold"))
             self.columnconfigure(i, weight=weight)
-            label.grid(row=self.current_row, rowspan=1, column=i, pady=(0, 2), sticky="ew")
+            label.grid(row=0, rowspan=1, column=i, pady=(0, 2), sticky="ew")
 
-    def add_torrent(self, name: str, size: int, progress: float, status: str, peers: int, availability: float, info_hash: bytes):
-        self.current_row += 1
-        labels = [0] * 6
-        for i, param in enumerate([name, size, progress, status, peers, availability]):
-            if i not in (0, 1, 2):  # not progress and name
-                labels[i] = customtkinter.CTkLabel(self, text=str(param), font=("", 13), justify="left")
-            elif i == 1:  # size
-                labels[i] = customtkinter.CTkLabel(self, text=TorrentsInfo.convert_size(param), font=("", 13), justify="left")
-            elif i == 2:  # progress
-                labels[i] = customtkinter.CTkProgressBar(self, orientation="horizontal", mode="determinate",
-                                                         width=50, corner_radius=0, progress_color="green")
-                labels[i].set(progress / 100)
-            else:  # name
-                labels[i] = customtkinter.CTkTextbox(self, fg_color="transparent", activate_scrollbars=True, wrap="none", font=("", 13), height=15)
-                labels[i].insert("0.0", name)
-                labels[i].configure(state="disabled")
+    def add_torrent(self, first_add: bool, obj_hash: int, name: str, size: int, progress: float, status: str, peers: int, ETA: float):
+        if first_add:
+            labels = [0] * 7
+            self.current_row += 1
+            for i, param in enumerate([None, name, size, progress, status, peers, ETA]):
+                if i == 0:  # radio button select
+                    labels[i] = customtkinter.CTkRadioButton(self, text=f"No. {self.current_row}",
+                                                             variable=self.master.selected_hash, value=obj_hash,
+                                                             command=self.master.open_torrent_info_tab)
+                elif i == 1:  # name
+                    labels[i] = customtkinter.CTkTextbox(self, fg_color="transparent", activate_scrollbars=True, wrap="none", font=("", 13), height=15)
+                    labels[i].insert("0.0", name)
+                    labels[i].configure(state="disabled")
+                elif i == 2:  # size
+                    labels[i] = customtkinter.CTkLabel(self, text=convert_size(param), font=("", 13), justify="left")
+                elif i == 3:  # progress
+                    labels[i] = customtkinter.CTkProgressBar(self, orientation="horizontal", mode="determinate",
+                                                             width=50, height=15, corner_radius=0, progress_color="green")
+                    labels[i].set(progress / 100)
+                elif i == 6:  # ETA
+                    labels[i] = customtkinter.CTkLabel(self, text=convert_seconds(param), font=("", 13), justify="left")
+                else:  # status, peers
+                    labels[i] = customtkinter.CTkLabel(self, text=str(param), font=("", 13), justify="left")
 
-            labels[i].grid(row=self.current_row, rowspan=1, column=i, pady=(0, 2), sticky="ew")
+                labels[i].grid(row=self.current_row, rowspan=1, column=i, pady=(0, 2), padx=4, sticky="ew")
 
-        TorrentsInfo.torrent_labels[info_hash] = labels
+            labels.append(obj_hash)
+            labels.append(self.current_row)
+            TorrentsInfo.torrent_labels.append(labels)
+            labels[0].invoke()  # display current torrent stats
 
-    @staticmethod
-    def convert_size(size: int) -> str:
-        bytes_in_gib = 0.000000000931322574615478515625
-        bytes_in_mib = 0.00000095367431640625
-        bytes_in_kib = 0.0009765625
-        if size * bytes_in_gib < 1:
-            if size * bytes_in_mib < 1:
-                return f"{round(size * bytes_in_kib, 2)} KiB"
-            return f"{round(size * bytes_in_mib, 2)} MiB"
-        return f"{round(size * bytes_in_gib, 2)} GiB"
+        else:  # update
+            for row in TorrentsInfo.torrent_labels:
+                if row[7] == obj_hash:
+                    # progress
+                    row[3].set(progress / 100)
+                    # else
+                    row[4].configure(text=str(status))
+                    row[5].configure(text=str(peers))
+                    row[6].configure(text=convert_seconds(ETA))
+                    return
+
+    def remove_torrents(self, obj_hashes: List[int]):
+        for rowno, row in reversed(list(enumerate(TorrentsInfo.torrent_labels))):
+            if row[7] in obj_hashes:
+                for item in row[:7]:
+                    item.destroy()
+                # cleanup
+                TorrentsInfo.torrent_labels.pop(rowno)
+                tab = self.master.info_tabs.pop(row[7])
+                self.master.current_tab = None
+                self.master.peers_info_tables.pop(row[7])
+                self.master.open_torrent_info_tab(True)
+                tab.destroy()
 
 
-class SingleTorrent(customtkinter.CTkFrame):
+class GeneralTorrentInfo(customtkinter.CTkFrame):
+    titles = [
+        "Downloaded: ", "Uploaded: ", "Corrupted: ", "Wasted: ",
+        "Progress: ", "Ratio: ", "Pieces: ", "Piece length: ",
+        "Trackers: ", "Comment: ", "Created By: ", "Creation Date: "
+    ]
+
+    def __init__(self, master, *data, **kwargs):
+        """
+        titles in order:
+        "Downloaded: ", "Uploaded: ", "Corrupted: ", "Wasted: ",
+        "Progress: ", "Ratio: ", "Pieces: ", "Piece length: ",
+        "Trackers: ", "Comment: ", "Created By: ", "Creation Date: "
+        """
+        super().__init__(master, **kwargs)
+        master.columnconfigure(0, weight=1)
+        master.rowconfigure(0, weight=1)
+        if data:
+            torrent_info = list(map(lambda x: x[0] + str(x[1]), zip(GeneralTorrentInfo.titles, data)))
+        else:
+            torrent_info = GeneralTorrentInfo.titles
+        self.columnconfigure(0, weight=1)
+        self.columnconfigure(1, weight=1)
+        self.columnconfigure(2, weight=1)
+        for i, info in enumerate(torrent_info):
+            row = i % 4
+            column = i // 4
+            label = customtkinter.CTkLabel(self, text=info, font=("", 13), anchor="w")
+            label.grid(row=row, column=column, sticky="ew")
+
+
+class MapFrame(customtkinter.CTkFrame):
     def __init__(self, master, **kwargs):
         super().__init__(master, **kwargs)
-
-
-class PeersInfo(customtkinter.CTkFrame):
-    def __init__(self, master, addresses, **kwargs):
-        super().__init__(master, **kwargs)
-
-        self.map = get_ZoomableMapFrame()(self, addresses, width=1000, height=500)
+        self.addresses = []
+        self.map = get_ZoomableMapCanvas()(self, self.addresses, width=1000, height=500)
         self.map.pack(expand=True, anchor="ne")
 
 
+class PeersInfoFrame(customtkinter.CTkScrollableFrame):
+    def __init__(self, master, **kwargs):
+        super().__init__(master, **kwargs)
+        self.peers: List[List[Any]] = []  # [Any * 4- widgets, int- peer_hash, int- row]
+        self.current_row = 0
+        columns_titles = [('IP', 10), ('Port', 3), ('City', 10), ('Client', 10)]
+        for i, data in enumerate(columns_titles):
+            title, weight = data
+            label = customtkinter.CTkLabel(self, text=title, font=("", 13, "bold"))
+            self.columnconfigure(i, weight=weight)
+            label.grid(row=self.current_row, rowspan=1, column=i, pady=(0, 2), sticky="ew")
+
+    def add_peer(self, peer_hash: int, ip: str, port: int, geodata: Tuple[str, str, float, float], client: str):
+        # geodata: city, country code, latitude, longitude
+        labels = [0] * 4
+        self.current_row += 1
+        for i, param in enumerate([ip, port, geodata, client]):
+            if i == 2:  # geodata
+                labels[i] = customtkinter.CTkLabel(self, text=param[0] if param[0] else '', font=("", 13), justify="left")
+
+            else:  # ip, port, client
+                labels[i] = customtkinter.CTkLabel(self, text=str(param), font=("", 13), justify="left")
+
+            labels[i].grid(row=self.current_row, rowspan=1, column=i, pady=(0, 2), padx=4, sticky="ew")
+
+        labels.append(peer_hash)
+        labels.append(geodata)
+        self.peers.append(labels)
+
+    def remove_peers(self, peer_hashes: List[int]):
+        for rowno, row in reversed(list(enumerate(self.peers))):
+            if row[4] in peer_hashes:
+                for item in row[:4]:
+                    item.destroy()
+                self.peers.pop(rowno)
+
+
 class MainWindow(customtkinter.CTk):
-    ICON_PATH = r"assets\RaBit_icon.ico"
-    SETTINGS_PATH = r"assets\settings.png"
-    ADD_PATH = r"assets\add.png"
-    REMOVE_PATH = r"assets\remove.png"
+    ICON_PATH = Path().resolve() / "src" / "view" / "assets" / "RaBit_icon.ico"
+    SETTINGS_PATH = Path().resolve() / "src" / "view" / "assets" / "settings.png"
+    ADD_PATH = Path().resolve() / "src" / "view" / "assets" / "add.png"
+    REMOVE_PATH = Path().resolve() / "src" / "view" / "assets" / "remove.png"
 
     WIDTH = 720
     HEIGHT = 360
@@ -109,43 +223,104 @@ class MainWindow(customtkinter.CTk):
         self.title("RaBit Client")
         self.iconbitmap(MainWindow.ICON_PATH)
         self.minsize(MainWindow.WIDTH, MainWindow.HEIGHT)
-
-        self.columnconfigure(0, weight=0)
-        self.columnconfigure(1, weight=1)
-
+        self.columnconfigure(0, weight=1)
+        self.rowconfigure(0, weight=0)
+        self.rowconfigure(1, weight=2)
+        self.rowconfigure(2, weight=1)
+        # toolbar
         self.toolbar_frame = ToolbarFrame(self)
-        self.toolbar_frame.grid(row=0, column=0, padx=10, pady=(3, 0), columnspan=1, rowspan=1)
-        self.toplevel_window = None
+        self.toolbar_frame.grid(row=0, column=0, padx=10, pady=(3, 0), columnspan=1, rowspan=1, sticky="w")
 
+        self.addition_toplevel_window = None
+        self.settings_toplevel_window = None
+
+        self.selected_hash = customtkinter.IntVar(value=0)
+
+        # torrent info holder
         self.torrents_info_frame = TorrentsInfo(self, orientation="vertical")
-        self.torrents_info_frame.grid(row=1, column=0, rowspan=3, columnspan=2, padx=10, pady=(5, 3), sticky="news")
+        self.torrents_info_frame.grid(row=1, column=0, rowspan=3, columnspan=2, padx=10, pady=5, sticky="news")
 
-        addresses = [('Dhaka', 'BD', 23.746, 90.382),
-                     ('Adelaide', 'AU', -34.9517, 138.607),
-                     ('Athens', 'GR', 37.9842, 23.7353),
-                     ('Auckland', 'NZ', -36.8506, 174.7679),
-                     ('Cuenca', 'EC', -2.8976, -79.0045),
-                     ('Montes Claros', 'BR', -16.5879, -43.9),
-                     ('Dieppe', 'CA', 46.097, -64.7049),
-                     ('Cape Town', 'ZA', -33.91, 18.4304),
-                     ('Dublin', 'IE', 53.3798, -6.4136),
-                     ('Zurich', 'CH', 47.3614, 8.4899),
-                     ('Barcelona', 'ES', 41.4357, 2.1339),
-                     (None, None, 52.3759, 4.8975)]
+        self.info_tabs = dict()
+        self.peers_info_tables = dict()
+        self.current_tab = None
+        self.current_obj_hash = None
 
-        self.peers_info_frame = PeersInfo(self, addresses)
-        self.peers_info_frame.grid(row=4, column=0, rowspan=10, columnspan=2, padx=10, pady=(3, 20), sticky="news")
-
-    def open_toplevel(self):
-        if self.toplevel_window is None or not self.toplevel_window.winfo_exists():
-            self.toplevel_window = get_TopWindow()(self, "")
+    def open_addition_toplevel(self):
+        if self.addition_toplevel_window is None or not self.addition_toplevel_window.winfo_exists():
+            self.addition_toplevel_window = AddTorrent()(self, Client().get_download_dir())
         else:
-            self.toplevel_window.focus()
+            self.addition_toplevel_window.focus()
+
+    def open_settings_toplevel(self):
+        if self.settings_toplevel_window is None or not self.settings_toplevel_window.winfo_exists():
+            self.settings_toplevel_window = Settings()(self)
+        else:
+            self.settings_toplevel_window.focus()
+
+    def add_torrent(self, *params):
+        self.torrents_info_frame.add_torrent(*params)
+
+    def remove_torrents(self, *params):
+        self.torrents_info_frame.remove_torrents(*params)
+
+    def update_general_info_tab(self, obj_hash: int, *new_data):
+        slaves = reversed(self.info_tabs[obj_hash].tab("General").grid_slaves()[0].grid_slaves())
+        for index, pair in enumerate(zip(slaves, new_data)):
+            slave, info = pair
+            slave.configure(text=GeneralTorrentInfo.titles[index] + str(info))
+
+    def update_peers_info_tab(self, obj_hash: int, peers: List[Tuple[int, str, int, Tuple[str, str, float, float], str]]):
+        peer_info_frame = self.peers_info_tables[obj_hash]
+        hashes_to_add = set(map(lambda x: x[0], peers)) - set(map(lambda x: x[4], peer_info_frame.peers))
+        hashes_to_remove = set(map(lambda x: x[4], peer_info_frame.peers)) - set(map(lambda x: x[0], peers))
+
+        # update table
+        peer_info_frame.remove_peers(hashes_to_remove)
+        for peer in peers:
+            if peer[0] in hashes_to_add:
+                peer_info_frame.add_peer(*peer)
+
+        # update map
+        if hashes_to_add or hashes_to_remove:
+            map_frame = self.current_tab.tab("Peers").grid_slaves(row=0, column=1)[0]
+            map_frame.map.show_image(addresses=list(map(lambda x: x[5], peer_info_frame.peers)))
+
+    def open_torrent_info_tab(self, random_choice: bool = False):
+        if random_choice:
+            if not self.info_tabs:
+                return
+            self.selected_hash.set(choice(list(self.info_tabs)))
+
+        obj_hash = self.selected_hash.get()
+
+        if obj_hash not in self.info_tabs:
+            self.info_tabs[obj_hash] = customtkinter.CTkTabview(master=self)
+
+            self.info_tabs[obj_hash].add("General")
+            self.info_tabs[obj_hash].add("Peers")
+            self.info_tabs[obj_hash].set("Peers")
+            self.info_tabs[obj_hash].tab("Peers").columnconfigure(0, weight=10)
+            self.info_tabs[obj_hash].tab("Peers").columnconfigure(1, weight=1)
+
+            # peer info and map holder
+            map_frame = MapFrame(self.info_tabs[obj_hash].tab("Peers"), fg_color="transparent")
+            map_frame.grid(row=0, column=1, columnspan=1, padx=(5, 0), pady=0, sticky="e")
+            peers_info_frame = PeersInfoFrame(self.info_tabs[obj_hash].tab("Peers"))
+            peers_info_frame.grid(row=0, column=0, columnspan=1, padx=(0, 5), pady=0, sticky="we")
+            self.peers_info_tables[obj_hash] = peers_info_frame
+
+            # general info
+            general_info_tab = GeneralTorrentInfo(self.info_tabs[obj_hash].tab("General"), fg_color="transparent")
+            general_info_tab.grid(row=0, column=0, padx=5, pady=5, sticky="new")
+
+        if self.current_tab:
+            self.current_tab.tab("Peers").grid_slaves(row=0, column=1)[0].map.show_image(True)
+            self.current_tab.grid_forget()
+
+        self.info_tabs[obj_hash].grid(row=4, column=0, rowspan=10, columnspan=2, padx=10, pady=(0, 5), sticky="news")
+        self.current_tab = self.info_tabs[obj_hash]
+        self.current_obj_hash = obj_hash
 
 
 def get_MainWindow():
     return MainWindow
-
-
-app = MainWindow()
-app.mainloop()

@@ -49,6 +49,15 @@ def get_banned_countries() -> List[str]:
         return banned_list
 
 
+async def set_banned_countries(countries: List[str]):
+    with threading.Lock():
+        async with asyncio.Lock():
+            with open(abs_db_path('banned_countries.json'), 'w') as json_file:
+                json_file.seek(0)
+                json_file.truncate()
+                json.dump(countries, json_file)
+
+
 def get_client(peer_id: bytes) -> str:
     """
     partial fingerprinting of the client software used by the peer

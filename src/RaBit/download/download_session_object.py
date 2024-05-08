@@ -1,8 +1,5 @@
-import random
-
 from ..app_data import db_utils
 from ..peer.peer_object import Peer
-from ..seeding.server import add_newly_completed_torrent
 from ..torrent.torrent import read_torrent
 from ..tracker.initial_announce import initial_announce
 from ..tracker.utils import format_peers_list
@@ -19,6 +16,10 @@ import asyncio
 from hashlib import sha1
 import bitstring
 from typing import List, Tuple, Dict, Any
+import os
+import random
+import time
+from math import ceil
 
 
 class DownloadSession:
@@ -34,8 +35,10 @@ class DownloadSession:
         :return: None
         """
         self.torrent_path = torrent_path
+        self.name = os.path.splitext(os.path.basename(torrent_path))[0]
         self.skip_hash_check = skip_hash_check
         self.TorrentData = None
+        self.length = 0
         self.info_hash = None
         self.result_dir = result_dir
         self.downloaded = 0
@@ -43,9 +46,15 @@ class DownloadSession:
         self.left = 0
         self.corrupted = 0
         self.wasted = 0
-        self.state = None
+        self.state = 'Started'
         self.trackers = []
+        self.announce_task = None
+        self.peers = []
         self.progress = 0
+        # ETA
+        self.last_Total = 0
+        self.last_Time = 0
+        self.last_ETA = 0
 
         self.__seed = random.getrandbits(64)
 
@@ -67,6 +76,7 @@ class DownloadSession:
         self.state = 'Reading torrent'
         self.TorrentData = read_torrent(self.torrent_path)
         self.info_hash = self.TorrentData.info_hash
+        self.length = self.TorrentData.length
 
         # is it already being downloaded?
         if self.info_hash in DownloadSession.Sessions:
@@ -100,12 +110,12 @@ class DownloadSession:
         # verify torrent
         if all(bitarray):
             self.state = 'Completed'
+            self.progress = 100
             print('got all!')
             db_utils.CompletedTorrentsDB().insert_torrent(PickleableFile(File(self.TorrentData, self, None, None, self.torrent_path, self.result_dir)))
             db_utils.remove_ongoing_torrent(self.torrent_path)
             return True
 
-        # TODO keep track of uploaded stats (?)
         db_utils.CompletedTorrentsDB().delete_torrent(self.info_hash)
 
         if not peers_list:
@@ -116,8 +126,9 @@ class DownloadSession:
 
         # --------
         # peer wire protocol
-        self.state = 'Downloading...'
+        self.state = 'Downloading'
         announce_loop_task = asyncio.create_task(announce_loop(self.trackers, self))
+        self.announce_task = announce_loop_task
 
         piece_picker = PiecePicker(self.TorrentData, self, bitarray, missing)
         tit_for_tat_manager = TitForTat(piece_picker)
@@ -137,7 +148,6 @@ class DownloadSession:
         if db_utils.CompletedTorrentsDB().find_info_hash(self.info_hash):
             # announce completion
             total_download, total_upload = self.downloaded + self.corrupted + self.wasted, self.uploaded
-            # TODO use the tracker update thread to announce complete
 
             async def final_announce(tracker: Tracker):
                 if tracker.state in (ANNOUNCING, WORKING):
@@ -147,7 +157,6 @@ class DownloadSession:
                         pass
 
             work = [final_announce(tracker) for tracker in self.trackers]
-            await add_newly_completed_torrent(self.info_hash)
             await asyncio.gather(*work)
 
             self.state = 'Completed'
@@ -168,7 +177,6 @@ class DownloadSession:
         goes over the entire torrent and checks which pieces are missing to not re-download existing torrent pieces
         :return: bitarray of pieces availability, a range of missing pieces indexes (tuple)
         """
-        # do not
         missing = None
         bitarray = bitstring.BitArray(bin='0' * len(self.TorrentData.piece_hashes))
         if self.torrent_path in map(lambda x: x[0], db_utils.get_ongoing_torrents()) or db_utils.CompletedTorrentsDB().find_info_hash(self.info_hash):
@@ -194,6 +202,27 @@ class DownloadSession:
             finally:
                 del temp_file
         return bitarray, missing
+
+    @property
+    def ETA(self) -> float:
+        """
+        :return: estimated time of arrival, in seconds
+        """
+        Total = self.downloaded + self.wasted + self.corrupted
+        Time = time.time()
+        delay = 1.5 if self.progress < 95 else 0.5
+        if Time - self.last_Time < delay:
+            return self.last_ETA  # a very long time (100.9y)
+        speed = (Total - self.last_Total) / (Time - self.last_Time)
+        if speed == 0:
+            return 3184622406
+        ETA = ceil(self.left / speed)
+        if self.last_ETA == 1:
+            ETA = 1
+        self.last_Total = Total
+        self.last_Time = Time
+        self.last_ETA = ETA
+        return ETA
 
     def __repr__(self):
         return f"{self.state}, {self.info_hash}"

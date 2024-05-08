@@ -1,14 +1,13 @@
-import asyncio
-import threading
-import time
-from typing import Set, Union
-
-from .app_data.db_utils import (get_configuration, set_configuration, get_ongoing_torrents,
-                                CompletedTorrentsDB, remove_ongoing_torrent)
-from .seeding.server import start_seeding_server
+from .app_data.db_utils import *
+from .seeding.server import start_seeding_server, add_completed_torrent
 from .seeding.utils import FileObjects
 from .download.download_session_object import DownloadSession
 from .file.file_object import PickleableFile
+
+import asyncio
+import threading
+import time
+from typing import Set, Union, Any
 
 
 class _Singleton:
@@ -42,11 +41,17 @@ class Client(_Singleton):
         seeding_thread = threading.Thread(target=lambda: asyncio.run(start_seeding_server()), daemon=True)
         seeding_thread.start()
 
-        # TODO wait for the seeding server before starting download
+        # wait for the seeding server before starting download
         while True:
             if get_configuration('seeding_server_is_up'):
                 break
-            time.sleep(0.5)
+            time.sleep(0.25)
+
+        # add torrents for seeding
+        completed_torrents = CompletedTorrentsDB().get_all_torrents()
+        for torrent in completed_torrents:
+            self.torrents.add(torrent)
+            add_completed_torrent(torrent)
 
         # start unfinished torrents
         ongoing_torrents = get_ongoing_torrents()
@@ -62,9 +67,6 @@ class Client(_Singleton):
         seeding_torrents = set(CompletedTorrentsDB().get_all_torrents())
         self.torrents.update(seeding_torrents)
 
-        # run update loop
-        threading.Thread(target=lambda: asyncio.run(self._torrents_state_update_loop()), daemon=True).start()
-
         self.started = True
         return True
 
@@ -78,35 +80,70 @@ class Client(_Singleton):
         download_thread.start()
         return True
 
-    def remove_torrent(self, info_hash: bytes) -> bool:
+    def remove_torrent_session(self, info_hash: bytes, obj_hash: int) -> bool:
         if not self.started:
             return False
-        success = False
         for torrent in self.torrents.copy():
-            if torrent.info_hash == info_hash:
+            if torrent.info_hash == info_hash and hash(torrent) == obj_hash:
                 if isinstance(torrent, DownloadSession):
+                    # close all connections
+                    for peer in torrent.peers:
+                        try:
+                            peer.found_dirty = True  # not really, just to terminate the connection
+                            peer.writer.close()
+                        except:
+                            pass
                     DownloadSession.Sessions.pop(torrent.info_hash)
                     remove_ongoing_torrent(torrent.torrent_path)
+
                 else:
+                    # close all connections
+                    for peer in torrent.peers:
+                        try:
+                            peer.writer.close()
+                        except:
+                            pass
                     CompletedTorrentsDB().delete_torrent(torrent.info_hash)
                     FileObjects.pop(torrent.info_hash)
+
+                # stop the announce task
+                if (task := torrent.announce_task) is not None:
+                    if not task.done():
+                        task.cancel()
                 self.torrents.remove(torrent)
-                success = True
-        return success
+                return True
+        return False
 
-    async def _torrents_state_update_loop(self):
-        while True:
-            for torrent in self.torrents.copy():
-                if isinstance(torrent, DownloadSession):
-                    if torrent.state in ('Completed', 'Failed'):
-                        self.torrents.remove(torrent)
-                        self.torrents.add(CompletedTorrentsDB().get_torrent(torrent.info_hash))
-                else:
-                    if not CompletedTorrentsDB().find_info_hash(torrent.info_hash):
-                        self.torrents.remove(torrent)
-
-            await asyncio.sleep(1)
+    async def torrents_state_update_loop(self):
+        for torrent in self.torrents.copy():
+            if isinstance(torrent, DownloadSession):
+                if torrent.state in ('Completed', 'Failed', 'Seeding'):
+                    self.torrents.remove(torrent)
+                    torrent_from_db = CompletedTorrentsDB().get_torrent(torrent.info_hash)
+                    if torrent_from_db:
+                        if torrent_from_db.info_hash not in map(lambda x: x.info_hash, self.torrents):
+                            self.torrents.add(torrent_from_db)
+                            await add_completed_torrent(torrent_from_db)
+            else:  # isinstance(torrent, PickleableFile)
+                if not CompletedTorrentsDB().find_info_hash(torrent.info_hash):
+                    self.torrents.remove(torrent)
 
     @staticmethod
     def get_download_dir() -> str:
         return get_configuration("download_dir")
+
+    @staticmethod
+    def get_configuration(config: str) -> Any:
+        return get_configuration(config)
+
+    @staticmethod
+    async def set_configuration(config: str, new_value: Any):
+        await set_configuration(config, new_value)
+
+    @staticmethod
+    def get_banned_countries() -> List[str]:
+        return get_banned_countries()
+
+    @staticmethod
+    async def set_banned_countries(countries: List[str]):
+        await set_banned_countries(countries)

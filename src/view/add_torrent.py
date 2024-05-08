@@ -1,3 +1,6 @@
+from src.RaBit import Client
+
+import concurrent.futures
 import customtkinter
 from PyQt5.QtWidgets import QApplication, QFileDialog
 import os
@@ -13,12 +16,16 @@ class FileDialogs(customtkinter.CTkFrame):
         self.valid_dir = False
         self.download_dir = ""
 
+        self.columnconfigure(0, weight=1)
+        self.columnconfigure(1, weight=3)
+        self.columnconfigure(2, weight=1)
+
         # path of file label
         self.torrent_path_label = customtkinter.CTkLabel(self, text="Torrent path:")
         self.torrent_path_label.grid(row=0, column=0, padx=(20, 0), pady=(20, 0), sticky="w")
 
         # torrent file
-        self.torrent_path_input = customtkinter.CTkTextbox(self, activate_scrollbars=False, wrap="none", font=("", 12), width=375, height=15)
+        self.torrent_path_input = customtkinter.CTkEntry(self, font=("", 13), width=375, placeholder_text="Type here...")
         self.torrent_path_input.grid(row=1, column=0, padx=(10, 0), pady=(20, 0), rowspan=1, columnspan=1, sticky="ew")
 
         # check mark image
@@ -38,8 +45,9 @@ class FileDialogs(customtkinter.CTkFrame):
         self.download_dir_label.grid(row=2, column=0, padx=(20, 0), pady=(20, 0), sticky="w")
 
         # download dir
-        self.download_dir_input = customtkinter.CTkTextbox(self, activate_scrollbars=False, wrap="none", font=("", 12), width=375, height=15)
-        self.download_dir_input.insert("0.0", start_path)
+        self.download_dir_input = customtkinter.CTkEntry(self, font=("", 13), width=375, placeholder_text="Type here...")
+        if start_path:
+            self.download_dir_input.insert(0, start_path)
         self.download_dir_input.grid(row=3, column=0, padx=(10, 0), pady=(20, 2), rowspan=1, columnspan=1, sticky="ew")
 
         # check mark image
@@ -59,16 +67,20 @@ class FileDialogs(customtkinter.CTkFrame):
 
         # confirm button
         self.confirm_button = customtkinter.CTkButton(self, text="Confirm", state="disabled",
-                                                      command=lambda: master.added_torrents.append((self.file_path, self.download_dir, bool(self.skip_hash_checkbox.get()))))
+                                                      command=lambda: self.add_torrent(master))
         self.confirm_button.grid(row=5, column=0, padx=50, pady=30, columnspan=3, sticky="ew")
 
         # start params could be valid
         self.on_key_release(None, True)
 
+    def add_torrent(self, master):
+        Client().add_torrent(self.file_path, self.download_dir, bool(self.skip_hash_checkbox.get()))
+        master.destroy()
+
     def on_key_release(self, event, is_dir: bool):
         path_input = self.download_dir_input if is_dir else self.torrent_path_input
         image_label = self.download_dir_image_label if is_dir else self.torrent_path_image_label
-        path = path_input.get("0.0", "end")
+        path = path_input.get()
         image = customtkinter.CTkImage(self.get_validation_mark(path, is_dir), size=(25, 25))
         image_label.configure(image=image)
 
@@ -119,22 +131,23 @@ class FileDialogs(customtkinter.CTkFrame):
     def file_dialog(self, master, is_folder: bool, start_directory: str):
         master.attributes("-topmost", False)
         instance = self.download_dir_input if is_folder else self.torrent_path_input
-        path = FileDialogs.open_file_dialog(is_folder, start_directory)
+        # prevent total collapse
+        with concurrent.futures.ThreadPoolExecutor() as executor:
+            future = executor.submit(FileDialogs.open_file_dialog, is_folder, start_directory)
+            path = future.result()
         if path:
-            instance.delete("0.0", "end")
-            instance.insert("0.0", path)
+            instance.delete(0, "end")
+            instance.insert(0, path)
             self.on_key_release(None, is_folder)
         master.attributes("-topmost", True)
 
 
 class AddTorrentWindow(customtkinter.CTkToplevel):
-    POSITIVE_PATH = r"assets\positive_mark.png"
-    NEGATIVE_PATH = r"assets\negative_mark.png"
+    POSITIVE_PATH = Path().resolve() / "src" / "view" / "assets" / "positive_mark.png"
+    NEGATIVE_PATH = Path().resolve() / "src" / "view" / "assets" / "negative_mark.png"
 
     WIDTH = 600
     HEIGHT = 450
-
-    added_torrents = []
 
     def __init__(self, master, start_path: str, **kwargs):
         super().__init__(master, **kwargs)
@@ -144,7 +157,7 @@ class AddTorrentWindow(customtkinter.CTkToplevel):
 
         self.columnconfigure(0, weight=1)
 
-        self.title("Add a Torrent")
+        self.title("")
         self.minsize(AddTorrentWindow.WIDTH, AddTorrentWindow.HEIGHT)
 
         self.title = customtkinter.CTkLabel(self, text="Add a Torrent", font=("", 35))

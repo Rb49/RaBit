@@ -26,9 +26,9 @@ def read_torrent(path: str) -> Torrent:
                                  multi_file=bool(content[b'info'].get(b'files')),
                                  peer_id=None,
                                  announce=content.get(b'announce'),
-                                 comment=content.get(b'comment'),
-                                 created_by=content.get(b'created by'),
-                                 date_created=content.get(b'date created'),
+                                 comment=content.get(b'comment').decode('utf-8') if content.get(b'comment') else '',
+                                 created_by=content.get(b'created by').decode('utf-8') if content.get(b'created by') else '',
+                                 date_created=content.get(b'date created').decode('utf-8') if content.get(b'date created') else '',
                                  announce_list=content.get(b'announce-list'))
 
     if torrent_data.multi_file:

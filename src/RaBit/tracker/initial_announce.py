@@ -20,7 +20,6 @@ async def initial_announce(TorrentData: Torrent, downloaded: int, uploaded: int,
     :param event: 0: none; 1: completed; 2: started; 3: stopped
     :return: a list of peer addresses (ip, port)
     """
-    # TODO add tracker object support, scrape and updating udp trackers by protocol timeouts
     # initial announce
     if not TorrentData.announce_list:
         TorrentData.announce_list = [[TorrentData.announce]]

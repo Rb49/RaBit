@@ -1,13 +1,15 @@
-from typing import Tuple
+from .utils import *
 
+from typing import Tuple, List
 import customtkinter
 from PIL import Image, ImageTk
 import os
+from pathlib import Path
 
 
 class ZoomableMapCanvas(customtkinter.CTkCanvas):
-    MAP_PATH = r"assets\full_size_map.png"
-    PINS_PATH = r"assets\country_pins"
+    MAP_PATH = Path().resolve() / "src" / "view" / "assets" / "full_size_map.png"
+    PINS_PATH = Path().resolve() / "src" / "view" / "assets" / "country_pins"
     initial_zoom = 0.35
 
     def __init__(self, master, addresses, **kwargs):
@@ -32,6 +34,7 @@ class ZoomableMapCanvas(customtkinter.CTkCanvas):
 
         self.bind("<MouseWheel>", self.zoom)
         self.bind('<Motion>', self.motion)
+        self.bind('<Leave>', self.reset_cursor)
 
     def reset(self, event):
         self.zoom_level = ZoomableMapCanvas.initial_zoom
@@ -40,7 +43,16 @@ class ZoomableMapCanvas(customtkinter.CTkCanvas):
     def motion(self, event):
         self.x, self.y = event.x, event.y
 
-    def show_image(self, reset: bool = False):
+    def reset_cursor(self, event):
+        width = self.winfo_reqwidth()
+        height = self.winfo_reqheight()
+        self.x = width // 2
+        self.y = height // 2
+
+    def show_image(self, reset: bool = False, addresses: List[Tuple] = None):
+        if addresses:
+            self.addresses = addresses
+
         if not reset:
             prev_width_range = (self.prev_x, self.prev_x + self.prev_width)
             prev_height_range = (self.prev_y, self.prev_y + self.prev_height)
@@ -48,13 +60,13 @@ class ZoomableMapCanvas(customtkinter.CTkCanvas):
             if not (prev_width_range[0] <= self.x <= prev_width_range[1] and prev_height_range[0] <= self.y <= prev_height_range[1]):
                 return
 
-            normalized_x = ZoomableMapCanvas.normalize(self.x, *prev_width_range)
-            normalized_y = ZoomableMapCanvas.normalize(self.y, *prev_height_range)
+            normalized_x = normalize(self.x, *prev_width_range)
+            normalized_y = normalize(self.y, *prev_height_range)
 
             image = self.image.resize((int(self.image.width * self.zoom_level), int(self.image.height * self.zoom_level)))
 
-            new_x = self.x - ZoomableMapCanvas.inverse_normalization(normalized_x, 0, image.width)
-            new_y = self.y - ZoomableMapCanvas.inverse_normalization(normalized_y, 0, image.height)
+            new_x = self.x - inverse_normalization(normalized_x, 0, image.width)
+            new_y = self.y - inverse_normalization(normalized_y, 0, image.height)
 
             self.prev_width = image.width
             self.prev_height = image.height
@@ -107,14 +119,6 @@ class ZoomableMapCanvas(customtkinter.CTkCanvas):
                 self.show_image()
             else:
                 self.reset(None)
-
-    @staticmethod
-    def normalize(value: int, min_value: int, max_value: int):
-        return (value - min_value) / (max_value - min_value)
-
-    @staticmethod
-    def inverse_normalization(norm_value: float, min_value: int, max_value: int):
-        return int((norm_value * (max_value - min_value)) + min_value)
 
 
 def get_ZoomableMapCanvas():

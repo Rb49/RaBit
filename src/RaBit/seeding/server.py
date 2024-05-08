@@ -137,7 +137,7 @@ async def handle_leecher(reader, writer) -> None:
             await writer.drain()
 
         leecher = Leecher(writer, peer_address, geodata, peer_id, ip_priority)
-        print(leecher)
+        FileObjects[file_object.info_hash].peers.append(leecher)
         normalize = lambda value, max_value, new_min, new_max: (value / max_value) * (new_max - new_min) + new_min
         last_seen = time.time()
         async for msg in Stream(reader):
@@ -206,9 +206,10 @@ async def handle_leecher(reader, writer) -> None:
         if leecher in Leecher.leecher_instances:
             Leecher.leecher_instances.remove(leecher)
             file_object.close_files()
-            del leecher
             # update db statistics
+            FileObjects[file_object.info_hash].peers.remove(leecher)
             db_utils.CompletedTorrentsDB().update_torrent(FileObjects[file_object.info_hash])
+            del leecher
             del file_object
 
         return
@@ -269,9 +270,6 @@ async def start_seeding_server() -> None:
         server_v4, last_forward_v4 = await forward_port(internal_ipv4, internal_port_v4, external_port_v4, last_forward_v4, 'v4')
         await db_utils.set_configuration('seeding_server_is_up', True)
 
-        # load all completed torrents
-        init_completed_torrents()
-
         # run server and updates thread
         update_coroutine = await asyncio.to_thread(update_mapping, internal_port_v4, external_port_v4, internal_ipv4, last_forward_v4, 'v4')
         async with server_v4:
@@ -284,47 +282,27 @@ async def start_seeding_server() -> None:
     except Exception as e:
         print(e)
     finally:
-        await db_utils.set_configuration('seeding_server_is_up', False)
         return
 
 
-def init_completed_torrents() -> None:
-    """
-    loads torrents from the completed torrents db and starts announce loops for their trackers
-    :return: None
-    """
-    all_torrents: List[PickleableFile] = db_utils.CompletedTorrentsDB().get_all_torrents()
-    for file in all_torrents:
-        try:
-            file.reopen_files()
-            file.close_files()
-            FileObjects[file.info_hash] = file
-            for tracker in file.trackers:
-                tracker.state = WORKING
-            asyncio.create_task(announce_loop(file.trackers, file))
-            print('ready to seed ', file)
-        except OSError:
-            db_utils.CompletedTorrentsDB().delete_torrent(file.info_hash)
-
-
-async def add_newly_completed_torrent(info_hash: bytes) -> None:
+async def add_completed_torrent(pickleable_file: PickleableFile) -> None:
     """
     adds a newly downloaded torrent available for seeding
+    :param pickleable_file: PickleableFile from main torrent set
     :return: None
     """
-    file: PickleableFile = db_utils.CompletedTorrentsDB().get_torrent(info_hash)
-    if file:
-        async with asyncio.Lock():
-            try:
-                file.reopen_files()
-                file.close_files()
-                FileObjects[info_hash] = file
-                for tracker in file.trackers:
-                    tracker.state = WORKING
-                asyncio.create_task(announce_loop(file.trackers, file))
-                print('ready to seed ', file)
-            except OSError:
-                db_utils.CompletedTorrentsDB().delete_torrent(info_hash)
+    async with asyncio.Lock():
+        try:
+            pickleable_file.reopen_files()
+            pickleable_file.close_files()
+            FileObjects[pickleable_file.info_hash] = pickleable_file
+            for tracker in pickleable_file.trackers:
+                tracker.state = WORKING
+            pickleable_file.peers = []
+            asyncio.create_task(announce_loop(pickleable_file.trackers, pickleable_file))
+            print('ready to seed ', pickleable_file)
+        except OSError:
+            db_utils.CompletedTorrentsDB().delete_torrent(pickleable_file.info_hash)
 
 
 async def update_mapping(internal_port: int, external_port: int, internal_ip: str, last_forward: float, version: str) -> None:
