@@ -1,4 +1,4 @@
-from typing import Tuple
+from typing import Tuple, List
 import customtkinter
 from PIL import Image, ImageTk
 import os
@@ -34,6 +34,7 @@ class ZoomableMapCanvas(customtkinter.CTkCanvas):
 
         self.bind("<MouseWheel>", self.zoom)
         self.bind('<Motion>', self.motion)
+        self.bind('<Leave>', self.reset_cursor)
 
     def reset(self, event):
         self.zoom_level = ZoomableMapCanvas.initial_zoom
@@ -42,7 +43,16 @@ class ZoomableMapCanvas(customtkinter.CTkCanvas):
     def motion(self, event):
         self.x, self.y = event.x, event.y
 
-    def show_image(self, reset: bool = False):
+    def reset_cursor(self, event):
+        width = self.winfo_reqwidth()
+        height = self.winfo_reqheight()
+        self.x = width // 2
+        self.y = height // 2
+
+    def show_image(self, reset: bool = False, addresses: List[Tuple] = None):
+        if addresses:
+            self.addresses = addresses
+
         if not reset:
             prev_width_range = (self.prev_x, self.prev_x + self.prev_width)
             prev_height_range = (self.prev_y, self.prev_y + self.prev_height)

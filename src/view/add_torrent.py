@@ -1,3 +1,4 @@
+import concurrent.futures
 import customtkinter
 from PyQt5.QtWidgets import QApplication, QFileDialog
 import os
@@ -125,7 +126,10 @@ class FileDialogs(customtkinter.CTkFrame):
     def file_dialog(self, master, is_folder: bool, start_directory: str):
         master.attributes("-topmost", False)
         instance = self.download_dir_input if is_folder else self.torrent_path_input
-        path = FileDialogs.open_file_dialog(is_folder, start_directory)
+        # prevent total collapse
+        with concurrent.futures.ThreadPoolExecutor() as executor:
+            future = executor.submit(FileDialogs.open_file_dialog, is_folder, start_directory)
+            path = future.result()
         if path:
             instance.delete("0.0", "end")
             instance.insert("0.0", path)

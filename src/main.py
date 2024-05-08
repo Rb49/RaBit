@@ -22,13 +22,14 @@ async def gui_updates(client: Client, main_window: get_MainWindow()):
             if torrent not in first:
                 first[torrent] = True
             # update progress info
-            main_window.torrents_info_frame.add_torrent(first[torrent], hash(torrent),
-                                                        torrent.name,
-                                                        torrent.length,
-                                                        torrent.progress,
-                                                        torrent.state,
-                                                        len(torrent.peers),
-                                                        torrent.ETA)
+            main_window.add_torrent(first[torrent],
+                                    hash(torrent),
+                                    torrent.name,
+                                    torrent.length,
+                                    torrent.progress,
+                                    torrent.state,
+                                    len(torrent.peers),
+                                    torrent.ETA)
             first[torrent] = False
 
             if torrent.TorrentData if hasattr(torrent, "TorrentData") else True:
@@ -52,7 +53,8 @@ async def gui_updates(client: Client, main_window: get_MainWindow()):
                                                             torrent.TorrentData.date_created if hasattr(torrent, "TorrentData") else torrent.date_created)
                     elif main_window.current_tab.get() == "Peers":
                         # update peers info
-                        ...
+                        main_window.update_peers_info_tab(hash(torrent),
+                                                          list(map(lambda x: (hash(x), *x.address, x.geodata, x.client), torrent.peers)))
 
         prev_torrents = client.torrents.copy()
         await client.torrents_state_update_loop()
@@ -60,9 +62,9 @@ async def gui_updates(client: Client, main_window: get_MainWindow()):
         # handle removed torrents
         removed = prev_torrents - client.torrents
         if removed:
-            main_window.torrents_info_frame.remove_torrent([hash(torrent) for torrent in removed])
+            main_window.remove_torrents([hash(torrent) for torrent in removed])
         else:
-            await asyncio.sleep(0.5)
+            await asyncio.sleep(1)
 
 
 # start the client and display the loading window
