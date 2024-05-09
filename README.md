@@ -21,3 +21,8 @@ You won't be able to:
 - download / seed without an upnp-enabled router or seed from a double nat
 - download from magnet links
 - contribute to incoming connections during download (only to outgoing)
+
+### Usage
+1. go to `src` directory with ```cd RaBit/src```
+2. install required libraries with ```pip install -r requirements.txt```
+3. run `main.py`
