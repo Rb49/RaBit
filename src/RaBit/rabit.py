@@ -34,39 +34,44 @@ class Client(_Singleton):
         self.torrents: Set[Union[DownloadSession, PickleableFile]] = set()
         self.started = False
 
-    def start(self) -> bool:
+    def start(self, loading_window) -> bool:
         if self.started:
             return False
+        try:
+            seeding_thread = threading.Thread(target=lambda: asyncio.run(start_seeding_server()), daemon=True)
+            seeding_thread.start()
 
-        seeding_thread = threading.Thread(target=lambda: asyncio.run(start_seeding_server()), daemon=True)
-        seeding_thread.start()
+            # wait for the seeding server before starting download
+            while True:
+                if not seeding_thread.is_alive():
+                    _raise_error(loading_window, "Either your router is not UPnP-enabled, or there was no available port.\n"
+                                 "Check your setup and restart the client.")
+                if get_configuration('seeding_server_is_up'):
+                    break
+                time.sleep(0.25)
 
-        # wait for the seeding server before starting download
-        while True:
-            if get_configuration('seeding_server_is_up'):
-                break
-            time.sleep(0.25)
+            # add torrents for seeding
+            completed_torrents = CompletedTorrentsDB().get_all_torrents()
+            for torrent in completed_torrents:
+                torrent.peers = []
+                self.torrents.add(torrent)
+                asyncio.run(add_completed_torrent(torrent))
 
-        # add torrents for seeding
-        completed_torrents = CompletedTorrentsDB().get_all_torrents()
-        for torrent in completed_torrents:
-            torrent.peers = []
-            self.torrents.add(torrent)
-            asyncio.run(add_completed_torrent(torrent))
+            # start unfinished torrents
+            ongoing_torrents = get_ongoing_torrents()
+            self.torrents: Set[Union[DownloadSession, PickleableFile]] = set()
+            for torrent, path in ongoing_torrents:
+                session = DownloadSession(torrent, path, False)
+                self.torrents.add(session)
+                download_thread = threading.Thread(target=lambda: asyncio.run(session.download()), daemon=True)
+                time.sleep(0.05)
+                download_thread.start()
 
-        # start unfinished torrents
-        ongoing_torrents = get_ongoing_torrents()
-        self.torrents: Set[Union[DownloadSession, PickleableFile]] = set()
-        for torrent, path in ongoing_torrents:
-            session = DownloadSession(torrent, path, False)
-            self.torrents.add(session)
-            download_thread = threading.Thread(target=lambda: asyncio.run(session.download()), daemon=True)
-            time.sleep(0.05)
-            download_thread.start()
-
-        # add completed torrents
-        seeding_torrents = set(CompletedTorrentsDB().get_all_torrents())
-        self.torrents.update(seeding_torrents)
+            # add completed torrents
+            seeding_torrents = set(CompletedTorrentsDB().get_all_torrents())
+            self.torrents.update(seeding_torrents)
+        except Exception as e:
+            _raise_error(loading_window, f"Could not start the client due to: {str(e)}")
 
         self.started = True
         return True
@@ -152,3 +157,10 @@ class Client(_Singleton):
     @staticmethod
     def get_torrent(info_hash: bytes):
         return CompletedTorrentsDB().get_torrent(info_hash)
+
+
+def _raise_error(loading_window, msg: str):
+    loading_window.frame.description2.configure(text=msg)
+    loading_window.frame.description2.configure(text_color="red")
+    loading_window.frame.progressbar.destroy()
+    time.sleep(1000000)

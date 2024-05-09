@@ -20,12 +20,12 @@ class Frame(customtkinter.CTkFrame):
         description = customtkinter.CTkLabel(self, text="A BitTorrent Client", font=("aptos black", 20))
         description.grid(row=2, padx=20, pady=0)
 
-        description2 = customtkinter.CTkLabel(self, text="Loading...")
-        description2.grid(row=3, padx=20, pady=(20, 0))
+        self.description2 = customtkinter.CTkLabel(self, text="Loading...")
+        self.description2.grid(row=3, padx=20, pady=(20, 5))
 
-        progressbar = customtkinter.CTkProgressBar(self, orientation="horizontal", mode="indeterminate")
-        progressbar.start()
-        progressbar.grid(row=4, padx=20, pady=0)
+        self.progressbar = customtkinter.CTkProgressBar(self, orientation="horizontal", mode="indeterminate")
+        self.progressbar.start()
+        self.progressbar.grid(row=4, padx=20, pady=0)
 
 
 class LoadingWindow(customtkinter.CTk):

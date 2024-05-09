@@ -24,7 +24,7 @@ class Application:
 
     @staticmethod
     def _wait_for_loading(client: Client, window: get_LoadingWindow()):
-        start_client_thread = threading.Thread(target=lambda: (client.start(), window.quit()), daemon=True)
+        start_client_thread = threading.Thread(target=lambda: (client.start(window), window.quit()), daemon=True)
         start_client_thread.start()
         window.mainloop()
         window.destroy()

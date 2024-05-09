@@ -15,4 +15,4 @@ if __name__ == '__main__':
         raise Exception("Wrong Python version! Use version 3.10 and above.")
 
     main()
-    exit(0)
+    sys.exit()
