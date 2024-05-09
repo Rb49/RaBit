@@ -50,8 +50,9 @@ class Client(_Singleton):
         # add torrents for seeding
         completed_torrents = CompletedTorrentsDB().get_all_torrents()
         for torrent in completed_torrents:
+            torrent.peers = []
             self.torrents.add(torrent)
-            add_completed_torrent(torrent)
+            asyncio.run(add_completed_torrent(torrent))
 
         # start unfinished torrents
         ongoing_torrents = get_ongoing_torrents()
@@ -147,3 +148,7 @@ class Client(_Singleton):
     @staticmethod
     async def set_banned_countries(countries: List[str]):
         await set_banned_countries(countries)
+
+    @staticmethod
+    def get_torrent(info_hash: bytes):
+        return CompletedTorrentsDB().get_torrent(info_hash)

@@ -39,7 +39,7 @@ class ToolbarFrame(customtkinter.CTkFrame):
         if not (ct := self.master.current_tab):
             return
         test_num = randint(10, 99)
-        dialog = customtkinter.CTkInputDialog(text=f"Confirm with typing: {test_num}", title="")
+        dialog = customtkinter.CTkInputDialog(text=f"Are you sure you want to remove this torrent?\nConfirm with typing:\n{test_num}", title="Remove a torrent")
         good_input = False
         if entry_data := dialog.get_input():
             if entry_data.strip('\n').isdigit():
@@ -220,7 +220,7 @@ class MainWindow(customtkinter.CTk):
         customtkinter.set_appearance_mode("System")
         customtkinter.set_default_color_theme("blue")
 
-        self.title("RaBit Client")
+        self.title("RaBit v1.0.0")
         self.iconbitmap(MainWindow.ICON_PATH)
         self.minsize(MainWindow.WIDTH, MainWindow.HEIGHT)
         self.columnconfigure(0, weight=1)

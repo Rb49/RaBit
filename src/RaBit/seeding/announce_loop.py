@@ -34,4 +34,4 @@ async def announce_loop(trackers: List[Tracker], session) -> None:
                 break
         if isinstance(session, PickleableFile):
             db_utils.CompletedTorrentsDB().update_torrent(session)
-        await asyncio.sleep(5)
+        await asyncio.sleep(1)

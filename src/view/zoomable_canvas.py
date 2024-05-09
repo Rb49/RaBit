@@ -83,17 +83,20 @@ class ZoomableMapCanvas(customtkinter.CTkCanvas):
         # add pins
         size = (int(max(25, 1.25 * 25 * self.zoom_level)), int(max(33, 1.25 * 33 * self.zoom_level)))
         for pin in self.addresses:
-            pin: Tuple[str, str, float, float]  # city, country code, latitude, longitude
-            if None in pin[2:4]:
-                continue
-            if pin[1] is not None:
-                pin_image = Image.open(os.path.join(ZoomableMapCanvas.PINS_PATH, f"{pin[1]}.png")).convert('RGBA')
-            else:
-                pin_image = Image.open(os.path.join(ZoomableMapCanvas.PINS_PATH, "NONE.png")).convert('RGBA')
-            pin_image = pin_image.resize(size)
-            position = ZoomableMapCanvas.format_coords(pin[2], pin[3], *size, self.prev_width, self.prev_height)
+            try:
+                pin: Tuple[str, str, float, float]  # city, country code, latitude, longitude
+                if None in pin[2:4]:
+                    continue
+                if pin[1] is not None:
+                    pin_image = Image.open(os.path.join(ZoomableMapCanvas.PINS_PATH, f"{pin[1]}.png")).convert('RGBA')
+                else:
+                    pin_image = Image.open(os.path.join(ZoomableMapCanvas.PINS_PATH, "NONE.png")).convert('RGBA')
+                pin_image = pin_image.resize(size)
+                position = ZoomableMapCanvas.format_coords(pin[2], pin[3], *size, self.prev_width, self.prev_height)
 
-            Image.Image.alpha_composite(image, pin_image, position)
+                Image.Image.alpha_composite(image, pin_image, position)
+            except:
+                pass
         self.delete("image")
         self.image_on_canvas = ImageTk.PhotoImage(image)
         self.create_image(self.prev_x, self.prev_y, anchor="nw", image=self.image_on_canvas, tags="image")

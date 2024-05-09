@@ -51,6 +51,19 @@ class Application:
                     # update initialized objects only
                     if main_window.current_obj_hash == hash(torrent):
                         # update displayed window only
+                        if not hasattr(torrent, "TorrentData"):
+                            torrent = client.get_torrent(torrent.info_hash)
+                            # update torrents info
+                            if torrent.peers:
+                                main_window.add_torrent(False,
+                                                        hash(torrent),
+                                                        torrent.name,
+                                                        torrent.length,
+                                                        torrent.progress,
+                                                        torrent.state,
+                                                        len(torrent.peers),
+                                                        torrent.ETA)
+
                         if main_window.current_tab.get() == "General":
                             # update general info
                             main_window.update_general_info_tab(hash(torrent),

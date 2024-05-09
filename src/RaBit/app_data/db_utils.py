@@ -1,3 +1,5 @@
+from collections import namedtuple
+
 from ..file.file_object import PickleableFile
 
 import asyncio
@@ -8,6 +10,10 @@ import pickle
 from typing import Union, Any, Dict, List, Tuple
 import json
 import threading
+import copy
+
+
+Peers = namedtuple('Peers', 'address geodata client')
 
 
 def get_configuration(config_to_get: str) -> Any:
@@ -177,9 +183,13 @@ class CompletedTorrentsDB(Singleton):
         cursor.execute("INSERT OR IGNORE INTO completed_torrents (info_hash, file_object) VALUES (?, ?)", params)
         self.conn.commit()
 
-    def update_torrent(self, new_file_object: PickleableFile):
-        self.delete_torrent(new_file_object.info_hash)
-        self.insert_torrent(new_file_object)
+    def update_torrent(self, file_object: PickleableFile):
+        new_file_object = copy.copy(file_object)
+        new_file_object.peers = [Peers(peer.address, peer.geodata, peer.client) for peer in new_file_object.peers]
+        params = (pickle.dumps(new_file_object), new_file_object.info_hash)
+        cursor = self.conn.cursor()
+        cursor.execute("UPDATE completed_torrents SET file_object=? WHERE info_hash=?", params)
+        self.conn.commit()
 
     def get_torrent(self, info_hash: bytes) -> Union[PickleableFile, None]:
         cursor = self.conn.cursor()

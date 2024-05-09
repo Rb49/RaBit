@@ -43,7 +43,7 @@ class LoadingWindow(customtkinter.CTk):
 
         self.grid_columnconfigure(0, weight=1)
 
-        self.title("RaBit v0.1")
+        self.title("RaBit v1.0.0")
         self.iconbitmap(LoadingWindow.ICON_PATH)
         self.minsize(LoadingWindow.WIDTH, LoadingWindow.HEIGHT)
 

@@ -11,8 +11,9 @@ from math import ceil
 import bitstring
 from random import sample
 import copy
-from typing import List, Any
+from typing import Any
 import time
+import threading
 
 
 _BUFFER_SIZE = 4096
@@ -299,7 +300,7 @@ async def add_completed_torrent(pickleable_file: PickleableFile) -> None:
             for tracker in pickleable_file.trackers:
                 tracker.state = WORKING
             pickleable_file.peers = []
-            asyncio.create_task(announce_loop(pickleable_file.trackers, pickleable_file))
+            threading.Thread(target=lambda: asyncio.run(announce_loop(pickleable_file.trackers, pickleable_file)), daemon=True).start()
             print('ready to seed ', pickleable_file)
         except OSError:
             db_utils.CompletedTorrentsDB().delete_torrent(pickleable_file.info_hash)

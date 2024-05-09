@@ -11,8 +11,8 @@ if __name__ == '__main__':
     tracemalloc.start()
 
     import sys
-    if sys.version_info[0:2] != (3, 10):
-        raise Exception("Wrong Python version! Use version 3.10 only.")
+    if sys.version_info[0] != 3 or sys.version_info[1] < 10:
+        raise Exception("Wrong Python version! Use version 3.10 and above.")
 
     main()
     exit(0)
