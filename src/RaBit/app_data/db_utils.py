@@ -1,5 +1,3 @@
-from collections import namedtuple
-
 from ..file.file_object import PickleableFile
 
 import asyncio
@@ -8,6 +6,7 @@ from pathlib import Path
 import sqlite3
 import pickle
 from typing import Union, Any, Dict, List, Tuple
+from collections import namedtuple
 import json
 import threading
 import copy
