@@ -29,3 +29,21 @@ You won't be able to:
 1. Go to `src` directory with ```cd RaBit/src```
 2. Install required libraries with ```pip install -r requirements.txt```
 3. Run `main.py`
+
+### Usage example
+Downloading Linux Debian iso:
+>
+> https://github.com/Rb49/RaBit/assets/95938066/918fce2d-278e-4bba-b195-973a75534007
+
+### Screenshots
+Full screen in Windows:
+> 
+> ![windows_1080p_download](https://github.com/Rb49/RaBit/assets/95938066/6efe93dd-a2e1-404e-9039-3492e0d794fe)
+
+Minimized screen in Windows:
+>
+> ![windows_1080p_minimized](https://github.com/Rb49/RaBit/assets/95938066/c5505cf0-a872-4632-8b76-f24b7820dd52)
+
+Full screen in Kali-Linux:
+> 
+> ![linux_download](https://github.com/Rb49/RaBit/assets/95938066/80aef9e9-f2a8-45c0-bd86-c99fdf0e8cba)
