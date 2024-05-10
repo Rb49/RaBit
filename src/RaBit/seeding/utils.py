@@ -134,7 +134,12 @@ def crc32c_sort_v4(peer_ip: str) -> int:
     return priority
 
 
-
-
-
-
+def re_announce_all_trackers():
+    """
+    if a port mapping has changed re-announce with the new external port
+    tells the announce loop to re-announce to all working trackers
+    """
+    print('hi')
+    for file in FileObjects.values():
+        for tracker in file.trackers:
+            tracker.interval = 0

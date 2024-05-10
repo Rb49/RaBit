@@ -4,6 +4,9 @@ from .seeding.utils import FileObjects
 from .download.download_session_object import DownloadSession
 from .file.file_object import PickleableFile
 
+# view helper, not part of module
+from .view_helper import raise_error
+
 import asyncio
 import threading
 import time
@@ -34,7 +37,7 @@ class Client(_Singleton):
         self.torrents: Set[Union[DownloadSession, PickleableFile]] = set()
         self.started = False
 
-    def start(self, loading_window) -> bool:
+    def start(self, loading_window=None) -> bool:
         if self.started:
             return False
         try:
@@ -44,8 +47,8 @@ class Client(_Singleton):
             # wait for the seeding server before starting download
             while True:
                 if not seeding_thread.is_alive():
-                    _raise_error(loading_window, "Either your router is not UPnP-enabled, or there was no available port.\n"
-                                 "Check your setup and restart the client.")
+                    raise_error(loading_window, "Either your router is not UPnP-enabled, or there was no available port.\n"
+                                "Check your setup and restart the client.")
                 if get_configuration('seeding_server_is_up'):
                     break
                 time.sleep(0.25)
@@ -71,7 +74,8 @@ class Client(_Singleton):
             seeding_torrents = set(CompletedTorrentsDB().get_all_torrents())
             self.torrents.update(seeding_torrents)
         except Exception as e:
-            _raise_error(loading_window, f"Could not start the client due to: {str(e)}")
+            raise_error(loading_window, f"Could not start the client due to: {str(e)}\n"
+                                        "Restart the client.")
 
         self.started = True
         return True
@@ -157,10 +161,3 @@ class Client(_Singleton):
     @staticmethod
     def get_torrent(info_hash: bytes):
         return CompletedTorrentsDB().get_torrent(info_hash)
-
-
-def _raise_error(loading_window, msg: str):
-    loading_window.frame.description2.configure(text=msg)
-    loading_window.frame.description2.configure(text_color="red")
-    loading_window.frame.progressbar.destroy()
-    time.sleep(1000000)

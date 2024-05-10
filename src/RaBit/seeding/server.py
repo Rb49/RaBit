@@ -252,6 +252,8 @@ async def start_seeding_server() -> None:
                     if res:
                         await save_forward(internal_port, external_port, version)
                         last_forward = time.time()
+                        # re-announce to trackers
+                        re_announce_all_trackers()
                         break
                     else:  # no compatible device was found
                         raise Exception("Router not found. Most likely UPnP is not enabled on the router")
@@ -335,6 +337,8 @@ async def update_mapping(internal_port: int, external_port: int, internal_ip: st
             if res:
                 await save_forward(internal_port, external_port, version)
                 last_forward = time.time()
+                # re-announce to trackers
+                re_announce_all_trackers()
                 break
             else:  # no compatible device was found
                 raise Exception("Router not found. Most likely UPNP is not enabled on the router")
