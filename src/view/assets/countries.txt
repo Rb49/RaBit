@@ -1,250 +1,254 @@
-Rwanda
-Somalia
-Yemen
-Iraq
-Saudi Arabia
-Iran
-Cyprus
-Tanzania
-Syria
-Armenia
-Kenya
-DR Congo
-Djibouti
-Uganda
-Central African Republic
-Seychelles
-Jordan
-Lebanon
-Kuwait
-Oman
-Qatar
-Bahrain
-United Arab Emirates
-Israel
-TÃ¼rkiye
-Ethiopia
-Eritrea
-Egypt
-Sudan
-Greece
-Burundi
-Estonia
-Latvia
-Azerbaijan
-Lithuania
-Svalbard and Jan Mayen
-Georgia
-Moldova
-Belarus
-Finland
-Ã…land Islands
-Ukraine
-North Macedonia
-Hungary
-Bulgaria
-Albania
-Poland
-Romania
-Kosovo
-Zimbabwe
-Zambia
-Comoros
-Malawi
-Lesotho
-Botswana
-Mauritius
-Eswatini
-RÃ©union
-South Africa
-Mayotte
-Mozambique
-Madagascar
-Afghanistan
-Pakistan
-Bangladesh
-Turkmenistan
-Tajikistan
-Sri Lanka
-Bhutan
-India
-Maldives
-British Indian Ocean Territory
-Nepal
-Myanmar
-Uzbekistan
-Kazakhstan
-Kyrgyzstan
-French Southern Territories
-Heard and McDonald Islands
-Cocos (Keeling) Islands
-Palau
-Vietnam
-Thailand
-Indonesia
-Laos
-Taiwan
-Philippines
-Malaysia
-China
-Hong Kong
-Brunei
-Macao
-Cambodia
-South Korea
-Japan
-North Korea
-Singapore
-Cook Islands
-Timor-Leste
-Russia
-Mongolia
-Australia
-Christmas Island
-Marshall Islands
-Federated States of Micronesia
-Papua New Guinea
-Solomon Islands
-Tuvalu
-Nauru
-Vanuatu
-New Caledonia
-Norfolk Island
-New Zealand
-Fiji
-Libya
-Cameroon
-Senegal
-Congo Republic
-Portugal
-Liberia
-Ivory Coast
-Ghana
-Equatorial Guinea
-Nigeria
-Burkina Faso
-Togo
-Guinea-Bissau
-Mauritania
-Benin
-Gabon
-Sierra Leone
-SÃ£o TomÃ© and PrÃ­ncipe
-Gibraltar
-Gambia
-Guinea
-Chad
-Niger
-Mali
-Western Sahara
-Tunisia
-Spain
-Morocco
-Malta
-Algeria
-Faroe Islands
-Denmark
-Iceland
-United Kingdom
-Switzerland
-Sweden
-The Netherlands
-Austria
-Belgium
-Germany
-Luxembourg
-Ireland
-Monaco
-France
-Andorra
-Liechtenstein
-Jersey
-Isle of Man
-Guernsey
-Slovakia
-Czechia
-Norway
-Vatican City
-San Marino
-Italy
-Slovenia
-Montenegro
-Croatia
-Bosnia and Herzegovina
-Angola
-Namibia
-Saint Helena
-Bouvet Island
-Barbados
-Cabo Verde
-Guyana
-French Guiana
-Suriname
-Saint Pierre and Miquelon
-Greenland
-Paraguay
-Uruguay
-Brazil
-Falkland Islands
-South Georgia and the South Sandwich Islands
-Jamaica
-Dominican Republic
-Cuba
-Martinique
-Bahamas
-Bermuda
-Anguilla
-Trinidad and Tobago
-St Kitts and Nevis
-Dominica
-Antigua and Barbuda
-Saint Lucia
-Turks and Caicos Islands
-Aruba
-British Virgin Islands
-St Vincent and Grenadines
-Montserrat
-Saint Martin
-Saint BarthÃ©lemy
-Guadeloupe
-Grenada
-Cayman Islands
-Belize
-El Salvador
-Guatemala
-Honduras
-Nicaragua
-Costa Rica
-Venezuela
-Ecuador
-Colombia
-Panama
-Haiti
-Argentina
-Chile
-Bolivia
-Peru
-Mexico
-French Polynesia
-Pitcairn Islands
-Kiribati
-Tokelau
-Tonga
-Wallis and Futuna
-Samoa
-Niue
-Northern Mariana Islands
-Guam
-Puerto Rico
-U.S. Virgin Islands
-U.S. Outlying Islands
-American Samoa
-Canada
-United States
-Palestine
-Serbia
-Antarctica
-Sint Maarten
-CuraÃ§ao
-Bonaire, Sint Eustatius, and Saba
-South Sudan
+AD
+AE
+AF
+AG
+AI
+AL
+AM
+AO
+AQ
+AR
+AS
+AT
+AU
+AW
+AX
+AZ
+BA
+BB
+BD
+BE
+BF
+BG
+BH
+BI
+BJ
+BL
+BM
+BN
+BO
+BQ
+BR
+BS
+BT
+BV
+BW
+BY
+BZ
+CA
+CC
+CD
+CF
+CG
+CH
+CI
+CK
+CL
+CM
+CN
+CO
+CR
+CU
+CV
+CW
+CX
+CY
+CZ
+DE
+DJ
+DK
+DM
+DO
+DZ
+EC
+EE
+EG
+EH
+ER
+ES
+ET
+FI
+FJ
+FK
+FM
+FO
+FR
+GA
+GB-eng
+GB-nir
+GB-sct
+GB-wls
+GB
+GD
+GE
+GF
+GG
+GH
+GI
+GL
+GM
+GN
+GP
+GQ
+GR
+GS
+GT
+GU
+GW
+GY
+HK
+HM
+HN
+HR
+HT
+HU
+ID
+IE
+IL
+IM
+IN
+IO
+IQ
+IR
+IS
+IT
+JE
+JM
+JO
+JP
+KE
+KG
+KH
+KI
+KM
+KN
+KP
+KR
+KW
+KY
+KZ
+LA
+LB
+LC
+LI
+LK
+LR
+LS
+LT
+LU
+LV
+LY
+MA
+MC
+MD
+ME
+MF
+MG
+MH
+MK
+ML
+MM
+MN
+MO
+MP
+MQ
+MR
+MS
+MT
+MU
+MV
+MW
+MX
+MY
+MZ
+NA
+NC
+NE
+NF
+NG
+NI
+NL
+NO
+NP
+NR
+NU
+NZ
+OM
+PA
+PE
+PF
+PG
+PH
+PK
+PL
+PM
+PN
+PR
+PS
+PT
+PW
+PY
+QA
+RE
+RO
+RS
+RU
+RW
+SA
+SB
+SC
+SD
+SE
+SG
+SH
+SI
+SJ
+SK
+SL
+SM
+SN
+SO
+SR
+SS
+ST
+SV
+SX
+SY
+SZ
+TC
+TD
+TF
+TG
+TH
+TJ
+TK
+TL
+TM
+TN
+TO
+TR
+TT
+TV
+TW
+TZ
+UA
+UG
+UM
+US
+UY
+UZ
+VA
+VC
+VE
+VG
+VI
+VN
+VU
+WF
+WS
+XK
+YE
+YT
+ZA
+ZM
+ZW

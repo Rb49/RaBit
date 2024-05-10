@@ -56,7 +56,7 @@ class DataFrame(customtkinter.CTkFrame):
         self.max_unchock_image_image_label.grid(row=5, column=3, columnspan=1, padx=7, pady=0)
 
         # banned countries value
-        self.banned_countries_title = customtkinter.CTkLabel(self, text="Banned countries")
+        self.banned_countries_title = customtkinter.CTkLabel(self, text="Banned countries (ISO alpha-2 codes)")
         self.banned_countries_title.grid(row=6, column=0, columnspan=3, padx=(20, 0), pady=(5, 0), sticky="w")
         self.banned_countries_entry = customtkinter.CTkEntry(self, placeholder_text="Type here...")
         banned_countries = ', '.join(master.client.get_banned_countries())
