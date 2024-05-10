@@ -78,7 +78,10 @@ class File:
                     os.makedirs(file_name, exist_ok=True)
                 self.file_names.append(file_name)
 
-        self.fds = [os.open(file_name, os.O_RDWR | os.O_CREAT | os.O_BINARY) for file_name in self.file_names]
+        if "nt" == os.name:
+            self.fds = [os.open(file_name, os.O_RDWR | os.O_CREAT | os.O_BINARY) for file_name in self.file_names]
+        else:
+            self.fds = [os.open(file_name, os.O_RDWR | os.O_CREAT) for file_name in self.file_names]
 
     def close_files(self) -> None:
         """
@@ -170,9 +173,10 @@ class File:
                     database = db_utils.BannedPeersDB()
                     for peer_ip in bad_peers:
                         database.insert_ip(peer_ip)
-                        peer = list(filter(lambda x: x.address[0] == peer_ip, Peer.peer_instances[self.piece_picker.TorrentData.info_hash]))[0]
-                        peer.found_dirty = True
-                        print('banned ', peer_ip)
+                        if peer in Peer.peer_instances[self.piece_picker.TorrentData.info_hash]:
+                            peer = list(filter(lambda x: x.address[0] == peer_ip, Peer.peer_instances[self.piece_picker.TorrentData.info_hash]))[0]
+                            peer.found_dirty = True
+                            print('banned ', peer_ip)
 
             piece_abs_index = self.TorrentData.info[b'piece length'] * piece.index
 
@@ -257,7 +261,10 @@ class PickleableFile:
         reopens completed files in read-only mode
         :return: None
         """
-        self.fds = [os.open(file_name, os.O_RDONLY | os.O_BINARY) for file_name in self.file_names]
+        if "nt" == os.name:
+            self.fds = [os.open(file_name, os.O_RDONLY | os.O_BINARY) for file_name in self.file_names]
+        else:
+            self.fds = [os.open(file_name, os.O_RDONLY) for file_name in self.file_names]
 
     def close_files(self) -> None:
         """

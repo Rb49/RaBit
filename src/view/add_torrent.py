@@ -123,8 +123,14 @@ class FileDialogs(customtkinter.CTkFrame):
         else:
             file_dialog.setDirectory(os.path.abspath(os.sep))
         if file_dialog.exec_():
-            selected_file = file_dialog.selectedFiles()[0]
-            return selected_file
+            selected_files = file_dialog.selectedFiles()
+            if is_folder:
+                for selected_file in selected_files:
+                    if os.path.isdir(selected_file):
+                        return selected_file
+                return ""
+            else:
+                return selected_files[0]  # Return the first selected file
         else:
             return ""
 

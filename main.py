@@ -1,3 +1,5 @@
+#!/usr/bin/python
+
 from src.app import Application
 
 

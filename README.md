@@ -5,13 +5,13 @@
 - [x] http and udp trackers + compact response support (BEP 3, BEP 7, BEP 15, BEP 23)
 - [x] download a multi-file torrent using all strategies (BEP 3, BEP 20)
 - [x] download multiple torrents simultaneously
-- [x] seeding
-- [x] tracker updating in intervals
+- [x] seeding + tracker updating in intervals
 - [x] smart ban 
+- [x] location-based peer filtering
 - [x] canonical peer priority for seeding (BEP 40)
 - [x] user interface
 - [x] upnp port forwarding with randomization
-- [ ] cross-platform
+- [x] compatible with Windows / Linux
 
 ### Limitations
 You won't be able to:
@@ -24,7 +24,7 @@ You won't be able to:
 
 ### Usage
 > [!IMPORTANT]
-> to mitigate unexpected behavior, use python version above `3.10`
+> to mitigate unexpected behavior, use a python version above `3.10`
 
 1. go to `src` directory with ```cd RaBit/src```
 2. install required libraries with ```pip install -r requirements.txt```

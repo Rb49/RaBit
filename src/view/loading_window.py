@@ -1,6 +1,7 @@
 import customtkinter
 from PIL import Image
 from pathlib import Path
+import os
 
 
 class Frame(customtkinter.CTkFrame):
@@ -12,7 +13,12 @@ class Frame(customtkinter.CTkFrame):
         image_label = customtkinter.CTkLabel(self, image=icon, text="", fg_color=master.background)
         image_label.grid(row=0, padx=20, pady=(10, 20))
 
-        name = customtkinter.CTkLabel(self, text="RaBit ™", font=("impact", 35))
+        if "nt" == os.name:  # linux tkinter doesn't support this font
+            font = "impact"
+        else:
+            font = "aptos black"
+
+        name = customtkinter.CTkLabel(self, text="RaBit ™", font=(font, 35))
         name.grid(row=1, padx=20, pady=0)
 
         description = customtkinter.CTkLabel(self, text="A BitTorrent Client", font=("aptos black", 20))
@@ -42,7 +48,8 @@ class LoadingWindow(customtkinter.CTk):
         self.grid_columnconfigure(0, weight=1)
 
         self.title("RaBit v1.0.0")
-        self.iconbitmap(LoadingWindow.ICON_PATH)
+        if "nt" == os.name:  # linux tkinter doesn't support .ico
+            self.iconbitmap(LoadingWindow.ICON_PATH)
         self.minsize(LoadingWindow.WIDTH, LoadingWindow.HEIGHT)
 
         self.frame = Frame(self, fg_color=self.background)

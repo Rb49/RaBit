@@ -9,6 +9,7 @@ from typing import List, Any, Tuple
 import customtkinter
 from PIL import Image
 from random import choice, randint
+import os
 
 
 class ToolbarFrame(customtkinter.CTkFrame):
@@ -221,7 +222,9 @@ class MainWindow(customtkinter.CTk):
         customtkinter.set_default_color_theme("blue")
 
         self.title("RaBit v1.0.0")
-        self.iconbitmap(MainWindow.ICON_PATH)
+        if "nt" == os.name:  # linux tkinter doesn't support .ico
+            self.iconbitmap(MainWindow.ICON_PATH)
+
         self.minsize(MainWindow.WIDTH, MainWindow.HEIGHT)
         self.columnconfigure(0, weight=1)
         self.rowconfigure(0, weight=0)
@@ -306,7 +309,7 @@ class MainWindow(customtkinter.CTk):
             map_frame = MapFrame(self.info_tabs[obj_hash].tab("Peers"), fg_color="transparent")
             map_frame.grid(row=0, column=1, columnspan=1, padx=(5, 0), pady=0, sticky="e")
             peers_info_frame = PeersInfoFrame(self.info_tabs[obj_hash].tab("Peers"))
-            peers_info_frame.grid(row=0, column=0, columnspan=1, padx=(0, 5), pady=0, sticky="we")
+            peers_info_frame.grid(row=0, column=0, columnspan=1, padx=(0, 5), pady=0, sticky="nwe")
             self.peers_info_tables[obj_hash] = peers_info_frame
 
             # general info
