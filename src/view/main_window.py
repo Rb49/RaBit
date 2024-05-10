@@ -133,7 +133,7 @@ class GeneralTorrentInfo(customtkinter.CTkFrame):
     titles = [
         "Downloaded: ", "Uploaded: ", "Corrupted: ", "Wasted: ",
         "Progress: ", "Ratio: ", "Pieces: ", "Piece length: ",
-        "Trackers: ", "Comment: ", "Created By: ", "Creation Date: "
+        "Working trackers: ", "Comment: ", "Created By: ", "Creation Date: "
     ]
 
     def __init__(self, master, *data, **kwargs):
@@ -141,7 +141,7 @@ class GeneralTorrentInfo(customtkinter.CTkFrame):
         titles in order:
         "Downloaded: ", "Uploaded: ", "Corrupted: ", "Wasted: ",
         "Progress: ", "Ratio: ", "Pieces: ", "Piece length: ",
-        "Trackers: ", "Comment: ", "Created By: ", "Creation Date: "
+        "Working trackers: ", "Comment: ", "Created By: ", "Creation Date: "
         """
         super().__init__(master, **kwargs)
         master.columnconfigure(0, weight=1)

@@ -23,6 +23,9 @@ You won't be able to:
 - contribute to incoming connections during download (only to outgoing)
 
 ### Usage
+> [!IMPORTANT]
+> to mitigate unexpected behavior, use python version above `3.10`
+
 1. go to `src` directory with ```cd RaBit/src```
 2. install required libraries with ```pip install -r requirements.txt```
 3. run `main.py`

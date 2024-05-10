@@ -1,5 +1,3 @@
-import os
-
 import customtkinter
 from PIL import Image
 from pathlib import Path
