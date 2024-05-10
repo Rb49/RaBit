@@ -309,7 +309,7 @@ class MainWindow(customtkinter.CTk):
             map_frame = MapFrame(self.info_tabs[obj_hash].tab("Peers"), fg_color="transparent")
             map_frame.grid(row=0, column=1, columnspan=1, padx=(5, 0), pady=0, sticky="e")
             peers_info_frame = PeersInfoFrame(self.info_tabs[obj_hash].tab("Peers"))
-            peers_info_frame.grid(row=0, column=0, columnspan=1, padx=(0, 5), pady=0, sticky="nwe")
+            peers_info_frame.grid(row=0, column=0, columnspan=1, padx=(0, 5), pady=0, sticky="news")
             self.peers_info_tables[obj_hash] = peers_info_frame
 
             # general info
