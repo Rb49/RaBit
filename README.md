@@ -24,7 +24,7 @@ You won't be able to:
 
 ### Usage
 > [!IMPORTANT]
-> To mitigate unexpected behavior, use a python version above `3.10`
+> To mitigate unexpected behavior, use a python version equal or above `3.10`
 
 1. Go to `src` directory with ```cd RaBit/src```
 2. Install required libraries with ```pip install -r requirements.txt```
