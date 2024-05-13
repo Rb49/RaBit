@@ -4,12 +4,24 @@ from .settings import get_TopWindow as Settings
 from .zoomable_canvas import get_ZoomableMapCanvas
 from .utils import *
 
-from pathlib import Path
 from typing import List, Any, Tuple
 import customtkinter
 from PIL import Image
 from random import choice, randint
 import os
+import sys
+
+
+def abs_db_path(file_name: str) -> str:
+    """
+    computes the absolute path of the file (based on this root dir)
+    :return: absolute path
+    """
+    if hasattr(sys, '_MEIPASS'):  # TODO add `data` dir in exe for all data, paste manually
+        base_path = os.path.join(sys._MEIPASS, 'data')
+    else:
+        base_path = os.path.dirname(os.path.abspath(__file__))
+    return os.path.join(base_path, file_name)
 
 
 class ToolbarFrame(customtkinter.CTkFrame):
@@ -207,10 +219,10 @@ class PeersInfoFrame(customtkinter.CTkScrollableFrame):
 
 
 class MainWindow(customtkinter.CTk):
-    ICON_PATH = Path().resolve() / "src" / "view" / "assets" / "RaBit_icon.ico"
-    SETTINGS_PATH = Path().resolve() / "src" / "view" / "assets" / "settings.png"
-    ADD_PATH = Path().resolve() / "src" / "view" / "assets" / "add.png"
-    REMOVE_PATH = Path().resolve() / "src" / "view" / "assets" / "remove.png"
+    ICON_PATH = abs_db_path("assets/RaBit_icon.ico")
+    SETTINGS_PATH = abs_db_path("assets/settings.png")
+    ADD_PATH = abs_db_path("assets/add.png")
+    REMOVE_PATH = abs_db_path("assets/remove.png")
 
     WIDTH = 720
     HEIGHT = 360

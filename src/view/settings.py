@@ -1,9 +1,22 @@
 from src.RaBit import Client
 
 import asyncio
-from pathlib import Path
 from PIL import Image
 import customtkinter
+import os
+import sys
+
+
+def abs_db_path(file_name: str) -> str:
+    """
+    computes the absolute path of the file (based on this root dir)
+    :return: absolute path
+    """
+    if hasattr(sys, '_MEIPASS'):  # TODO add `data` dir in exe for all data, paste manually
+        base_path = os.path.join(sys._MEIPASS, 'data')
+    else:
+        base_path = os.path.dirname(os.path.abspath(__file__))
+    return os.path.join(base_path, file_name)
 
 
 class DataFrame(customtkinter.CTkFrame):
@@ -161,9 +174,9 @@ class DataFrame(customtkinter.CTkFrame):
 
 
 class SettingsWindow(customtkinter.CTkToplevel):
-    COUNTRY_LIST_PATH = Path().resolve() / "src" / "view" / "assets" / "countries.txt"
-    POSITIVE_PATH = Path().resolve() / "src" / "view" / "assets" / "positive_mark.png"
-    NEGATIVE_PATH = Path().resolve() / "src" / "view" / "assets" / "negative_mark.png"
+    COUNTRY_LIST_PATH = abs_db_path("assets/countries.txt")
+    POSITIVE_PATH = abs_db_path("assets/positive_mark.png")
+    NEGATIVE_PATH = abs_db_path("assets/negative_mark.png")
 
     WIDTH = 600
     HEIGHT = 450

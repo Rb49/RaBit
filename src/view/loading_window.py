@@ -1,7 +1,19 @@
 import customtkinter
 from PIL import Image
-from pathlib import Path
 import os
+import sys
+
+
+def abs_db_path(file_name: str) -> str:
+    """
+    computes the absolute path of the file (based on this root dir)
+    :return: absolute path
+    """
+    if hasattr(sys, '_MEIPASS'):  # TODO add `data` dir in exe for all data, paste manually
+        base_path = os.path.join(sys._MEIPASS, 'data')
+    else:
+        base_path = os.path.dirname(os.path.abspath(__file__))
+    return os.path.join(base_path, file_name)
 
 
 class Frame(customtkinter.CTkFrame):
@@ -33,7 +45,7 @@ class Frame(customtkinter.CTkFrame):
 
 
 class LoadingWindow(customtkinter.CTk):
-    ICON_PATH = Path().resolve() / "src" / "view" / "assets" / "RaBit_icon.ico"
+    ICON_PATH = abs_db_path("assets/RaBit_icon.ico")
     WIDTH = 640
     HEIGHT = 360
 

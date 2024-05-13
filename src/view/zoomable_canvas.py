@@ -4,12 +4,24 @@ from typing import Tuple, List
 import customtkinter
 from PIL import Image, ImageTk
 import os
-from pathlib import Path
+import sys
+
+
+def abs_db_path(file_name: str) -> str:
+    """
+    computes the absolute path of the file (based on this root dir)
+    :return: absolute path
+    """
+    if hasattr(sys, '_MEIPASS'):  # TODO add `data` dir in exe for all data, paste manually
+        base_path = os.path.join(sys._MEIPASS, 'data')
+    else:
+        base_path = os.path.dirname(os.path.abspath(__file__))
+    return os.path.join(base_path, file_name)
 
 
 class ZoomableMapCanvas(customtkinter.CTkCanvas):
-    MAP_PATH = Path().resolve() / "src" / "view" / "assets" / "full_size_map.png"
-    PINS_PATH = Path().resolve() / "src" / "view" / "assets" / "country_pins"
+    MAP_PATH = abs_db_path("assets/full_size_map.png")
+    PINS_PATH = abs_db_path("assets/country_pins")
     initial_zoom = 0.35
 
     def __init__(self, master, addresses, **kwargs):

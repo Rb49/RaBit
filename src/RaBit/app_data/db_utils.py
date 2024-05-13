@@ -2,9 +2,10 @@ from ..file.file_object import PickleableFile
 
 import asyncio
 import re
-from pathlib import Path
 import sqlite3
 import pickle
+import sys
+import os
 from typing import Union, Any, Dict, List, Tuple
 from collections import namedtuple
 import json
@@ -227,13 +228,13 @@ class CompletedTorrentsDB(Singleton):
         self.conn.close()
 
 
-def abs_db_path(file_name: str) -> Path:
+def abs_db_path(file_name: str) -> str:
     """
     computes the absolute path of the file (based on this root dir)
     :return: absolute path
     """
-    hpath_parent = Path(__file__).parent
-    return hpath_parent.joinpath(file_name)
-
-    # thanks to sapoj for help with this function
-
+    if hasattr(sys, '_MEIPASS'):  # TODO add `data` dir in exe for all data, paste manually
+        base_path = os.path.join(sys._MEIPASS, 'data')
+    else:
+        base_path = os.path.dirname(os.path.abspath(__file__))
+    return os.path.join(base_path, file_name)
