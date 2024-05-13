@@ -28,7 +28,9 @@ You won't be able to:
 
 1. Go to `src` directory with ```cd RaBit/src```
 2. Install required libraries with ```pip install -r requirements.txt```
-3. Run `main.py`
+3. Run with GUI: `main.py`
+
+   Run without GUI: `viewless.py` (with args: seed: bool, torrent_path: str, result_path: str, skip_hash_check: bool)
 
 ### Usage example
 Downloading Linux Debian iso:

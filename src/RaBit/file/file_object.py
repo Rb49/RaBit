@@ -146,12 +146,12 @@ class File:
             with threading.Lock():
                 piece: DownloadingPiece = await self.results_queue.get()
 
-            # hash check
             data = piece.get_data
-            piece_hash = sha1(data).digest()
-            torrent_piece_hash = self.TorrentData.piece_hashes[piece.index]
 
             if not self.skip_hash_check:
+                # hash check
+                piece_hash = sha1(data).digest()
+                torrent_piece_hash = self.TorrentData.piece_hashes[piece.index]
                 if piece_hash != torrent_piece_hash:
                     print('received corrupted piece ', piece.index)
 

@@ -218,6 +218,11 @@ class CompletedTorrentsDB(Singleton):
             torrents.append(pickle.loads(torrent[1]))
         return torrents
 
+    def delete_all_torrents(self):
+        cursor = self.conn.cursor()
+        cursor.execute("DELETE * FROM completed_torrents")
+        self.conn.commit()
+
     def __del__(self):
         self.conn.close()
 

@@ -80,15 +80,15 @@ class Client(_Singleton):
         self.started = True
         return True
 
-    def add_torrent(self, torrent_path: str, download_dir: str, skip_hash_check: bool) -> bool:
+    def add_torrent(self, torrent_path: str, download_dir: str, skip_hash_check: bool) -> threading.Thread:
         if not self.started:
-            return False
+            return None
         session = DownloadSession(torrent_path, download_dir, skip_hash_check)
         self.torrents.add(session)
         download_thread = threading.Thread(target=lambda: asyncio.run(session.download()), daemon=True)
         time.sleep(0.05)
         download_thread.start()
-        return True
+        return download_thread
 
     def remove_torrent_session(self, info_hash: bytes, obj_hash: int) -> bool:
         if not self.started:
@@ -138,6 +138,9 @@ class Client(_Singleton):
                 if not CompletedTorrentsDB().find_info_hash(torrent.info_hash):
                     self.torrents.remove(torrent)
 
+    def _force_start(self):
+        self.started = True
+
     @staticmethod
     def get_download_dir() -> str:
         return get_configuration("download_dir")
@@ -161,3 +164,7 @@ class Client(_Singleton):
     @staticmethod
     def get_torrent(info_hash: bytes):
         return CompletedTorrentsDB().get_torrent(info_hash)
+
+    @staticmethod
+    def _remove_all_completed_torrents():
+        CompletedTorrentsDB().delete_all_torrents()

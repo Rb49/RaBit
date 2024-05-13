@@ -1,8 +1,7 @@
 from src.RaBit import Client
 
-import concurrent.futures
 import customtkinter
-from PyQt5.QtWidgets import QApplication, QFileDialog
+from tkinter import filedialog as FD
 import os
 from PIL import Image
 from pathlib import Path
@@ -111,36 +110,21 @@ class FileDialogs(customtkinter.CTkFrame):
 
     @staticmethod
     def open_file_dialog(is_folder: bool, start_directory: str) -> str:
-        app = QApplication([])
-        file_dialog = QFileDialog()
+        if not start_directory:
+            start_directory = os.path.abspath(os.sep)
         if is_folder:
-            file_dialog.setFileMode(QFileDialog.Directory)
+            path = FD.askdirectory(title="Select a Folder", initialdir=start_directory)
         else:
-            file_dialog.setFileMode(QFileDialog.ExistingFile)
-            file_dialog.setNameFilter("Torrent Files (*.torrent)")
-        if start_directory:
-            file_dialog.setDirectory(start_directory)
-        else:
-            file_dialog.setDirectory(os.path.abspath(os.sep))
-        if file_dialog.exec_():
-            selected_files = file_dialog.selectedFiles()
-            if is_folder:
-                for selected_file in selected_files:
-                    if os.path.isdir(selected_file):
-                        return selected_file
-                return ""
-            else:
-                return selected_files[0]  # Return the first selected file
+            path = FD.askopenfilename(title="Select a Torrent file", initialdir=start_directory, filetypes=[('Torrent files', '*.torrent')])
+        if path:
+            return path
         else:
             return ""
 
     def file_dialog(self, master, is_folder: bool, start_directory: str):
         master.attributes("-topmost", False)
         instance = self.download_dir_input if is_folder else self.torrent_path_input
-        # prevent total collapse
-        with concurrent.futures.ThreadPoolExecutor() as executor:
-            future = executor.submit(FileDialogs.open_file_dialog, is_folder, start_directory)
-            path = future.result()
+        path = FileDialogs.open_file_dialog(is_folder, start_directory)
         if path:
             instance.delete(0, "end")
             instance.insert(0, path)
