@@ -1,0 +1,1 @@
+{"v4_forward": {"internal_port": 0, "external_port": 0, "last_forward": 0}, "v6_forward": {"internal_port": 0, "external_port": 0, "last_forward": 0}, "seeding_server_is_up": false, "download_dir": "", "external_ip": "", "max_unchocked_peers": 8, "max_optimistic_unchock": 2, "max_leecher_peers": 100}
