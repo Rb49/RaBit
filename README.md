@@ -32,6 +32,8 @@ You won't be able to:
 
    Run without GUI: `viewless.py` (with args: seed: bool, torrent_path: str, result_path: str, skip_hash_check: bool)
 
+Running `reset.py` can be helpful with a file-related problem.
+
 ### Usage example
 Downloading Linux Debian iso:
 >

@@ -1,5 +1,9 @@
 #!/usr/bin/python
 
+"""
+main file of RaBit module only, without ui
+"""
+
 from src.RaBit.rabit import Client
 
 import asyncio

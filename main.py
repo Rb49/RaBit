@@ -1,5 +1,9 @@
 #!/usr/bin/python
 
+"""
+main file of RaBit client integrated with gui
+"""
+
 from src.app import Application
 
 import sys
