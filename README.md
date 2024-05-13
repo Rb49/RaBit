@@ -11,7 +11,7 @@
 - [x] Canonical peer priority for seeding (BEP 40)
 - [x] UPnP port forwarding with randomization
 - [x] User interface
-- [x] Compatible with Windows / Linux
+- [x] Compatible with Windows / Linux / macOS
 
 ### Limitations
 You won't be able to:
@@ -49,3 +49,7 @@ Minimized screen in Windows:
 Full screen in Kali-Linux:
 > 
 > ![linux_download](https://github.com/Rb49/RaBit/assets/95938066/80aef9e9-f2a8-45c0-bd86-c99fdf0e8cba)
+
+Minimized screen in macOS:
+>
+> ![macos_download](https://github.com/Rb49/RaBit/assets/95938066/845b22f6-1375-429d-ba6e-8dde5db727a4)
