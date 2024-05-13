@@ -44,7 +44,7 @@ Full screen in Windows:
 
 Minimized screen in Windows:
 >
-> ![windows_1080p_minimized](https://github.com/Rb49/RaBit/assets/95938066/c5505cf0-a872-4632-8b76-f24b7820dd52)
+> 
 
 Full screen in Kali-Linux:
 > 
