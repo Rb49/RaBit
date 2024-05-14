@@ -22,7 +22,8 @@ You won't be able to:
 - Download from magnet links
 - Contribute to incoming connections during download (only to outgoing)
 
-### Usage
+### Usage and installation
+#### Source installation
 > [!IMPORTANT]
 > To mitigate unexpected behavior, use a python version equal or above `3.10`
 
@@ -33,6 +34,9 @@ You won't be able to:
    Run without GUI: `viewless.py` (with args: seed: bool, torrent_path: str, result_path: str, skip_hash_check: bool)
 
 Running `reset.py` can be helpful with a file-related problem.
+#### Executable
+
+Simply download and extract the application corresponding to your OS.
 
 ### Usage example
 Downloading Linux Debian iso:
