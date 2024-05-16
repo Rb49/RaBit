@@ -44,29 +44,29 @@ class DataFrame(customtkinter.CTkFrame):
         self.max_leechers_image_label = customtkinter.CTkLabel(self, image=check_mark, text="")
         self.max_leechers_image_label.grid(row=1, column=3, columnspan=1, padx=7, pady=0)
 
-        # max optimistic unchock value
-        self.max_optimistic_unchock_title = customtkinter.CTkLabel(self, text="Max optimistically unchocked peers")
-        self.max_optimistic_unchock_title.grid(row=2, column=0, columnspan=3, padx=(20, 0), pady=(5, 0), sticky="w")
-        self.max_optimistic_unchock_entry = customtkinter.CTkEntry(self, placeholder_text="Type here...")
-        self.max_optimistic_unchock_entry.insert(0, master.client.get_configuration("max_optimistic_unchock"))
-        self.max_optimistic_unchock_entry.grid(row=3, column=0, columnspan=3, sticky="ew", padx=(20, 0), pady=5)
+        # max optimistic unchoke value
+        self.max_optimistic_unchoke_title = customtkinter.CTkLabel(self, text="Max optimistically unchoked peers")
+        self.max_optimistic_unchoke_title.grid(row=2, column=0, columnspan=3, padx=(20, 0), pady=(5, 0), sticky="w")
+        self.max_optimistic_unchoke_entry = customtkinter.CTkEntry(self, placeholder_text="Type here...")
+        self.max_optimistic_unchoke_entry.insert(0, master.client.get_configuration("max_optimistic_unchoke"))
+        self.max_optimistic_unchoke_entry.grid(row=3, column=0, columnspan=3, sticky="ew", padx=(20, 0), pady=5)
 
-        self.max_optimistic_unchock_entry.bind("<KeyRelease>", lambda event: self.validate("max_optimistic_unchock"))
+        self.max_optimistic_unchoke_entry.bind("<KeyRelease>", lambda event: self.validate("max_optimistic_unchoke"))
 
-        self.max_optimistic_unchock_image_label = customtkinter.CTkLabel(self, image=check_mark, text="")
-        self.max_optimistic_unchock_image_label.grid(row=3, column=3, columnspan=1, padx=7, pady=0)
+        self.max_optimistic_unchoke_image_label = customtkinter.CTkLabel(self, image=check_mark, text="")
+        self.max_optimistic_unchoke_image_label.grid(row=3, column=3, columnspan=1, padx=7, pady=0)
 
-        # max unchocked peers value
-        self.max_unchock_title = customtkinter.CTkLabel(self, text="Max regularly unchocked peers")
-        self.max_unchock_title.grid(row=4, column=0, columnspan=3, padx=(20, 0), pady=(5, 0), sticky="w")
-        self.max_unchock_entry = customtkinter.CTkEntry(self, placeholder_text="Type here...")
-        self.max_unchock_entry.insert(0, master.client.get_configuration("max_unchocked_peers"))
-        self.max_unchock_entry.grid(row=5, column=0, columnspan=3, sticky="ew", padx=(20, 0), pady=5)
+        # max unchoked peers value
+        self.max_unchoke_title = customtkinter.CTkLabel(self, text="Max regularly unchoked peers")
+        self.max_unchoke_title.grid(row=4, column=0, columnspan=3, padx=(20, 0), pady=(5, 0), sticky="w")
+        self.max_unchoke_entry = customtkinter.CTkEntry(self, placeholder_text="Type here...")
+        self.max_unchoke_entry.insert(0, master.client.get_configuration("max_unchoked_peers"))
+        self.max_unchoke_entry.grid(row=5, column=0, columnspan=3, sticky="ew", padx=(20, 0), pady=5)
 
-        self.max_unchock_entry.bind("<KeyRelease>", lambda event: self.validate("max_unchocked_peers"))
+        self.max_unchoke_entry.bind("<KeyRelease>", lambda event: self.validate("max_unchoked_peers"))
 
-        self.max_unchock_image_image_label = customtkinter.CTkLabel(self, image=check_mark, text="")
-        self.max_unchock_image_image_label.grid(row=5, column=3, columnspan=1, padx=7, pady=0)
+        self.max_unchoke_image_image_label = customtkinter.CTkLabel(self, image=check_mark, text="")
+        self.max_unchoke_image_image_label.grid(row=5, column=3, columnspan=1, padx=7, pady=0)
 
         # banned countries value
         self.banned_countries_title = customtkinter.CTkLabel(self, text="Banned countries (ISO alpha-2 codes)")
@@ -111,30 +111,30 @@ class DataFrame(customtkinter.CTkFrame):
             self.max_leechers_image_label.configure(image=image)
             self.validation_flags[0] = False
 
-        elif setting == "max_optimistic_unchock":
-            entry_data = self.max_optimistic_unchock_entry.get().strip('\n')
+        elif setting == "max_optimistic_unchoke":
+            entry_data = self.max_optimistic_unchoke_entry.get().strip('\n')
             if entry_data.isdigit():
                 entry_data = int(entry_data)
                 if entry_data > 0:
                     image = customtkinter.CTkImage(Image.open(SettingsWindow.POSITIVE_PATH), size=(25, 25))
-                    self.max_optimistic_unchock_image_label.configure(image=image)
+                    self.max_optimistic_unchoke_image_label.configure(image=image)
                     self.validation_flags[1] = True
                     return
             image = customtkinter.CTkImage(Image.open(SettingsWindow.NEGATIVE_PATH), size=(25, 25))
-            self.max_optimistic_unchock_image_label.configure(image=image)
+            self.max_optimistic_unchoke_image_label.configure(image=image)
             self.validation_flags[1] = False
 
-        elif setting == "max_unchocked_peers":
-            entry_data = self.max_unchock_entry.get().strip('\n')
+        elif setting == "max_unchoked_peers":
+            entry_data = self.max_unchoke_entry.get().strip('\n')
             if entry_data.isdigit():
                 entry_data = int(entry_data)
                 if entry_data > 0:
                     image = customtkinter.CTkImage(Image.open(SettingsWindow.POSITIVE_PATH), size=(25, 25))
-                    self.max_unchock_image_image_label.configure(image=image)
+                    self.max_unchoke_image_image_label.configure(image=image)
                     self.validation_flags[2] = True
                     return
             image = customtkinter.CTkImage(Image.open(SettingsWindow.NEGATIVE_PATH), size=(25, 25))
-            self.max_unchock_image_image_label.configure(image=image)
+            self.max_unchoke_image_image_label.configure(image=image)
             self.validation_flags[2] = False
 
         elif setting == "banned_countries":
@@ -157,11 +157,11 @@ class DataFrame(customtkinter.CTkFrame):
         new_data = int(self.max_leechers_entry.get().strip('\n'))
         await self.master.client.set_configuration("max_leecher_peers", new_data)
 
-        new_data = int(self.max_optimistic_unchock_entry.get().strip('\n'))
-        await self.master.client.set_configuration("max_optimistic_unchock", new_data)
+        new_data = int(self.max_optimistic_unchoke_entry.get().strip('\n'))
+        await self.master.client.set_configuration("max_optimistic_unchoke", new_data)
 
-        new_data = int(self.max_unchock_entry.get().strip('\n'))
-        await self.master.client.set_configuration("max_unchocked_peers", new_data)
+        new_data = int(self.max_unchoke_entry.get().strip('\n'))
+        await self.master.client.set_configuration("max_unchoked_peers", new_data)
 
         new_data = self.banned_countries_entry.get().strip('\n')
         if new_data:

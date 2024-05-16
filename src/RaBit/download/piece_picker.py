@@ -316,28 +316,28 @@ class PiecePicker:
                     peer.control_msg_queue.append(have_msg)
 
     @staticmethod
-    async def send_chock(peer: Peer):
+    async def send_choke(peer: Peer):
         """
-        adds 'chock' message to the queue of a peer
+        adds 'choke' message to the queue of a peer
         """
         async with asyncio.Lock():
-            peer.am_chocked = True
-            chock_msg: bytes = Chock.encode()
+            peer.am_choked = True
+            choke_msg: bytes = Choke.encode()
             peer.control_msg_queue = list(filter(lambda x: x[4] == 4, peer.control_msg_queue))
-            peer.control_msg_queue.append(chock_msg)
-            print('chocked ', repr(peer))
+            peer.control_msg_queue.append(choke_msg)
+            print('choked ', repr(peer))
 
     @staticmethod
-    async def send_unchock(peer: Peer):
+    async def send_unchoke(peer: Peer):
         """
-        adds 'unchock' message to the queue of a peer
+        adds 'unchoke' message to the queue of a peer
         """
         async with asyncio.Lock():
-            peer.am_chocked = False
-            unchock_msg: bytes = Unchock.encode()
+            peer.am_choked = False
+            unchoke_msg: bytes = Unchoke.encode()
             peer.control_msg_queue = list(filter(lambda x: x[4] == 4, peer.control_msg_queue))
-            peer.control_msg_queue.append(unchock_msg)
-            print('unchocked ', repr(peer))
+            peer.control_msg_queue.append(unchoke_msg)
+            print('unchoked ', repr(peer))
 
     @property
     def get_health(self):

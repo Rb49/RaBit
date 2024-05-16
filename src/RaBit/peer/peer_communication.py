@@ -83,9 +83,9 @@ class Stream:
 
             self.__consume(length)
             if msg_id == CHOKE:
-                return Chock()
+                return Choke()
             elif msg_id == UNCHOKE:
-                return Unchock()
+                return Unchoke()
             elif msg_id == INTERESTED:
                 return Interested()
             elif msg_id == NOT_INTERESTED:
@@ -106,7 +106,7 @@ class Stream:
                 raise AssertionError
 
 
-async def tcp_wire_communication(peerData: Tuple, TorrentData: Torrent, session, file_manager: File, piece_picker: PiecePicker, chocking_manager: TitForTat) -> None:
+async def tcp_wire_communication(peerData: Tuple, TorrentData: Torrent, session, file_manager: File, piece_picker: PiecePicker, choking_manager: TitForTat) -> None:
     """
     main function for communicating with a peer
     :param peerData: geodata of the peer
@@ -114,7 +114,7 @@ async def tcp_wire_communication(peerData: Tuple, TorrentData: Torrent, session,
     :param session: DownloadingSession instance with session stats
     :param file_manager: File instance managing disk IO operations
     :param piece_picker: PiecePicker instance for requesting and reporting blocks
-    :param chocking_manager: tit-for-tat algorithm for chocking management
+    :param choking_manager: tit-for-tat algorithm for choking management
     :return: None
     """
     address, city, distance = peerData
@@ -143,19 +143,19 @@ async def tcp_wire_communication(peerData: Tuple, TorrentData: Torrent, session,
             print("\033[92m{}\033[00m".format(f'connected {repr(thisPeer)}'))
 
             async for msg in Stream(reader, thisPeer, TorrentData):
-                if isinstance(msg, Chock):
-                    thisPeer.is_chocked = True
+                if isinstance(msg, Choke):
+                    thisPeer.is_choked = True
                     # send interested
                     writer.write(Interested.encode())
                     await writer.drain()
-                elif isinstance(msg, Unchock):
-                    thisPeer.is_chocked = False
+                elif isinstance(msg, Unchoke):
+                    thisPeer.is_choked = False
 
                 # the peer is interested in what I have
                 elif isinstance(msg, Interested):
-                    await chocking_manager.report_interested(thisPeer)
+                    await choking_manager.report_interested(thisPeer)
                 elif isinstance(msg, NotInterested):
-                    await chocking_manager.report_uninterested(thisPeer)
+                    await choking_manager.report_uninterested(thisPeer)
 
                 elif isinstance(msg, Have):
                     msg: Have
@@ -184,7 +184,7 @@ async def tcp_wire_communication(peerData: Tuple, TorrentData: Torrent, session,
                     thisPeer.have_pieces |= msg.bitfield
 
                 elif isinstance(msg, Request):
-                    if not thisPeer.am_chocked:
+                    if not thisPeer.am_choked:
                         if piece_picker.FILE_STATUS[TorrentData.info_hash][msg.piece_index]:
                             request_queue.append((msg.piece_index, msg.begin, msg.length))
                             if len(request_queue) > _MAX_REQUESTS:
@@ -236,7 +236,7 @@ async def tcp_wire_communication(peerData: Tuple, TorrentData: Torrent, session,
                 # send requests
                 if not thisPeer.is_in_endgame:
                     if len(thisPeer.pipelined_requests) < thisPeer.MAX_PIPELINE_SIZE / 2:  # save some cpu usage
-                        while not thisPeer.is_chocked and len(thisPeer.pipelined_requests) < thisPeer.MAX_PIPELINE_SIZE:
+                        while not thisPeer.is_choked and len(thisPeer.pipelined_requests) < thisPeer.MAX_PIPELINE_SIZE:
                             if isinstance((request := await piece_picker.get_block(thisPeer.have_pieces)), Block):
                                 writer.write(Request.encode(request.index, request.begin, request.length))
                                 await writer.drain()
@@ -247,7 +247,7 @@ async def tcp_wire_communication(peerData: Tuple, TorrentData: Torrent, session,
                                 break
 
                 else:
-                    while not thisPeer.is_chocked and len(thisPeer.pipelined_requests) < thisPeer.MAX_PIPELINE_SIZE:
+                    while not thisPeer.is_choked and len(thisPeer.pipelined_requests) < thisPeer.MAX_PIPELINE_SIZE:
                         seed(hash(thisPeer))
                         # available_blocks = all blocks - blocks I already requested - blocks somebody else got - pipelined requests (from before endgame)
                         available_blocks = thisPeer.endgame_blocks - thisPeer.endgame_request_msg_sent - piece_picker.endgame_received_blocks - thisPeer.pipelined_requests
@@ -319,7 +319,7 @@ async def tcp_wire_communication(peerData: Tuple, TorrentData: Torrent, session,
             else:
                 return
 
-            await chocking_manager.report_uninterested(thisPeer)
+            await choking_manager.report_uninterested(thisPeer)
 
             # return requested blocks
             for block in thisPeer.pipelined_requests:

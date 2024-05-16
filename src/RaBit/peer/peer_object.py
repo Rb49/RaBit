@@ -28,9 +28,9 @@ class Peer:
         self.MAX_PIPELINE_SIZE = 10  # 10 is default
         self.address = address
 
-        self.is_chocked = True  # am I chocked?
+        self.is_choked = True  # am I choked?
         self.is_interested = True  # am I interested in what the peer offers? always true on download
-        self.am_chocked = True  # have I chocked the peer?
+        self.am_choked = True  # have I choked the peer?
         self.am_interested = False  # is the peer interested in what I offer?
 
         self.have_pieces = bitstring.BitArray(bin='0' * len(self.TorrentData.piece_hashes))

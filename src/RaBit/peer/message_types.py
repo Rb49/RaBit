@@ -18,7 +18,7 @@ BLOCK_SIZE = 2 ** 14
 MAX_ALLOWED_MSG_SIZE = 2 ** 15 + 9
 
 
-class Chock:
+class Choke:
     """
     I cannot send requests to this peer anymore
     choke: <len=0001><id=0>
@@ -29,7 +29,7 @@ class Chock:
         return struct.pack('>IB', 1, CHOKE)
 
 
-class Unchock:
+class Unchoke:
     """
     I can now send requests to this peer
     unchoke: <len=0001><id=1>

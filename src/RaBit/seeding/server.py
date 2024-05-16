@@ -146,17 +146,17 @@ async def handle_leecher(reader, writer) -> None:
 
             if isinstance(msg, Interested):
                 leecher.am_interested = True
-                leecher.am_chocked = False
-                writer.write(Unchock.encode())
+                leecher.am_choked = False
+                writer.write(Unchoke.encode())
                 await writer.drain()
             elif isinstance(msg, NotInterested):
                 leecher.am_interested = False
-                leecher.am_chocked = True
-                writer.write(Chock.encode())
+                leecher.am_choked = True
+                writer.write(Choke.encode())
                 await writer.drain()
 
             elif isinstance(msg, Request):
-                if not leecher.am_chocked:
+                if not leecher.am_choked:
                     leecher.pipelined_requests.append((msg.piece_index, msg.begin, msg.length))
                     if len(leecher.pipelined_requests) > _MAX_REQUESTS:
                         # attempted dos detected

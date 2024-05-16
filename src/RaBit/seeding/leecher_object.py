@@ -26,7 +26,7 @@ class Leecher:
         self.address = address
         self.priority = priority
 
-        self.am_chocked = True  # have I chocked the peer?
+        self.am_choked = True  # have I choked the peer?
         self.am_interested = False  # is the peer interested in what I offer?
 
         self.pipelined_requests: List[Tuple[int, int, int]] = []
