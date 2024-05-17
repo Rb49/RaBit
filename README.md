@@ -2,7 +2,7 @@
 ## A pure Python asynchronous BitTorrent Client
 ### Features
 
-- [x] HTTP and UDP tracker announces + compact response support (BEP 3, BEP 7, BEP 15, BEP 23)
+- [x] HTTP and UDP tracker announces + compact response support (BEP 3, BEP 7, BEP 12, BEP 15, BEP 23)
 - [x] Download a multi-file torrent using all strategies (BEP 3, BEP 20)
 - [x] Download multiple torrents simultaneously
 - [x] Seeding + tracker updating in intervals
