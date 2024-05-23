@@ -1,3 +1,28 @@
+import PTN
+import requests
+from bs4 import BeautifulSoup
+
+
+def imdb_search(name: str) -> bool:
+    """
+    scrapes IMDb to find if the torrent contains mainstream media which is almost certainly under copyright
+    :param name: torrent's name without its suffix
+    :return: whatever the media was found in scrape
+    """
+    try:
+        parsed_name = PTN.parse(name)
+        query = f"{parsed_name['title']} {parsed_name['year'] if 'year' in parsed_name else ''}"
+        url = f"https://www.imdb.com/search/title/?title={'%20'.join(query.split())}"
+
+        response = requests.get(url, headers={'User-Agent': 'RaBit v1.0.0'})
+        soup = BeautifulSoup(response.text, 'html.parser')
+        links = filter(lambda x: x.startswith('/title/'), map(lambda link: link.get('href'), soup.find_all('a')))
+        if list(links):
+            return True
+    except:
+        return False
+
+
 def convert_seconds(seconds: float) -> str:
     units = [(31556952, 'y'), (2629746, 'm'), (604800, 'w'), (86400, 'd'), (3600, 'h'), (60, 'm'), (1, 's')]
     remaining_seconds = seconds

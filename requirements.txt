@@ -9,3 +9,6 @@ upnpclient==1.0.3
 crc32c~=2.4
 customtkinter~=5.2.2
 pillow~=10.2.0
+parse-torrent-title==2.8.1
+beautifulsoup4~=4.12.2
+future~=1.0.0

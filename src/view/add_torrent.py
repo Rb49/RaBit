@@ -1,4 +1,7 @@
+import threading
+
 from src.RaBit import Client
+from .utils import *
 
 import customtkinter
 from pathlib import Path
@@ -80,7 +83,11 @@ class FileDialogs(customtkinter.CTkFrame):
         # confirm button
         self.confirm_button = customtkinter.CTkButton(self, text="Confirm", state="disabled",
                                                       command=lambda: self.add_torrent(master))
-        self.confirm_button.grid(row=5, column=0, padx=50, pady=30, columnspan=3, sticky="ew")
+        self.confirm_button.grid(row=5, column=0, padx=50, pady=(30, 2), columnspan=3, sticky="ew")
+
+        # warning label
+        self.warning_label = customtkinter.CTkLabel(self, text="", font=("", 13), text_color='orange')
+        self.warning_label.grid(row=6, column=0, columnspan=3, padx=(10, 0), pady=(0, 5))
 
         # start params could be valid
         self.on_key_release(None, True)
@@ -111,8 +118,18 @@ class FileDialogs(customtkinter.CTkFrame):
                 self.file_path = str(path)
                 self.valid_file = True
                 image = Image.open(AddTorrentWindow.POSITIVE_PATH)
+
+                # add warning label in a thread
+                def search():
+                    if imdb_search(path.name):
+                        self.warning_label.configure(text=f"The torrent entered is most certainly under copyright.\n"
+                                                          f"Downloading and distributing it may be illegal!")
+                        self.on_key_release(None, False)
+                threading.Thread(target=search, daemon=True).start()
+
             else:
                 self.valid_file = False
+                self.warning_label.configure(text="")
                 image = Image.open(AddTorrentWindow.NEGATIVE_PATH)
 
         if self.valid_file and self.valid_dir:
