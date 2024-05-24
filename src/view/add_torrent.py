@@ -1,5 +1,3 @@
-import threading
-
 from src.RaBit import Client
 from .utils import *
 
@@ -9,6 +7,7 @@ from tkinter import filedialog as FD
 import os
 from PIL import Image
 import sys
+import threading
 
 
 def abs_db_path(file_name: str) -> str:

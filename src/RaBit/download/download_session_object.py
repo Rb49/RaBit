@@ -70,106 +70,110 @@ class DownloadSession:
         main function for downloading a .torrent file
         :return: whatever the download was successful
         """
-        # should be called from protected code
-
-        # read torrent file
-        self.state = 'Reading torrent'
-        self.TorrentData = read_torrent(self.torrent_path)
-        self.info_hash = self.TorrentData.info_hash
-        self.length = self.TorrentData.length
-
-        # is it already being downloaded?
-        if self.info_hash in DownloadSession.Sessions:
-            self.state = 'Failed'
-            print('already downloading!')
-            return False
-
-        self.state = 'Verifying files'
-        bitarray, missing = self.verify_torrent()
-
-        if missing is None:
-            self.left = self.TorrentData.length
-        else:
-            extra = len(self.TorrentData.piece_hashes) * self.TorrentData.info[b'piece length'] - self.TorrentData.length
-            self.left = len(missing) * self.TorrentData.info[b'piece length'] - extra
-            self.downloaded = self.TorrentData.length - self.left
-
-        # add the TorrentData file path for fail safety
-        await db_utils.add_ongoing_torrent(self.torrent_path, self.result_dir)
-
-        # add self to dict
-        DownloadSession.Sessions[self.info_hash] = self
-
-        # initial announce
-        self.state = 'Announcing'
-        peers_list, self.trackers = await initial_announce(self.TorrentData, self.downloaded, self.uploaded, self.left, db_utils.get_configuration('v4_forward')['external_port'], 2)
-        # format peer list: sort and remove unwanted peers
-        my_ip = await get_my_public_ip()
-        peers_list = format_peers_list(peers_list, my_ip)
-
-        # verify torrent
-        if all(bitarray):
-            self.state = 'Completed'
-            self.progress = 100
-            print('got all!')
-            db_utils.CompletedTorrentsDB().insert_torrent(PickleableFile(File(self.TorrentData, self, None, None, self.torrent_path, self.result_dir)))
-            db_utils.remove_ongoing_torrent(self.torrent_path)
-            return True
-
-        db_utils.CompletedTorrentsDB().delete_torrent(self.info_hash)
-
-        if not peers_list:
-            self.state = 'Failed'
-            print("couldn't find any peers!")
-            DownloadSession.Sessions.pop(self.info_hash)
-            return False
-
-        # --------
-        # peer wire protocol
-        self.state = 'Downloading'
-        announce_loop_task = asyncio.create_task(announce_loop(self.trackers, self))
-        self.announce_task = announce_loop_task
-
-        piece_picker = PiecePicker(self.TorrentData, self, bitarray, missing)
-        tit_for_tat_manager = TitForTat(piece_picker)
-
-        # start disk IO thread
-        await db_utils.set_configuration('download_dir', self.result_dir)
-        file = File(self.TorrentData, self, piece_picker, piece_picker.results_queue, self.torrent_path, self.result_dir, self.skip_hash_check)
-
-        work = [tcp_wire_communication(peer, self.TorrentData, self, file, piece_picker, tit_for_tat_manager) for peer in peers_list]
         try:
-            thread = threading.Thread(target=lambda: asyncio.run(DownloadSession.work_wrapper(file.save_pieces_loop, tit_for_tat_manager.loop, *work)), daemon=True)
-            thread.start()
-            thread.join()
-        except RuntimeError:
-            pass
+            # read torrent file
+            self.state = 'Reading torrent'
+            self.TorrentData = read_torrent(self.torrent_path)
+            self.info_hash = self.TorrentData.info_hash
+            self.length = self.TorrentData.length
 
-        if db_utils.CompletedTorrentsDB().find_info_hash(self.info_hash):
-            # announce completion
-            total_download, total_upload = self.downloaded + self.corrupted + self.wasted, self.uploaded
+            # is it already being downloaded?
+            if self.info_hash in DownloadSession.Sessions:
+                self.state = 'Failed'
+                print('already downloading!')
+                return False
 
-            async def final_announce(tracker: Tracker):
-                if tracker.state in (ANNOUNCING, WORKING):
-                    try:
-                        await asyncio.wait_for(tracker.re_announce(total_download, total_upload, 0, 1), 2)
-                    except asyncio.TimeoutError:
-                        pass
+            self.state = 'Verifying files'
+            bitarray, missing = self.verify_torrent()
 
-            work = [final_announce(tracker) for tracker in self.trackers]
-            await asyncio.gather(*work)
+            if missing is None:
+                self.left = self.TorrentData.length
+            else:
+                extra = len(self.TorrentData.piece_hashes) * self.TorrentData.info[b'piece length'] - self.TorrentData.length
+                self.left = len(missing) * self.TorrentData.info[b'piece length'] - extra
+                self.downloaded = self.TorrentData.length - self.left
 
-            self.state = 'Completed'
-            # cleanup
-            DownloadSession.Sessions.pop(self.info_hash)
-            Peer.peer_instances.pop(self.info_hash)
-            announce_loop_task.cancel()
-            return True
+            # add the TorrentData file path for fail safety
+            await db_utils.add_ongoing_torrent(self.torrent_path, self.result_dir)
 
-        else:
+            # add self to dict
+            DownloadSession.Sessions[self.info_hash] = self
+
+            # initial announce
+            self.state = 'Announcing'
+            peers_list, self.trackers = await initial_announce(self.TorrentData, self.downloaded, self.uploaded, self.left, db_utils.get_configuration('v4_forward')['external_port'], 2)
+            # format peer list: sort and remove unwanted peers
+            my_ip = await get_my_public_ip()
+            peers_list = format_peers_list(peers_list, my_ip)
+
+            # verify torrent
+            if all(bitarray):
+                self.state = 'Completed'
+                self.progress = 100
+                print('got all!')
+                db_utils.CompletedTorrentsDB().insert_torrent(PickleableFile(File(self.TorrentData, self, None, None, self.torrent_path, self.result_dir)))
+                db_utils.remove_ongoing_torrent(self.torrent_path)
+                return True
+
+            db_utils.CompletedTorrentsDB().delete_torrent(self.info_hash)
+
+            if not peers_list:
+                self.state = 'Failed'
+                print("couldn't find any peers!")
+                DownloadSession.Sessions.pop(self.info_hash)
+                return False
+
+            # --------
+            # peer wire protocol
+            self.state = 'Downloading'
+            announce_loop_task = asyncio.create_task(announce_loop(self.trackers, self))
+            self.announce_task = announce_loop_task
+
+            piece_picker = PiecePicker(self.TorrentData, self, bitarray, missing)
+            tit_for_tat_manager = TitForTat(piece_picker)
+
+            # start disk IO thread
+            await db_utils.set_configuration('download_dir', self.result_dir)
+            file = File(self.TorrentData, self, piece_picker, piece_picker.results_queue, self.torrent_path, self.result_dir, self.skip_hash_check)
+
+            work = [tcp_wire_communication(peer, self.TorrentData, self, file, piece_picker, tit_for_tat_manager) for peer in peers_list]
+            try:
+                thread = threading.Thread(target=lambda: asyncio.run(DownloadSession.work_wrapper(file.save_pieces_loop, tit_for_tat_manager.loop, *work)), daemon=True)
+                thread.start()
+                thread.join()
+            except RuntimeError:
+                pass
+
+            if db_utils.CompletedTorrentsDB().find_info_hash(self.info_hash):
+                # announce completion
+                total_download, total_upload = self.downloaded + self.corrupted + self.wasted, self.uploaded
+
+                async def final_announce(tracker: Tracker):
+                    if tracker.state in (ANNOUNCING, WORKING):
+                        try:
+                            await asyncio.wait_for(tracker.re_announce(total_download, total_upload, 0, 1), 2)
+                        except asyncio.TimeoutError:
+                            pass
+
+                work = [final_announce(tracker) for tracker in self.trackers]
+                await asyncio.gather(*work)
+
+                self.state = 'Completed'
+                # cleanup
+                DownloadSession.Sessions.pop(self.info_hash)
+                Peer.peer_instances.pop(self.info_hash)
+                announce_loop_task.cancel()
+                return True
+
+            else:
+                self.state = 'Failed'
+                print('Failed!')
+                announce_loop_task.cancel()
+                return False
+        except:
+            db_utils.remove_ongoing_torrent(self.torrent_path)
             self.state = 'Failed'
             print('Failed!')
-            announce_loop_task.cancel()
             return False
 
     def verify_torrent(self) -> Tuple[bitstring.BitArray, List[int]]:
