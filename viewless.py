@@ -28,7 +28,7 @@ async def main(client: Client, seed: bool = True):
         print('Client could not initialize!')
         return
 
-    while seed or thread.is_alive() if hasattr(thread, "is_alive") else False:
+    while seed or (thread.is_alive() if hasattr(thread, "is_alive") else False):
         await client.torrents_state_update_loop()
         await asyncio.sleep(1)
 
