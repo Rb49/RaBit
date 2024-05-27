@@ -243,17 +243,19 @@ async def start_seeding_server() -> None:
                     port_range.insert(0, external_port)
 
                 devices = upnpclient.discover()
-                for external_port in port_range:
+                for new_external_port in port_range:
                     try:
-                        res = await forward_port_upnp(devices, external_port, internal_port, 'TCP', internal_ip, _LEASE_DURATION)
+                        res = await forward_port_upnp(devices, new_external_port, internal_port, 'TCP', internal_ip, _LEASE_DURATION)
                     except:  # conflict found, continue to next port
                         continue
 
                     if res:
-                        await save_forward(internal_port, external_port, version)
+                        await save_forward(internal_port, new_external_port, version)
                         last_forward = time.time()
-                        # re-announce to trackers
-                        re_announce_all_trackers()
+                        if new_external_port != external_port:
+                            # re-announce to trackers
+                            re_announce_all_trackers()
+                        external_port = new_external_port
                         break
                     else:  # no compatible device was found
                         raise Exception("Router not found. Most likely UPnP is not enabled on the router")
@@ -328,17 +330,19 @@ async def update_mapping(internal_port: int, external_port: int, internal_ip: st
         port_range.insert(0, external_port)
 
         devices = upnpclient.discover()
-        for external_port in port_range:
+        for new_external_port in port_range:
             try:
-                res = await forward_port_upnp(devices, external_port, internal_port, 'TCP', internal_ip, _LEASE_DURATION)
+                res = await forward_port_upnp(devices, new_external_port, internal_port, 'TCP', internal_ip, _LEASE_DURATION)
             except:  # conflict found, continue to next port
                 continue
 
             if res:
-                await save_forward(internal_port, external_port, version)
+                await save_forward(internal_port, new_external_port, version)
                 last_forward = time.time()
-                # re-announce to trackers
-                re_announce_all_trackers()
+                if new_external_port != external_port:
+                    # re-announce to trackers
+                    re_announce_all_trackers()
+                external_port = new_external_port
                 break
             else:  # no compatible device was found
                 raise Exception("Router not found. Most likely UPNP is not enabled on the router")
