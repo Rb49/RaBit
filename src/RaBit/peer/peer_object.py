@@ -11,7 +11,6 @@ class Peer:
     object to store attributes of a peer and some stats
     """
     peer_instances: Dict[bytes, List] = dict()
-    MAX_ENDGAME_REQUESTS = 5
 
     def __init__(self, writer, TorrentData: Torrent, address: Tuple[str, int], geodata: Tuple[str, str, float, float]) -> None:
         """
@@ -26,6 +25,7 @@ class Peer:
         self.TorrentData = TorrentData
 
         self.MAX_PIPELINE_SIZE = 10  # 10 is default
+        self.MAX_ENDGAME_REQUESTS = 5
         self.address = address
 
         self.is_choked = True  # am I choked?
@@ -80,7 +80,7 @@ class Peer:
         rate = (len_bytes_sent / 1024) / dt
 
         if self.is_in_endgame:
-            self.MAX_PIPELINE_SIZE = min(rate + 2, Peer.MAX_ENDGAME_REQUESTS)
+            self.MAX_PIPELINE_SIZE = min(rate + 2, self.MAX_ENDGAME_REQUESTS)
         else:
             # update pipeline size using rtorrent algorithm
             if rate < 20:

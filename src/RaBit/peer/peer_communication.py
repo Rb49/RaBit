@@ -227,7 +227,7 @@ async def tcp_wire_communication(peerData: Tuple, TorrentData: Torrent, session,
                     if thisPeer.is_in_endgame:
                         if block in thisPeer.endgame_cancel_msg_sent:
                             thisPeer.MAX_PIPELINE_SIZE -= 1
-                            Peer.MAX_ENDGAME_REQUESTS -= 1
+                            thisPeer.MAX_ENDGAME_REQUESTS -= 1
                         else:
                             thisPeer.endgame_cancel_msg_sent.add(block)
 
@@ -274,7 +274,7 @@ async def tcp_wire_communication(peerData: Tuple, TorrentData: Torrent, session,
                     thisPeer.endgame_cancel_msg_sent.update(need_to_cancel)
 
                     # request more blocks and don't get stuck on specific blocks
-                    Peer.MAX_ENDGAME_REQUESTS += len(need_to_cancel)
+                    thisPeer.MAX_ENDGAME_REQUESTS += len(need_to_cancel)
                     thisPeer.MAX_PIPELINE_SIZE += len(need_to_cancel)
 
                 # fulfill 50% of requests
