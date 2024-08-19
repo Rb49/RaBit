@@ -22,6 +22,8 @@ You won't be able to:
 - Download from magnet links
 - Contribute to incoming connections during download (only to outgoing)
 
+**And lastly, RaBit is as a learning project and not for production, so keep that in mind ;)**
+
 ### Usage and installation
 > [!IMPORTANT]
 > To mitigate unexpected behavior, use a python version equal or above `3.10`
